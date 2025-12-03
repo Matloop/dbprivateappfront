@@ -1,24 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { FaMapMarkerAlt, FaBed, FaBath, FaCar, FaRulerCombined, FaRegStar, FaSearch } from 'react-icons/fa';
 import './LandingPage.css';
 
-// Ícones
-import { 
-  FaPhoneAlt, FaWhatsapp, FaInstagram, FaStar, FaChevronDown, 
-  FaHome, FaSearch, FaMapMarkerAlt, FaBed, FaBath, FaCar, FaRulerCombined, FaRegStar 
-} from 'react-icons/fa';
-
-// --- TIPAGEM ---
+// Defina a interface Property ou importe
 interface Property {
   id: number;
   title: string;
-  subtitle?: string;
   price: number;
   category: string;
-  address?: {
-    city: string;
-    state: string;
-    neighborhood: string;
-  };
+  address?: { city: string; neighborhood: string; };
   bedrooms: number;
   suites: number;
   garageSpots: number;
@@ -30,7 +20,6 @@ export function LandingPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Buscar Imóveis da API
   useEffect(() => {
     fetch('http://127.0.0.1:3000/properties')
       .then(res => res.json())
@@ -38,43 +27,14 @@ export function LandingPage() {
         setProperties(data);
         setLoading(false);
       })
-      .catch(err => console.error("Erro ao buscar imóveis:", err));
+      .catch(err => console.error(err));
   }, []);
 
-  const formatCurrency = (value: number) => {
-    if (!value) return "Consulte-nos";
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-  };
+  const formatCurrency = (v: number) => v ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v) : "Consulte";
 
   return (
     <div className="landing-container">
       
-      {/* 1. TOP BAR */}
-      <div className="top-bar">
-        <div className="top-bar-left">
-          <span className="info-item">CRECI/SC 4.109-J - Balneário Camboriú / SC</span>
-        </div>
-        <div className="top-bar-right">
-          <div className="info-item"><FaPhoneAlt size={12} /><span>(47) 9.9653-5489</span></div>
-          <div className="info-item"><FaWhatsapp size={14} /><span>WhatsApp</span></div>
-          <div className="info-item"><FaInstagram size={16} /></div>
-        </div>
-      </div>
-
-      {/* 2. HEADER */}
-      <nav className="main-header">
-        <div className="logo-container">
-            <img src='src/assets/logo2025.png'></img>
-        </div>
-        <div className="nav-menu">
-          <div className="home-btn"><FaHome color="#fff" /></div>
-          <a href="#" className="nav-link">Sobre</a>
-          <a href="#" className="nav-link">Vendas</a>
-          <a href="#" className="nav-link">Contato</a>
-          <FaSearch className="search-btn" />
-        </div>
-      </nav>
-
       {/* 3. HERO BANNER */}
       <div className="hero-section" style={{ 
           backgroundImage: 'url("https://dwvimages.s3.amazonaws.com/images/developments/36f8314f-40ca-425c-8d7f-c686b30315d3/personal/10e47f16addab819a670c74ce25d448d84cc403b8c156fed5fc4b5e7b0dd23ad.png")' 
@@ -123,7 +83,7 @@ export function LandingPage() {
           <p style={{textAlign: 'center', color: '#666'}}>Carregando oportunidades...</p>
         ) : (
           <div className="properties-grid">
-            {properties.slice(0, 8).map(prop => ( // Mostra apenas os 8 primeiros
+            {properties.slice(0, 8).map(prop => (
               <div key={prop.id} className="property-card">
                 
                 {/* Imagem + Badge */}

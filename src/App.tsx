@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
+
+// Layouts
+import { MainLayout } from './layouts/MainLayout'
+
+// Páginas Públicas
+import { LandingPage } from './pages/LandingPage/LandingPage'
+import { SalesPage } from './pages/SalesPage'
 import { Login } from './pages/Login'
+
+// Páginas Privadas (Intranet)
 import { Intranet } from './pages/Intranet'
 import { NewProperty } from './pages/NewProperty'
-import { PropertiesList } from './pages/PropertiesList'
-import { LandingPage } from './pages/LandingPage'
+import { PropertiesList } from './pages/PropertiesList' // Caso use rota separada
 
 export default function App() {
   const [session, setSession] = useState<any>(null)
@@ -30,26 +38,33 @@ export default function App() {
   }, [])
 
   if (loading) {
-    return <div style={{ padding: '50px', background: '#121212', color: '#fff' }}>Carregando sistema...</div>
+    return <div style={{ height: '100vh', background: '#121212', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d4af37' }}>Carregando sistema...</div>
   }
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* --- ROTA PÚBLICA PRINCIPAL --- */}
-        {/* Agora a raiz SEMPRE mostra a Landing Page, independente de estar logado */}
-        <Route path="/" element={<LandingPage />} />
+        
+        {/* =========================================
+            ÁREA PÚBLICA (Com Navbar e Footer)
+           ========================================= */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/vendas" element={<SalesPage />} />
+          {/* Adicione Sobre e Contato aqui futuramente */}
+        </Route>
 
-        {/* --- ROTA DE LOGIN --- */}
-        {/* Se já estiver logado e tentar ir pro login, joga pra intranet. Se não, mostra login. */}
+        {/* =========================================
+            LOGIN
+           ========================================= */}
         <Route 
           path="/login" 
           element={!session ? <Login /> : <Navigate to="/intranet" />} 
         />
 
-        {/* --- ROTAS PROTEGIDAS (ADMINISTRATIVAS) --- */}
-        {/* Só acessíveis digitando a URL manualmente ou por redirecionamento interno */}
-        
+        {/* =========================================
+            ÁREA PRIVADA (Sem Navbar do Site)
+           ========================================= */}
         <Route 
           path="/intranet" 
           element={session ? <Intranet session={session} /> : <Navigate to="/login" />} 
@@ -70,8 +85,11 @@ export default function App() {
           element={session ? <NewProperty /> : <Navigate to="/login" />} 
         />
 
-        {/* Rota 404 */}
-        <Route path="*" element={<h1 style={{color:'#fff', textAlign:'center'}}>Página não encontrada</h1>} />
+        {/* =========================================
+            404 - Página Não Encontrada
+           ========================================= */}
+        <Route path="*" element={<div style={{padding: 50, color:'#fff', textAlign:'center', background: '#121212', height: '100vh'}}><h1>404 - Página não encontrada</h1><a href="/" style={{color: '#d4af37'}}>Voltar para Home</a></div>} />
+      
       </Routes>
     </BrowserRouter>
   )

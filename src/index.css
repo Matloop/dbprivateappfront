@@ -29,3 +29,8 @@ body {
   padding: 0 !important;
   text-align: left; /* Alguns templates centralizam o texto */
 }
+@media (min-width: 1024px) {
+  .sidebar-desktop {
+    display: flex !important;
+  }
+}

@@ -1,0 +1,195 @@
+/* SalesPage.css */
+
+/* --- LAYOUT GERAL --- */
+.sales-page-container {
+  background-color: #121212;
+  min-height: 100vh;
+  color: #fff;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.sales-main-layout {
+  display: flex;
+  padding: 20px 4%;
+  gap: 30px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* ÁREA DO GRID (Agora na esquerda) */
+.sales-grid-area {
+  flex: 1; /* Ocupa o espaço restante */
+}
+
+.sales-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* --- SIDEBAR (Agora na direita) --- */
+.sales-sidebar {
+  width: 320px;
+  min-width: 320px;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  align-self: flex-start; /* Para não esticar */
+}
+
+/* Cabeçalho da Sidebar */
+.sidebar-header {
+  background-color: #222;
+  padding: 15px;
+  border-bottom: 1px solid #333;
+  border-left: 3px solid #d4af37; /* Detalhe dourado */
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-weight: 400;
+  color: #eee;
+  font-size: 1.1rem;
+}
+
+/* Seções de Filtro */
+.filter-section {
+  padding: 15px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.filter-title {
+  font-size: 0.8rem;
+  color: #d4af37; /* Título Dourado */
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* Inputs e Selects */
+.filter-input, .filter-select {
+  width: 100%;
+  background-color: #121212;
+  border: 1px solid #333;
+  color: #ccc;
+  padding: 10px;
+  border-radius: 4px;
+  outline: none;
+  font-size: 0.9rem;
+}
+
+.filter-input:focus, .filter-select:focus {
+  border-color: #d4af37;
+}
+
+/* Checkboxes com Contador */
+.checkbox-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #bbb;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-count {
+  background-color: #2a2a2a;
+  color: #666;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 25px;
+  text-align: center;
+}
+
+/* Botões Numéricos (1+, 2+...) */
+.number-btn-group {
+  display: flex;
+  gap: 5px;
+}
+
+.number-btn {
+  flex: 1;
+  background-color: #2a2a2a; /* Cinza escuro */
+  border: 1px solid #333;
+  color: #ccc;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s;
+  border-radius: 2px;
+}
+
+.number-btn:hover {
+  background-color: #333;
+}
+
+.number-btn.active {
+  background-color: #d4af37; /* Dourado Ativo */
+  color: #000;
+  border-color: #d4af37;
+  font-weight: bold;
+}
+
+/* Inputs de Faixa (Preço/Área) */
+.range-inputs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.range-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.range-symbol {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.range-input-field {
+  width: 100%;
+  background-color: #121212;
+  border: 1px solid #333;
+  padding: 8px 8px 8px 30px; /* Espaço para o símbolo */
+  color: #fff;
+  border-radius: 4px;
+}
+
+/* Header Topo */
+.sales-header-bar {
+  background-color: #1a1a1a;
+  padding: 20px 4%;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.breadcrumb {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .sales-main-layout {
+    flex-direction: column-reverse; /* Em mobile, filtros vão pro fundo ou topo */
+  }
+  .sales-sidebar {
+    width: 100%;
+  }
+}
