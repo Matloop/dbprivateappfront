@@ -1,0 +1,369 @@
+/* src/pages/LandingPage/LandingPage.css */
+
+/* --- VARIÁVEIS E RESET --- */
+:root {
+  --primary-gold: #615445;
+  --gold-hover: #7a6a57;
+  --bg-dark: #121212;
+  --bg-card: #1a1a1a;
+  --text-white: #ffffff;
+  --text-gray: #cccccc;
+  --font-main: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- CONTAINER PRINCIPAL --- */
+.landing-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-dark);
+  font-family: var(--font-main);
+  color: var(--text-white);
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- 1. BARRA DE TOPO (Top Bar) --- */
+.top-bar {
+  width: 100%;
+  background-color: #050505;
+  color: var(--text-gray);
+  font-size: 0.75rem;
+  padding: 10px 5%;
+  display: flex; /* Faltava isso para alinhar lado a lado */
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #222;
+  z-index: 101;
+  position: relative;
+}
+
+.top-bar-left, .top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Espaço entre os itens */
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.info-item:hover {
+  color: var(--text-white);
+}
+
+/* --- 2. CABEÇALHO (Header) --- */
+.main-header {
+  width: 100%;
+  background-color: #0f0f0f;
+  padding: 15px 5%;
+  display: flex; /* Faltava isso para alinhar Logo e Menu */
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  position: relative;
+  z-index: 100;
+}
+
+/* Logo */
+.logo-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-text {
+  font-family: 'Times New Roman', serif;
+  color: var(--primary-gold);
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.logo-sub {
+  font-size: 0.6rem;
+  color: #888;
+  letter-spacing: 4px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+/* Menu */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 30px; /* Espaço entre os links */
+}
+
+.home-btn {
+  background-color: var(--primary-gold);
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.home-btn:hover {
+  background-color: var(--gold-hover);
+}
+
+.nav-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.3s;
+}
+
+.nav-link:hover {
+  color: var(--primary-gold);
+}
+
+.search-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* --- 3. HERO BANNER --- */
+.hero-section {
+  width: 100%;
+  height: 500px; /* Altura fixa para o banner */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.9));
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.hero-title {
+  color: white;
+  font-size: 3rem;
+  font-weight: 700;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.9);
+  margin-bottom: 10px;
+}
+
+.hero-subtitle {
+  color: #ccc;
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+/* --- 4. BUSCA FLUTUANTE --- */
+.search-section {
+  position: relative;
+  margin-top: -50px; /* Sobe a caixa */
+  z-index: 10;
+  padding: 0 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 60px;
+}
+
+.search-title {
+  color: #ccc;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  font-weight: 300;
+}
+
+.search-box {
+  background-color: #1a1a1a;
+  padding: 15px;
+  border-radius: 4px;
+  display: flex;
+  gap: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  width: 100%;
+  max-width: 1000px;
+  border: 1px solid #333;
+}
+
+.search-select, .search-input {
+  background-color: #0f0f0f;
+  border: 1px solid #333;
+  color: #aaa;
+  padding: 12px 15px;
+  font-size: 0.9rem;
+  border-radius: 2px;
+  outline: none;
+}
+
+.search-select { flex: 1; }
+.search-input-group { flex: 2; position: relative; }
+.search-input { width: 100%; height: 100%; padding-right: 35px; }
+.input-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #666; }
+
+.search-submit-btn {
+  background-color: #222;
+  border: 1px solid #333;
+  color: #fff;
+  width: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+}
+
+.search-submit-btn:hover {
+  background-color: var(--primary-gold);
+  border-color: var(--primary-gold);
+}
+
+/* --- 5. GRID DE IMÓVEIS --- */
+.properties-section {
+  padding: 0 5% 80px 5%;
+}
+
+.section-header {
+  border-left: 4px solid var(--primary-gold);
+  padding-left: 15px;
+  margin-bottom: 40px;
+}
+
+.section-header h2 {
+  color: #eee;
+  font-size: 1.5rem;
+  font-weight: 300;
+}
+
+.properties-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.property-card {
+  background-color: #161616;
+  border: 1px solid #252525;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.property-card:hover {
+  transform: translateY(-5px);
+  border-color: #444;
+}
+
+.card-image-container {
+  height: 200px;
+  position: relative;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-badge {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  padding: 3px 8px;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.card-content {
+  padding: 15px;
+}
+
+.card-location {
+  font-size: 0.7rem;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.card-title {
+  color: #eee;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-specs {
+  display: flex;
+  gap: 15px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.spec-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #aaa;
+  font-size: 0.8rem;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-price {
+  color: #fff;
+  font-size: 1rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .top-bar { display: none; }
+  .main-header { flex-direction: column; padding: 20px; }
+  .nav-menu { flex-wrap: wrap; justify-content: center; margin-top: 15px; }
+  .search-box { flex-direction: column; }
+  .search-submit-btn { height: 40px; width: 100%; }
+}

@@ -1,40 +1,38 @@
-import { useState } from 'react';
-import { supabase } from '../supabaseClient'; // Ajuste o import
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '../supabaseClient';
+import { useNavigate, useParams } from 'react-router-dom'; // Adicionado useParams
 
-// Lista de características para os checkboxes (baseado nas suas prints)
+// Lista de características (mesma do banco)
 const FEATURE_OPTIONS = [
   "Academia", "Piscina", "Elevador", "Salão de festas", "Playground", 
   "Brinquedoteca", "Sauna", "Spa", "Sala de jogos", "Espaço gourmet",
   "Portaria 24h", "Mobiliado", "Churrasqueira", "Ar Condicionado",
-  "Vista Panorâmica", "Aquecimento a Gás"
+  "Vista Panorâmica", "Aquecimento a Gás", "Importado DWV"
 ];
 
 export function NewProperty() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { id } = useParams(); // Pega o ID da URL (se existir)
+  const isEditing = !!id; // Boolean: true se estiver editando
 
-  // Estado inicial espelhando o DTO
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEditing);
+
   const [formData, setFormData] = useState({
-    // Básicos
     title: '',
     subtitle: '',
-    category: 'APARTAMENTO', // Default do Enum
+    category: 'APARTAMENTO',
     transactionType: 'VENDA',
     status: 'DISPONIVEL',
     isExclusive: false,
     showOnSite: true,
     exclusivityDocUrl: '',
-    registrationNumber: '', // Matrícula
+    registrationNumber: '',
     brokerNotes: '',
     description: '',
-
-    // Valores
     price: '',
     condoFee: '',
     iptuPrice: '',
-
-    // Números
     bedrooms: '',
     suites: '',
     bathrooms: '',
@@ -42,12 +40,8 @@ export function NewProperty() {
     privateArea: '',
     totalArea: '',
     garageArea: '',
-
-    // Datas
     constructionStartDate: '',
     deliveryDate: '',
-
-    // Objetos Aninhados
     address: {
       zipCode: '',
       state: 'SC',
@@ -57,15 +51,71 @@ export function NewProperty() {
       number: '',
       complement: ''
     },
-
     features: [] as string[],
-    
-    // Gerenciamento simples de URLs de imagem
     tempImageUrl: '', 
     images: [] as { url: string, isCover: boolean }[] 
   });
 
-  // 1. Handler Genérico para campos "planos"
+  // --- 1. BUSCAR DADOS SE FOR EDIÇÃO ---
+  useEffect(() => {
+    if (isEditing) {
+      fetchPropertyData();
+    }
+  }, [id]);
+
+  const fetchPropertyData = async () => {
+    try {
+      // Token rápido
+      const storageKey = Object.keys(localStorage).find(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+      const sessionStr = storageKey ? localStorage.getItem(storageKey) : null;
+      const token = sessionStr ? JSON.parse(sessionStr)?.access_token : null;
+
+      const response = await fetch(`http://127.0.0.1:3000/properties/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Populando o form com os dados do back
+        setFormData({
+          ...data,
+          // Converte números para string para o input não reclamar
+          price: data.price || '',
+          condoFee: data.condoFee || '',
+          iptuPrice: data.iptuPrice || '',
+          bedrooms: data.bedrooms || '',
+          suites: data.suites || '',
+          bathrooms: data.bathrooms || '',
+          garageSpots: data.garageSpots || '',
+          privateArea: data.privateArea || '',
+          totalArea: data.totalArea || '',
+          
+          // Tratamento de datas (vem ISO do back 2023-10-05T00..., input quer 2023-10-05)
+          constructionStartDate: data.constructionStartDate ? data.constructionStartDate.split('T')[0] : '',
+          deliveryDate: data.deliveryDate ? data.deliveryDate.split('T')[0] : '',
+
+          // Tratamento de Features (vem array de objetos [{name: 'Pool'}], form quer string ['Pool'])
+          features: data.features ? data.features.map((f: any) => f.name) : [],
+
+          // Endereço (se vier null, mantem objeto vazio)
+          address: data.address || { city: '', state: '', street: '', neighborhood: '', zipCode: '', number: '' },
+
+          images: data.images || [],
+          tempImageUrl: ''
+        });
+      } else {
+        alert("Erro ao carregar imóvel.");
+        navigate('/intranet');
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  // --- HANDLERS (Iguais ao anterior) ---
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -74,31 +124,22 @@ export function NewProperty() {
     }));
   };
 
-  // 2. Handler para Endereço (Nested Object)
   const handleAddressChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      address: {
-        ...prev.address,
-        [name]: value
-      }
+      address: { ...prev.address, [name]: value }
     }));
   };
 
-  // 3. Handler para Features (Array de Strings)
   const handleFeatureToggle = (feature: string) => {
     setFormData((prev) => {
       const exists = prev.features.includes(feature);
-      if (exists) {
-        return { ...prev, features: prev.features.filter(f => f !== feature) };
-      } else {
-        return { ...prev, features: [...prev.features, feature] };
-      }
+      if (exists) return { ...prev, features: prev.features.filter(f => f !== feature) };
+      return { ...prev, features: [...prev.features, feature] };
     });
   };
 
-  // 4. Handler para Adicionar Imagem (Simulação de URL)
   const addImage = () => {
     if (!formData.tempImageUrl) return;
     setFormData(prev => ({
@@ -124,12 +165,9 @@ export function NewProperty() {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      // PREPARAÇÃO DO PAYLOAD
-      // O backend espera números (Int/Float), mas inputs HTML retornam String.
-      // Precisamos converter.
+      // Prepara payload (converte strings para números)
       const payload = {
         ...formData,
-        // Convertendo números
         price: Number(formData.price),
         condoFee: formData.condoFee ? Number(formData.condoFee) : undefined,
         iptuPrice: formData.iptuPrice ? Number(formData.iptuPrice) : undefined,
@@ -137,21 +175,23 @@ export function NewProperty() {
         suites: Number(formData.suites),
         bathrooms: Number(formData.bathrooms),
         garageSpots: Number(formData.garageSpots),
-        garageArea: formData.garageArea ? Number(formData.garageArea) : undefined, 
-
         privateArea: Number(formData.privateArea),
         totalArea: formData.totalArea ? Number(formData.totalArea) : undefined,
-        
-        // Datas vazias viram undefined
+        garageArea: formData.garageArea ? Number(formData.garageArea) : undefined,
         constructionStartDate: formData.constructionStartDate || undefined,
         deliveryDate: formData.deliveryDate || undefined,
-
-        // Limpando campos auxiliares que não vão pro back
         tempImageUrl: undefined
       };
 
-      const response = await fetch('http://127.0.0.1:3000/properties', {
-        method: 'POST',
+      // DECISÃO: POST (Criar) ou PATCH (Editar)
+      const url = isEditing 
+        ? `http://127.0.0.1:3000/properties/${id}` 
+        : 'http://127.0.0.1:3000/properties';
+      
+      const method = isEditing ? 'PATCH' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -160,11 +200,11 @@ export function NewProperty() {
       });
 
       if (response.ok) {
-        alert('Imóvel cadastrado com sucesso!');
-        navigate('/intranet'); // Ou sua rota de sucesso
+        alert(isEditing ? 'Imóvel atualizado!' : 'Imóvel cadastrado!');
+        navigate('/intranet');
       } else {
         const errorData = await response.json();
-        alert(`Erro: ${errorData.message || 'Falha ao cadastrar'}`);
+        alert(`Erro: ${errorData.message || 'Falha na requisição'}`);
       }
     } catch (error) {
       console.error(error);
@@ -174,18 +214,23 @@ export function NewProperty() {
     }
   };
 
-  // Estilos simples inline (substitua por CSS Modules ou Tailwind se preferir)
   const sectionStyle = { border: '1px solid #444', padding: '15px', borderRadius: '8px', display: 'flex', flexDirection: 'column' as const, gap: '10px' };
   const rowStyle = { display: 'flex', gap: '10px', flexWrap: 'wrap' as const };
   const inputStyle = { padding: '10px', flex: 1, minWidth: '150px' };
 
+  if (initialLoading) {
+    return <div style={{padding: 50, color: '#fff'}}>Carregando dados do imóvel...</div>;
+  }
+
   return (
     <div style={{ padding: '20px', maxWidth: '900px', margin: 'auto', background: '#1a1a1a', color: '#fff', fontFamily: 'sans-serif' }}>
-      <h1 style={{ color: '#d4af37' }}>Novo Imóvel</h1>
+      <h1 style={{ color: '#d4af37' }}>
+        {isEditing ? `Editar Imóvel #${id}` : 'Novo Imóvel'}
+      </h1>
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        {/* --- 1. DADOS PRINCIPAIS --- */}
+        {/* --- DADOS --- */}
         <div style={sectionStyle}>
           <h3>Informações Básicas</h3>
           <div style={rowStyle}>
@@ -202,10 +247,20 @@ export function NewProperty() {
               <option value="VENDA">Venda</option>
               <option value="LOCACAO">Locação</option>
             </select>
+
+            {/* Campo de Status só aparece na edição */}
+            {isEditing && (
+              <select name="status" value={formData.status} onChange={handleChange} style={{...inputStyle, borderColor: '#d4af37'}}>
+                <option value="DISPONIVEL">Disponível</option>
+                <option value="RESERVADO">Reservado</option>
+                <option value="VENDIDO">Vendido</option>
+                <option value="ALUGADO">Alugado</option>
+              </select>
+            )}
           </div>
 
-          <input name="title" placeholder="Título do Anúncio *" value={formData.title} onChange={handleChange} required style={inputStyle} />
-          <input name="subtitle" placeholder="Subtítulo (Ex: 3 suítes + vista mar)" value={formData.subtitle} onChange={handleChange} style={inputStyle} />
+          <input name="title" placeholder="Título" value={formData.title} onChange={handleChange} required style={inputStyle} />
+          <input name="subtitle" placeholder="Subtítulo" value={formData.subtitle || ''} onChange={handleChange} style={inputStyle} />
           
           <div style={rowStyle}>
              <label><input type="checkbox" name="isExclusive" checked={formData.isExclusive} onChange={handleChange} /> É Exclusivo?</label>
@@ -213,7 +268,7 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* --- 2. VALORES --- */}
+        {/* --- VALORES --- */}
         <div style={sectionStyle}>
           <h3>Valores</h3>
           <div style={rowStyle}>
@@ -223,12 +278,13 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* --- 3. CARACTERÍSTICAS & ÁREAS --- */}
+        {/* --- DETALHES --- */}
         <div style={sectionStyle}>
-          <h3>Detalhes</h3>
+          <h3>Detalhes e Áreas</h3>
           <div style={rowStyle}>
             <input type="number" name="privateArea" placeholder="Área Privativa (m²) *" value={formData.privateArea} onChange={handleChange} required style={inputStyle} />
             <input type="number" name="totalArea" placeholder="Área Total (m²)" value={formData.totalArea} onChange={handleChange} style={inputStyle} />
+            <input type="number" name="garageArea" placeholder="Área Garagem" value={formData.garageArea} onChange={handleChange} style={inputStyle} />
           </div>
           <div style={rowStyle}>
             <input type="number" name="bedrooms" placeholder="Dormitórios" value={formData.bedrooms} onChange={handleChange} style={inputStyle} />
@@ -236,28 +292,25 @@ export function NewProperty() {
             <input type="number" name="bathrooms" placeholder="Banheiros" value={formData.bathrooms} onChange={handleChange} style={inputStyle} />
             <input type="number" name="garageSpots" placeholder="Vagas" value={formData.garageSpots} onChange={handleChange} style={inputStyle} />
           </div>
-          <div style={rowStyle}>
-            <input type="text" name="registrationNumber" placeholder="Nº Matrícula" value={formData.registrationNumber} onChange={handleChange} style={inputStyle} />
-          </div>
         </div>
 
-        {/* --- 4. ENDEREÇO (Objeto aninhado) --- */}
+        {/* --- ENDEREÇO --- */}
         <div style={sectionStyle}>
           <h3>Localização</h3>
           <div style={rowStyle}>
-            <input name="zipCode" placeholder="CEP" value={formData.address.zipCode} onChange={handleAddressChange} required style={inputStyle} />
-            <input name="city" placeholder="Cidade" value={formData.address.city} onChange={handleAddressChange} required style={inputStyle} />
+            <input name="zipCode" placeholder="CEP" value={formData.address.zipCode} onChange={handleAddressChange} style={inputStyle} />
+            <input name="city" placeholder="Cidade" value={formData.address.city} onChange={handleAddressChange} style={inputStyle} />
             <input name="state" placeholder="UF" value={formData.address.state} onChange={handleAddressChange} style={{...inputStyle, maxWidth: '60px'}} />
           </div>
           <div style={rowStyle}>
-            <input name="neighborhood" placeholder="Bairro" value={formData.address.neighborhood} onChange={handleAddressChange} required style={inputStyle} />
-            <input name="street" placeholder="Rua" value={formData.address.street} onChange={handleAddressChange} required style={inputStyle} />
-            <input name="number" placeholder="Número" value={formData.address.number} onChange={handleAddressChange} required style={{...inputStyle, maxWidth: '100px'}} />
+            <input name="neighborhood" placeholder="Bairro" value={formData.address.neighborhood} onChange={handleAddressChange} style={inputStyle} />
+            <input name="street" placeholder="Rua" value={formData.address.street} onChange={handleAddressChange} style={inputStyle} />
+            <input name="number" placeholder="Nº" value={formData.address.number} onChange={handleAddressChange} style={{...inputStyle, maxWidth: '100px'}} />
           </div>
-          <input name="complement" placeholder="Complemento" value={formData.address.complement} onChange={handleAddressChange} style={inputStyle} />
+          <input name="complement" placeholder="Complemento" value={formData.address.complement || ''} onChange={handleAddressChange} style={inputStyle} />
         </div>
 
-        {/* --- 5. DATAS --- */}
+        {/* --- DATAS --- */}
         <div style={sectionStyle}>
           <h3>Datas</h3>
           <div style={rowStyle}>
@@ -272,9 +325,9 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* --- 6. CHECKBOXES (FEATURES) --- */}
+        {/* --- FEATURES --- */}
         <div style={sectionStyle}>
-          <h3>Características do Empreendimento</h3>
+          <h3>Características</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
             {FEATURE_OPTIONS.map(feat => (
               <label key={feat} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem' }}>
@@ -289,13 +342,13 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* --- 7. GALERIA (URLs) --- */}
+        {/* --- GALERIA --- */}
         <div style={sectionStyle}>
           <h3>Galeria de Fotos</h3>
           <div style={rowStyle}>
             <input 
               name="tempImageUrl" 
-              placeholder="Cole o link da imagem aqui (https://...)" 
+              placeholder="Cole link de imagem extra..." 
               value={formData.tempImageUrl} 
               onChange={handleChange} 
               style={inputStyle} 
@@ -322,28 +375,10 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* --- 8. DESCRIÇÃO --- */}
+        {/* --- DESCRIÇÃO --- */}
         <div style={sectionStyle}>
-          <h3>Descrição Completa</h3>
-          <textarea 
-            name="description" 
-            rows={5} 
-            value={formData.description} 
-            onChange={handleChange} 
-            style={{...inputStyle, resize: 'vertical'}} 
-          />
-        </div>
-
-        <div style={sectionStyle}>
-          <h3>Observações (Interno)</h3>
-          <textarea 
-            name="brokerNotes" 
-            rows={3} 
-            placeholder="Infos de comissão, contato do proprietário, etc."
-            value={formData.brokerNotes} 
-            onChange={handleChange} 
-            style={{...inputStyle, resize: 'vertical'}} 
-          />
+          <h3>Descrição</h3>
+          <textarea name="description" rows={5} value={formData.description || ''} onChange={handleChange} style={{...inputStyle, resize: 'vertical'}} />
         </div>
 
         <button 
@@ -351,8 +386,8 @@ export function NewProperty() {
           disabled={loading}
           style={{ 
             padding: '15px', 
-            background: '#d4af37', 
-            color: '#000', 
+            background: isEditing ? '#28a745' : '#d4af37', 
+            color: '#fff', 
             border: 'none', 
             fontWeight: 'bold', 
             fontSize: '1.1rem', 
@@ -360,7 +395,7 @@ export function NewProperty() {
             opacity: loading ? 0.7 : 1 
           }}
         >
-          {loading ? 'Salvando...' : 'CADASTRAR IMÓVEL'}
+          {loading ? 'Salvando...' : (isEditing ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR IMÓVEL')}
         </button>
 
       </form>

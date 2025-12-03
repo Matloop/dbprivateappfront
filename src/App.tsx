@@ -5,10 +5,11 @@ import { Login } from './pages/Login'
 import { Intranet } from './pages/Intranet'
 import { NewProperty } from './pages/NewProperty'
 import { PropertiesList } from './pages/PropertiesList'
+import { LandingPage } from './pages/LandingPage'
 
 export default function App() {
   const [session, setSession] = useState<any>(null)
-  const [loading, setLoading] = useState(true) // Importante para não piscar a tela errada
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // 1. Checa sessão inicial
@@ -28,40 +29,49 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Mostra um "Carregando..." enquanto o Supabase verifica se o usuário existe
   if (loading) {
-    return <div style={{ padding: '50px' }}>Carregando sistema...</div>
+    return <div style={{ padding: '50px', background: '#121212', color: '#fff' }}>Carregando sistema...</div>
   }
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota Padrão: Se estiver logado vai pra intranet, senão login */}
-        <Route 
-          path="/" 
-          element={session ? <Navigate to="/intranet" /> : <Navigate to="/login" />} 
-        />
+        {/* --- ROTA PÚBLICA PRINCIPAL --- */}
+        {/* Agora a raiz SEMPRE mostra a Landing Page, independente de estar logado */}
+        <Route path="/" element={<LandingPage />} />
 
-        {/* Rota de Login: Se já estiver logado, chuta pra intranet */}
+        {/* --- ROTA DE LOGIN --- */}
+        {/* Se já estiver logado e tentar ir pro login, joga pra intranet. Se não, mostra login. */}
         <Route 
           path="/login" 
           element={!session ? <Login /> : <Navigate to="/intranet" />} 
         />
 
-        {/* Rota Protegida (Intranet): Se NÃO estiver logado, chuta pro login */}
+        {/* --- ROTAS PROTEGIDAS (ADMINISTRATIVAS) --- */}
+        {/* Só acessíveis digitando a URL manualmente ou por redirecionamento interno */}
+        
         <Route 
           path="/intranet" 
           element={session ? <Intranet session={session} /> : <Navigate to="/login" />} 
         />
-
-        {/* Rota 404 - Caso o usuário digite algo errado */}
-        <Route path="*" element={<h1>Página não encontrada</h1>} />
+        
         <Route 
-        path="/properties/new" 
-        element={session ? <NewProperty /> : <Navigate to="/login" />} 
-          />
-        <Route path="/properties" element={<PropertiesList />} />
+          path="/properties" 
+          element={session ? <PropertiesList /> : <Navigate to="/login" />} 
+        />
+        
+        <Route 
+          path="/properties/new" 
+          element={session ? <NewProperty /> : <Navigate to="/login" />} 
+        />
+        
+        <Route 
+          path="/properties/edit/:id" 
+          element={session ? <NewProperty /> : <Navigate to="/login" />} 
+        />
 
+        {/* Rota 404 */}
+        <Route path="*" element={<h1 style={{color:'#fff', textAlign:'center'}}>Página não encontrada</h1>} />
       </Routes>
     </BrowserRouter>
   )
