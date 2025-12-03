@@ -14,6 +14,7 @@ import { Login } from './pages/Login'
 import { Intranet } from './pages/Intranet'
 import { NewProperty } from './pages/NewProperty'
 import { PropertiesList } from './pages/PropertiesList' // Caso use rota separada
+import { PropertyDetails } from './pages/PropertyDetails'
 
 export default function App() {
   const [session, setSession] = useState<any>(null)
@@ -51,6 +52,8 @@ export default function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/vendas" element={<SalesPage />} />
+          <Route path="/imovel/:id" element={<PropertyDetails />} />
+
           {/* Adicione Sobre e Contato aqui futuramente */}
         </Route>
 
@@ -89,7 +92,6 @@ export default function App() {
             404 - Página Não Encontrada
            ========================================= */}
         <Route path="*" element={<div style={{padding: 50, color:'#fff', textAlign:'center', background: '#121212', height: '100vh'}}><h1>404 - Página não encontrada</h1><a href="/" style={{color: '#d4af37'}}>Voltar para Home</a></div>} />
-      
       </Routes>
     </BrowserRouter>
   )

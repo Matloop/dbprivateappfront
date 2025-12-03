@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate, useParams } from 'react-router-dom';
 
-// 1. LISTAS SEPARADAS
+// --- OPÇÕES IGUAIS AO PRINT ---
 const PROPERTY_OPTS = [
   "Mobiliado", "Semimobiliado", "Vazio", "Frente Mar", "Quadra Mar", 
   "Vista Panorâmica", "Churrasqueira a Carvão", "Sacada Aberta", 
@@ -68,7 +68,7 @@ export function NewProperty() {
       complement: ''
     },
 
-    // --- MUDANÇA: ARRAYS SEPARADOS ---
+    // Arrays para os Checkboxes
     propertyFeatures: [] as string[],
     developmentFeatures: [] as string[],
 
@@ -76,7 +76,7 @@ export function NewProperty() {
     images: [] as { url: string, isCover: boolean }[] 
   });
 
-  // --- BUSCAR DADOS (EDIÇÃO) ---
+  // --- 1. CARREGAR DADOS NA EDIÇÃO ---
   useEffect(() => {
     if (isEditing) {
       fetchPropertyData();
@@ -89,7 +89,6 @@ export function NewProperty() {
       const sessionStr = storageKey ? localStorage.getItem(storageKey) : null;
       const token = sessionStr ? JSON.parse(sessionStr)?.access_token : null;
 
-      // URL local para evitar delay
       const response = await fetch(`http://127.0.0.1:3000/properties/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -99,7 +98,7 @@ export function NewProperty() {
         
         setFormData({
           ...data,
-          // Numéricos para string
+          // Converte números para string (para não dar erro no input)
           price: data.price || '',
           condoFee: data.condoFee || '',
           iptuPrice: data.iptuPrice || '',
@@ -111,15 +110,21 @@ export function NewProperty() {
           totalArea: data.totalArea || '',
           garageArea: data.garageArea || '',
           
-          // Datas
+          // Datas (YYYY-MM-DD)
           constructionStartDate: data.constructionStartDate ? data.constructionStartDate.split('T')[0] : '',
           deliveryDate: data.deliveryDate ? data.deliveryDate.split('T')[0] : '',
 
-          // --- MAPEAR FEATURES SEPARADAS ---
-          // O banco retorna: [{name: 'Wifi'}, {name: 'Pool'}]
-          // O front precisa: ['Wifi', 'Pool']
-          propertyFeatures: data.propertyFeatures ? data.propertyFeatures.map((f: any) => f.name) : [],
-          developmentFeatures: data.developmentFeatures ? data.developmentFeatures.map((f: any) => f.name) : [],
+          // --- AQUI ESTÁ A CORREÇÃO CRÍTICA ---
+          // O Banco manda: [{ name: "Mobiliado" }, { name: "Academia" }]
+          // Nós transformamos em: ["Mobiliado", "Academia"]
+          propertyFeatures: data.propertyFeatures 
+            ? data.propertyFeatures.map((f: any) => f.name) 
+            : [],
+            
+          developmentFeatures: data.developmentFeatures 
+            ? data.developmentFeatures.map((f: any) => f.name) 
+            : [],
+          // -------------------------------------
 
           address: data.address || { city: '', state: '', street: '', neighborhood: '', zipCode: '', number: '' },
           images: data.images || [],
@@ -153,13 +158,15 @@ export function NewProperty() {
     }));
   };
 
-  // Handler genérico para toggles (recebe qual lista atualizar)
+  // Função genérica para marcar/desmarcar checkbox
   const handleFeatureToggle = (listName: 'propertyFeatures' | 'developmentFeatures', feature: string) => {
     setFormData((prev) => {
       const list = prev[listName];
       if (list.includes(feature)) {
+        // Se já tem, remove
         return { ...prev, [listName]: list.filter(f => f !== feature) };
       } else {
+        // Se não tem, adiciona
         return { ...prev, [listName]: [...list, feature] };
       }
     });
@@ -181,7 +188,7 @@ export function NewProperty() {
     }));
   };
 
-  // --- SUBMIT ---
+  // --- SALVAR ---
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
@@ -206,7 +213,7 @@ export function NewProperty() {
         deliveryDate: formData.deliveryDate || undefined,
         tempImageUrl: undefined,
         
-        // Os arrays já estão no formato correto de strings, o backend cuidará do connectOrCreate
+        // Os arrays já estão prontos (strings)
         propertyFeatures: formData.propertyFeatures,
         developmentFeatures: formData.developmentFeatures
       };
@@ -255,7 +262,7 @@ export function NewProperty() {
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        {/* BASICS */}
+        {/* --- DADOS BÁSICOS --- */}
         <div style={sectionStyle}>
           <h3>Informações Básicas</h3>
           <div style={rowStyle}>
@@ -290,7 +297,7 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* VALORES */}
+        {/* --- VALORES --- */}
         <div style={sectionStyle}>
           <h3>Valores</h3>
           <div style={rowStyle}>
@@ -300,7 +307,7 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* DETALHES */}
+        {/* --- DETALHES --- */}
         <div style={sectionStyle}>
           <h3>Detalhes e Áreas</h3>
           <div style={rowStyle}>
@@ -316,7 +323,7 @@ export function NewProperty() {
           <input type="text" name="registrationNumber" placeholder="Nº Matrícula" value={formData.registrationNumber} onChange={handleChange} style={inputStyle} />
         </div>
 
-        {/* ENDEREÇO */}
+        {/* --- ENDEREÇO --- */}
         <div style={sectionStyle}>
           <h3>Localização</h3>
           <div style={rowStyle}>
@@ -331,17 +338,17 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* --- CARACTERÍSTICAS PRIVATIVAS --- */}
+        {/* --- CARACTERÍSTICAS PRIVATIVAS (DO IMÓVEL) --- */}
         <div style={sectionStyle}>
-          <h3>Características do Imóvel (Privativo)</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+          <h3 style={{color: '#d4af37'}}>Características do Imóvel (Privativo)</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
             {PROPERTY_OPTS.map(feat => (
-              <label key={feat} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem', cursor: 'pointer' }}>
+              <label key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', color: '#ccc' }}>
                 <input 
                   type="checkbox" 
                   checked={formData.propertyFeatures.includes(feat)} 
                   onChange={() => handleFeatureToggle('propertyFeatures', feat)}
-                  style={{accentColor: '#d4af37'}}
+                  style={{width: 16, height: 16, accentColor: '#d4af37'}}
                 />
                 {feat}
               </label>
@@ -349,17 +356,17 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* --- CARACTERÍSTICAS EMPREENDIMENTO --- */}
+        {/* --- CARACTERÍSTICAS COMUNS (DO EMPREENDIMENTO) --- */}
         <div style={sectionStyle}>
-          <h3>Infraestrutura do Empreendimento (Comum)</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+          <h3 style={{color: '#d4af37'}}>Infraestrutura do Empreendimento (Comum)</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
             {DEVELOPMENT_OPTS.map(feat => (
-              <label key={feat} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem', cursor: 'pointer' }}>
+              <label key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', color: '#ccc' }}>
                 <input 
                   type="checkbox" 
                   checked={formData.developmentFeatures.includes(feat)} 
                   onChange={() => handleFeatureToggle('developmentFeatures', feat)}
-                  style={{accentColor: '#28a745'}}
+                  style={{width: 16, height: 16, accentColor: '#28a745'}}
                 />
                 {feat}
               </label>
@@ -367,7 +374,7 @@ export function NewProperty() {
           </div>
         </div>
 
-        {/* GALERIA */}
+        {/* --- GALERIA --- */}
         <div style={sectionStyle}>
           <h3>Galeria de Fotos</h3>
           <div style={rowStyle}>

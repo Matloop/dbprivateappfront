@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaMapMarkerAlt, FaBed, FaBath, FaCar, FaRulerCombined, FaRegStar } from 'react-icons/fa';
 import './PropertyCard.css'; // Importe o CSS criado acima
+import { useNavigate } from 'react-router-dom';
 
 // Definição da tipagem baseada no seu Backend
 export interface Property {
@@ -30,7 +31,11 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
-  
+  const navigate = useNavigate();
+
+  const goToDetails = () => {
+    navigate(`/imovel/${property.id}`);
+  };
   // Formatador de Moeda
   const formatCurrency = (value: number) => {
     if (!value) return "Consulte";
@@ -41,7 +46,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const coverImage = property.images?.find(i => i.isCover)?.url || property.images?.[0]?.url || 'https://via.placeholder.com/400x300?text=Sem+Foto';
 
   return (
-    <div className="db-card">
+    <div className="db-card" onClick={goToDetails} style={{cursor: 'pointer'}}>
       
       {/* 1. Imagem e Overlays */}
       <div className="db-card-image-box">
