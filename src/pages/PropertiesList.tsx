@@ -15,6 +15,7 @@ interface Property {
   price: number;
   category: string;
   status: string;
+  buildingName?: string;
   createdAt: string;
   updatedAt: string;
   images: PropertyImage[];
@@ -216,6 +217,11 @@ export function PropertiesList() {
                 {/* 3. Imóvel (Limpo, sem tarja) */}
                 <td>
                   <div className="property-title">{prop.title}</div>
+                  {prop.buildingName && (
+                    <div style={{ fontSize: '0.85rem', color: '#d4af37', fontWeight: 'bold', marginTop: 2 }}>
+                      🏢 {prop.buildingName}
+                    </div>
+                  )}
                   <div className="property-subtitle">
                     {prop.address?.neighborhood} - {prop.category}
                   </div>

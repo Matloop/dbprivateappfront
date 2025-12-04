@@ -1,160 +1,102 @@
-/* --- VARIAVEIS (Se já não tiver) --- */
-:root {
-  --gold: #d4af37;
-  --dark-bg: #1a1a1a;
-  --darker-bg: #121212;
-  --text-gray: #b0b0b0;
-  --text-white: #ffffff;
-  --border-color: #333;
-}
-
-/* --- CARD DO IMÓVEL --- */
-.db-card {
-  background-color: var(--dark-bg);
-  border: 1px solid #2a2a2a;
+.property-card {
+  background-color: #1e1e1e; /* Fundo escuro do card */
   border-radius: 4px;
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  height: 100%; /* Para cards em grid ficarem da mesma altura */
+  font-family: 'Segoe UI', sans-serif;
+  color: #fff;
+  width: 100%;
+  max-width: 350px; /* Largura média de um card */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
 }
 
-.db-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-  border-color: #444;
+.property-card:hover {
+  transform: translateY(-5px); /* Efeito leve ao passar o mouse */
 }
 
-/* Imagem */
-.db-card-image-box {
-  position: relative;
-  height: 240px; /* Altura fixa para alinhar */
-  overflow: hidden;
+/* --- A MÁGICA DA TARJA --- */
+.card-image-container {
+  position: relative; /* Importante para a tarja se posicionar aqui dentro */
+  width: 100%;
+  height: 250px; /* Altura fixa da imagem */
 }
 
-.db-card-img {
+.card-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
 }
 
-.db-card:hover .db-card-img {
-  transform: scale(1.05);
-}
-
-/* Badges e Overlays na Imagem */
-.db-badge-top-left {
+.card-badge {
   position: absolute;
-  top: 10px;
-  left: 0;
-  background: rgba(0, 0, 0, 0.8);
+  top: 20px;   /* Distância do topo */
+  right: 0;    /* Grudado na direita */
+  background-color: rgba(0, 0, 0, 0.85); /* Fundo preto meio transparente (padrão) */
   color: #fff;
-  padding: 5px 10px;
-  font-size: 0.7rem;
-  text-transform: uppercase;
+  padding: 8px 15px;
+  font-size: 0.75rem;
   font-weight: 600;
-  border-right: 2px solid var(--gold);
-}
-
-.db-badge-top-right {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: var(--gold); /* Azul/Dourado conforme o design */
-  color: #121212;
-  padding: 4px 8px;
-  font-size: 0.65rem;
-  font-weight: bold;
   text-transform: uppercase;
-  border-radius: 2px;
+  z-index: 10;
+  letter-spacing: 0.5px;
+  /* Se quiser canto arredondado apenas na esquerda: */
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
 }
 
-/* Corpo do Card */
-.db-card-body {
+/* --- DETALHES DO CARD (Igual seu print) --- */
+.card-content {
   padding: 15px;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  gap: 10px;
+  gap: 8px;
 }
 
-.db-location {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-gray);
-  font-size: 0.75rem;
+.card-location {
+  color: #ccc;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.db-title {
-  color: var(--text-white);
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.4;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* Limita a 2 linhas */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Linha de Ícones (Cama, Banheiro...) */
-.db-features-row {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-top: auto; /* Empurra para baixo se sobrar espaço */
-  padding-top: 10px;
-  border-top: 1px solid #2a2a2a;
-  color: var(--text-gray);
-  font-size: 0.85rem;
+  gap: 5px;
+  font-weight: 600;
 }
 
-.db-feature-item {
+.card-title {
+  font-size: 1rem;
+  font-weight: normal;
+  color: #fff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-features {
+  display: flex;
+  gap: 15px;
+  margin-top: 5px;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.feature-item {
   display: flex;
   align-items: center;
   gap: 5px;
 }
 
-.db-feature-item svg {
-  color: #888; /* Ícone mais escuro */
-}
-
-.db-card:hover .db-feature-item svg {
-  color: var(--gold); /* Dourado ao passar o mouse */
-}
-
-/* Rodapé (Preço e Ref) */
-.db-card-footer {
+.card-footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #333;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-top: 10px;
+  align-items: center;
 }
 
-.db-price {
-  color: var(--text-white);
-  font-size: 1.1rem;
-  font-weight: 400;
-}
-
-.db-ref {
-  font-size: 0.7rem;
-  color: #555;
-  font-family: monospace;
-}
-
-.db-fav-icon {
-  cursor: pointer;
-  color: #555;
-  transition: 0.2s;
-}
-
-.db-fav-icon:hover {
-  color: var(--gold);
+.card-price {
+  font-size: 1.2rem;
+  color: #fff;
+  font-weight: 500;
 }

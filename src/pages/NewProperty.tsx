@@ -5,18 +5,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 // --- CONSTANTES E OPÇÕES ---
 
 const PROPERTY_OPTS = [
-  "Mobiliado", "Semimobiliado", "Vazio", "Frente Mar", "Quadra Mar", 
-  "Vista Panorâmica", "Churrasqueira a Carvão", "Sacada Aberta", 
-  "Sacada Integrada", "Ar Condicionado", "Aquecimento a Gás", 
-  "Piso Porcelanato", "Piso Vinílico", "Automação Predial", 
+  "Mobiliado", "Semimobiliado", "Vazio", "Frente Mar", "Quadra Mar",
+  "Vista Panorâmica", "Churrasqueira a Carvão", "Sacada Aberta",
+  "Sacada Integrada", "Ar Condicionado", "Aquecimento a Gás",
+  "Piso Porcelanato", "Piso Vinílico", "Automação Predial",
   "Acabamento em Gesso", "Hidromassagem"
 ];
 
 const DEVELOPMENT_OPTS = [
   "Academia", "Piscina Adulto", "Piscina Infantil", "Piscina Térmica",
   "Salão de Festas", "Espaço Gourmet", "Sala de Jogos", "Playground",
-  "Brinquedoteca", "Cinema", "Sauna", "Spa", "Elevador", 
-  "Portaria 24h", "Bicicletário", "Entrada para Banhistas", 
+  "Brinquedoteca", "Cinema", "Sauna", "Spa", "Elevador",
+  "Portaria 24h", "Bicicletário", "Entrada para Banhistas",
   "Box de Praia", "Heliponto", "Gerador de Energia"
 ];
 
@@ -39,6 +39,7 @@ export function NewProperty() {
 
   const [formData, setFormData] = useState({
     title: '',
+    buildingName: '',
     subtitle: '',
     category: 'APARTAMENTO',
     transactionType: 'VENDA',
@@ -53,12 +54,12 @@ export function NewProperty() {
     // Tarja
     badgeText: '',
     badgeColor: '',
-    
+
     // Valores
     price: '',
     condoFee: '',
     iptuPrice: '',
-    
+
     // Números e Áreas
     bedrooms: '',
     suites: '',
@@ -67,11 +68,11 @@ export function NewProperty() {
     privateArea: '',
     totalArea: '',
     garageArea: '',
-    
+
     // Datas
     constructionStartDate: '',
     deliveryDate: '',
-    
+
     // Endereço
     address: {
       zipCode: '',
@@ -88,8 +89,8 @@ export function NewProperty() {
     developmentFeatures: [] as string[],
 
     // Imagens
-    tempImageUrl: '', 
-    images: [] as { url: string, isCover: boolean }[] 
+    tempImageUrl: '',
+    images: [] as { url: string, isCover: boolean }[]
   });
 
   // --- 1. CARREGAR DADOS (MÓDULO DE EDIÇÃO) ---
@@ -111,7 +112,7 @@ export function NewProperty() {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         setFormData({
           ...data,
           // Converte Nulls/Numbers para string vazia nos inputs
@@ -122,24 +123,25 @@ export function NewProperty() {
           suites: data.suites || '',
           bathrooms: data.bathrooms || '',
           garageSpots: data.garageSpots || '',
+          buildingName: data.buildingName || '',
           privateArea: data.privateArea || '',
           totalArea: data.totalArea || '',
           garageArea: data.garageArea || '',
-          
+
           badgeText: data.badgeText || '',
           badgeColor: data.badgeColor || '',
-          
+
           // Tratamento de Datas (YYYY-MM-DD)
           constructionStartDate: data.constructionStartDate ? String(data.constructionStartDate).split('T')[0] : '',
           deliveryDate: data.deliveryDate ? String(data.deliveryDate).split('T')[0] : '',
 
           // Mapeando Features: Backend (Objeto) -> Frontend (Array de Strings)
-          propertyFeatures: data.propertyFeatures 
-            ? data.propertyFeatures.map((f: any) => f.name) 
+          propertyFeatures: data.propertyFeatures
+            ? data.propertyFeatures.map((f: any) => f.name)
             : [],
-            
-          developmentFeatures: data.developmentFeatures 
-            ? data.developmentFeatures.map((f: any) => f.name) 
+
+          developmentFeatures: data.developmentFeatures
+            ? data.developmentFeatures.map((f: any) => f.name)
             : [],
 
           address: data.address || { city: '', state: '', street: '', neighborhood: '', zipCode: '', number: '' },
@@ -208,7 +210,7 @@ export function NewProperty() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -219,32 +221,32 @@ export function NewProperty() {
         price: Number(formData.price),
         condoFee: formData.condoFee ? Number(formData.condoFee) : undefined,
         iptuPrice: formData.iptuPrice ? Number(formData.iptuPrice) : undefined,
-        
+
         bedrooms: Number(formData.bedrooms),
         suites: Number(formData.suites),
         bathrooms: Number(formData.bathrooms),
         garageSpots: Number(formData.garageSpots),
-        
+
         privateArea: Number(formData.privateArea),
         totalArea: formData.totalArea ? Number(formData.totalArea) : undefined,
         garageArea: formData.garageArea ? Number(formData.garageArea) : undefined,
-        
+
         // Se a data vier vazia, manda undefined
         constructionStartDate: formData.constructionStartDate || undefined,
         deliveryDate: formData.deliveryDate || undefined,
-        
+
         // Remove campo temporário
         tempImageUrl: undefined,
-        
+
         // Backend novo espera esses arrays
         propertyFeatures: formData.propertyFeatures,
         developmentFeatures: formData.developmentFeatures
       };
 
-      const url = isEditing 
-        ? `http://127.0.0.1:3000/properties/${id}` 
+      const url = isEditing
+        ? `http://127.0.0.1:3000/properties/${id}`
         : 'http://127.0.0.1:3000/properties';
-      
+
       const method = isEditing ? 'PATCH' : 'POST';
 
       const response = await fetch(url, {
@@ -272,19 +274,19 @@ export function NewProperty() {
   };
 
   // --- ESTILOS INLINE (Simples) ---
-  const sectionStyle = { 
-    border: '1px solid #444', 
-    padding: '15px', 
-    borderRadius: '8px', 
-    display: 'flex', 
-    flexDirection: 'column' as const, 
-    gap: '10px' 
+  const sectionStyle = {
+    border: '1px solid #444',
+    padding: '15px',
+    borderRadius: '8px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px'
   };
   const rowStyle = { display: 'flex', gap: '10px', flexWrap: 'wrap' as const };
   const inputStyle = { padding: '10px', flex: 1, minWidth: '150px' };
 
   if (initialLoading) {
-    return <div style={{padding: 50, color: '#fff', textAlign: 'center'}}>Carregando dados do imóvel...</div>;
+    return <div style={{ padding: 50, color: '#fff', textAlign: 'center' }}>Carregando dados do imóvel...</div>;
   }
 
   return (
@@ -292,47 +294,48 @@ export function NewProperty() {
       <h1 style={{ color: '#d4af37', marginBottom: '20px' }}>
         {isEditing ? `Editar Imóvel #${id}` : 'Novo Imóvel'}
       </h1>
-      
+
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        
+
         {/* --- 1. BLOCO DA TARJA --- */}
         <div style={sectionStyle}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#d4af37' }}>
-            💳 Tarja de Destaque <span style={{fontSize:'0.8rem', fontWeight:'normal', color:'#aaa'}}>(Opcional)</span>
+            💳 Tarja de Destaque <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: '#aaa' }}>(Opcional)</span>
           </h3>
-          <p style={{fontSize: '0.85rem', color: '#888', margin: 0}}>Texto curto para destacar o imóvel na lista (Ex: MOBILIADO)</p>
-          
+          <p style={{ fontSize: '0.85rem', color: '#888', margin: 0 }}>Texto curto para destacar o imóvel na lista (Ex: MOBILIADO)</p>
+
           <div style={rowStyle}>
-             <div style={{flex: 2}}>
-                <input 
-                  name="badgeText" 
-                  placeholder="Texto da Tarja" 
-                  value={formData.badgeText} 
-                  onChange={handleChange} 
-                  style={inputStyle} 
-                />
-             </div>
-             <div style={{flex: 1}}>
-                <select name="badgeColor" value={formData.badgeColor} onChange={handleChange} style={inputStyle}>
-                    <option value="">Selecione a Cor</option>
-                    {BADGE_COLORS.map(c => (
-                        <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                </select>
-             </div>
+            <div style={{ flex: 2 }}>
+              <input
+                name="badgeText"
+                placeholder="Texto da Tarja"
+                value={formData.badgeText}
+                onChange={handleChange}
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <select name="badgeColor" value={formData.badgeColor} onChange={handleChange} style={inputStyle}>
+                <option value="">Selecione a Cor</option>
+                {BADGE_COLORS.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
           {/* Preview */}
           {formData.badgeText && (
-             <div style={{marginTop: 5}}>
-                <span style={{ fontSize:'0.8rem', color:'#aaa' }}>Prévia: </span>
-                <span style={{
-                   background: formData.badgeColor || '#555',
-                   color: '#fff', padding: '2px 8px', borderRadius: 4, 
-                   fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase'
-                }}>
-                    {formData.badgeText}
-                </span>
-             </div>
+            <div style={{ marginTop: 5 }}>
+              <span style={{ fontSize: '0.8rem', color: '#aaa' }}>Prévia: </span>
+              <span style={{
+                background: formData.badgeColor || '#555',
+                color: '#fff', padding: '2px 8px', borderRadius: 4,
+                fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase'
+              }}>
+                {formData.badgeText}
+              </span>
+            </div>
           )}
         </div>
 
@@ -348,14 +351,14 @@ export function NewProperty() {
               <option value="SALA_COMERCIAL">Sala Comercial</option>
               <option value="GALPAO">Galpão</option>
             </select>
-            
+
             <select name="transactionType" value={formData.transactionType} onChange={handleChange} style={inputStyle}>
               <option value="VENDA">Venda</option>
               <option value="LOCACAO">Locação</option>
             </select>
 
             {isEditing && (
-              <select name="status" value={formData.status} onChange={handleChange} style={{...inputStyle, borderColor: '#d4af37'}}>
+              <select name="status" value={formData.status} onChange={handleChange} style={{ ...inputStyle, borderColor: '#d4af37' }}>
                 <option value="DISPONIVEL">Disponível</option>
                 <option value="RESERVADO">Reservado</option>
                 <option value="VENDIDO">Vendido</option>
@@ -364,10 +367,17 @@ export function NewProperty() {
             )}
           </div>
           <input name="title" placeholder="Título do Anúncio *" value={formData.title} onChange={handleChange} required style={inputStyle} />
+          <input
+            name="buildingName"
+            placeholder="Nome do Edifício (Ex: Ed. Aurora)"
+            value={formData.buildingName}
+            onChange={handleChange}
+            style={inputStyle}
+          />
           <input name="subtitle" placeholder="Subtítulo (Ex: 3 suítes com vista mar)" value={formData.subtitle || ''} onChange={handleChange} style={inputStyle} />
           <div style={rowStyle}>
-             <label style={{cursor:'pointer'}}><input type="checkbox" name="isExclusive" checked={formData.isExclusive} onChange={handleChange} /> É Exclusivo?</label>
-             <label style={{cursor:'pointer'}}><input type="checkbox" name="showOnSite" checked={formData.showOnSite} onChange={handleChange} /> Mostrar no Site?</label>
+            <label style={{ cursor: 'pointer' }}><input type="checkbox" name="isExclusive" checked={formData.isExclusive} onChange={handleChange} /> É Exclusivo?</label>
+            <label style={{ cursor: 'pointer' }}><input type="checkbox" name="showOnSite" checked={formData.showOnSite} onChange={handleChange} /> Mostrar no Site?</label>
           </div>
         </div>
 
@@ -406,42 +416,42 @@ export function NewProperty() {
           <div style={rowStyle}>
             <input name="zipCode" placeholder="CEP" value={formData.address.zipCode} onChange={handleAddressChange} style={inputStyle} />
             <input name="city" placeholder="Cidade" value={formData.address.city} onChange={handleAddressChange} style={inputStyle} />
-            <input name="state" placeholder="UF" value={formData.address.state} onChange={handleAddressChange} style={{...inputStyle, maxWidth: '60px'}} />
+            <input name="state" placeholder="UF" value={formData.address.state} onChange={handleAddressChange} style={{ ...inputStyle, maxWidth: '60px' }} />
           </div>
           <div style={rowStyle}>
             <input name="neighborhood" placeholder="Bairro" value={formData.address.neighborhood} onChange={handleAddressChange} style={inputStyle} />
             <input name="street" placeholder="Rua" value={formData.address.street} onChange={handleAddressChange} style={inputStyle} />
-            <input name="number" placeholder="Nº" value={formData.address.number} onChange={handleAddressChange} style={{...inputStyle, maxWidth: '100px'}} />
+            <input name="number" placeholder="Nº" value={formData.address.number} onChange={handleAddressChange} style={{ ...inputStyle, maxWidth: '100px' }} />
           </div>
           <input name="complement" placeholder="Complemento" value={formData.address.complement} onChange={handleAddressChange} style={inputStyle} />
         </div>
 
         {/* --- 6. DATAS --- */}
         <div style={sectionStyle}>
-            <h3>Datas da Obra</h3>
-            <div style={rowStyle}>
-                <div style={{flex: 1}}>
-                    <label style={{fontSize: '0.8rem', color: '#aaa'}}>Início</label>
-                    <input type="date" name="constructionStartDate" value={formData.constructionStartDate} onChange={handleChange} style={{...inputStyle, width: '100%'}} />
-                </div>
-                <div style={{flex: 1}}>
-                    <label style={{fontSize: '0.8rem', color: '#aaa'}}>Entrega Prevista</label>
-                    <input type="date" name="deliveryDate" value={formData.deliveryDate} onChange={handleChange} style={{...inputStyle, width: '100%'}} />
-                </div>
+          <h3>Datas da Obra</h3>
+          <div style={rowStyle}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.8rem', color: '#aaa' }}>Início</label>
+              <input type="date" name="constructionStartDate" value={formData.constructionStartDate} onChange={handleChange} style={{ ...inputStyle, width: '100%' }} />
             </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.8rem', color: '#aaa' }}>Entrega Prevista</label>
+              <input type="date" name="deliveryDate" value={formData.deliveryDate} onChange={handleChange} style={{ ...inputStyle, width: '100%' }} />
+            </div>
+          </div>
         </div>
 
         {/* --- 7. CARACTERÍSTICAS PRIVATIVAS (DO IMÓVEL) --- */}
         <div style={sectionStyle}>
-          <h3 style={{color: '#d4af37'}}>Características do Imóvel</h3>
+          <h3 style={{ color: '#d4af37' }}>Características do Imóvel</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
             {PROPERTY_OPTS.map(feat => (
               <label key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', color: '#ccc' }}>
-                <input 
-                  type="checkbox" 
-                  checked={formData.propertyFeatures.includes(feat)} 
+                <input
+                  type="checkbox"
+                  checked={formData.propertyFeatures.includes(feat)}
                   onChange={() => handleFeatureToggle('propertyFeatures', feat)}
-                  style={{width: 16, height: 16, accentColor: '#d4af37'}}
+                  style={{ width: 16, height: 16, accentColor: '#d4af37' }}
                 />
                 {feat}
               </label>
@@ -451,15 +461,15 @@ export function NewProperty() {
 
         {/* --- 8. CARACTERÍSTICAS COMUNS (DO EMPREENDIMENTO) --- */}
         <div style={sectionStyle}>
-          <h3 style={{color: '#28a745'}}>Infraestrutura do Empreendimento</h3>
+          <h3 style={{ color: '#28a745' }}>Infraestrutura do Empreendimento</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
             {DEVELOPMENT_OPTS.map(feat => (
               <label key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', color: '#ccc' }}>
-                <input 
-                  type="checkbox" 
-                  checked={formData.developmentFeatures.includes(feat)} 
+                <input
+                  type="checkbox"
+                  checked={formData.developmentFeatures.includes(feat)}
                   onChange={() => handleFeatureToggle('developmentFeatures', feat)}
-                  style={{width: 16, height: 16, accentColor: '#28a745'}}
+                  style={{ width: 16, height: 16, accentColor: '#28a745' }}
                 />
                 {feat}
               </label>
@@ -472,14 +482,14 @@ export function NewProperty() {
           <h3>Galeria de Fotos</h3>
           <div style={rowStyle}>
             <input name="tempImageUrl" placeholder="Cole o link da imagem aqui..." value={formData.tempImageUrl} onChange={handleChange} style={inputStyle} />
-            <button type="button" onClick={addImage} style={{padding: '0 20px', cursor: 'pointer', background: '#444', color: '#fff', border: 'none'}}>Adicionar</button>
+            <button type="button" onClick={addImage} style={{ padding: '0 20px', cursor: 'pointer', background: '#444', color: '#fff', border: 'none' }}>Adicionar</button>
           </div>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
             {formData.images.map((img, idx) => (
               <div key={idx} style={{ position: 'relative', width: '100px', height: '80px' }}>
                 <img src={img.url} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
                 <button type="button" onClick={() => removeImage(idx)} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer' }}>&times;</button>
-                {img.isCover && <span style={{position:'absolute', bottom: 0, left: 0, background: '#d4af37', fontSize: '10px', padding: '2px 4px', color: '#000'}}>Capa</span>}
+                {img.isCover && <span style={{ position: 'absolute', bottom: 0, left: 0, background: '#d4af37', fontSize: '10px', padding: '2px 4px', color: '#000' }}>Capa</span>}
               </div>
             ))}
           </div>
@@ -488,25 +498,25 @@ export function NewProperty() {
         {/* --- 10. DESCRIÇÃO E OBSERVAÇÕES --- */}
         <div style={sectionStyle}>
           <h3>Descrição Completa</h3>
-          <textarea name="description" rows={5} value={formData.description || ''} onChange={handleChange} style={{...inputStyle, resize: 'vertical'}} />
+          <textarea name="description" rows={5} value={formData.description || ''} onChange={handleChange} style={{ ...inputStyle, resize: 'vertical' }} />
         </div>
 
         <div style={sectionStyle}>
           <h3>Observações Internas (Corretor)</h3>
-          <textarea name="brokerNotes" rows={3} value={formData.brokerNotes || ''} onChange={handleChange} style={{...inputStyle, resize: 'vertical'}} />
+          <textarea name="brokerNotes" rows={3} value={formData.brokerNotes || ''} onChange={handleChange} style={{ ...inputStyle, resize: 'vertical' }} />
         </div>
 
         {/* BOTÃO FINAL */}
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={loading}
-          style={{ 
-            padding: '15px', 
-            background: isEditing ? '#28a745' : '#d4af37', 
-            color: isEditing ? '#fff' : '#000', 
-            border: 'none', 
-            fontWeight: 'bold', 
-            fontSize: '1.1rem', 
+          style={{
+            padding: '15px',
+            background: isEditing ? '#28a745' : '#d4af37',
+            color: isEditing ? '#fff' : '#000',
+            border: 'none',
+            fontWeight: 'bold',
+            fontSize: '1.1rem',
             cursor: loading ? 'not-allowed' : 'pointer',
             opacity: loading ? 0.7 : 1,
             marginTop: '20px'
