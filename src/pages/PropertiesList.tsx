@@ -63,7 +63,7 @@ export function PropertiesList() {
     try {
       const token = getFastToken();
       // 127.0.0.1 para evitar delay do IPv6
-      const response = await fetch('http://127.0.0.1:3000/properties', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/properties`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (response.ok) {
@@ -89,7 +89,7 @@ export function PropertiesList() {
     setImporting(true);
     try {
       const token = getFastToken();
-      const response = await fetch('http://127.0.0.1:3000/properties/import-dwv', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/properties`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

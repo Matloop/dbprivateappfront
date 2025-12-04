@@ -25,7 +25,7 @@ export const SalesPage = () => {
       });
 
       // Lembre-se: use 127.0.0.1 para evitar delay local
-      const res = await fetch(`http://127.0.0.1:3000/properties?${params.toString()}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/properties?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setProperties(data);

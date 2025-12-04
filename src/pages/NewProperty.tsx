@@ -172,7 +172,7 @@ export function NewProperty() {
       const sessionStr = storageKey ? localStorage.getItem(storageKey) : null;
       const token = sessionStr ? JSON.parse(sessionStr)?.access_token : null;
 
-      const response = await fetch(`http://127.0.0.1:3000/properties/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/properties/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -289,8 +289,8 @@ export function NewProperty() {
       };
 
       const url = isEditing 
-        ? `http://127.0.0.1:3000/properties/${id}` 
-        : 'http://127.0.0.1:3000/properties';
+        ? `${import.meta.env.VITE_API_URL}/properties/${id}` 
+        : `${import.meta.env.VITE_API_URL}/properties`;
       
       const method = isEditing ? 'PATCH' : 'POST';
 

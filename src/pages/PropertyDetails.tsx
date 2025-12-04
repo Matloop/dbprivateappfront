@@ -50,7 +50,7 @@ export function PropertyDetails() {
   const [formMessage, setFormMessage] = useState('');
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:3000/properties/${id}`)
+    fetch(`${import.meta.env.VITE_API_URL}/properties/${id}`)
       .then(res => res.json())
       .then(data => {
         setProperty(data);
