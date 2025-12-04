@@ -1,0 +1,211 @@
+/* Container Geral */
+.intranet-container {
+  background-color: #2b2b2b; /* Fundo cinza chumbo */
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.intranet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #d46f13; /* Laranja da plataforma antiga */
+  padding-bottom: 10px;
+}
+
+.intranet-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Layout de Colunas */
+.intranet-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px; /* Esquerda Flexível, Direita Fixa (Imagens/Privado) */
+  gap: 15px;
+}
+
+/* Painéis (Boxes) */
+.panel {
+  background-color: #222;
+  border: 1px solid #444;
+  margin-bottom: 15px;
+  border-radius: 3px;
+}
+
+.panel-header {
+  background-color: #d46f13; /* O Laranja/Marrom do print */
+  color: #fff;
+  padding: 5px 10px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-transform: lowercase;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.panel-body {
+  padding: 10px;
+}
+
+/* Inputs Compactos */
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.form-group {
+  flex: 1;
+}
+
+.label-small {
+  display: block;
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-bottom: 2px;
+  text-align: right;
+  padding-right: 5px;
+}
+
+/* Estilo label lateral (ex: "ref. antiga:") */
+.row-label {
+  width: 120px;
+  text-align: right;
+  font-size: 0.8rem;
+  color: #ccc;
+  margin-right: 10px;
+  font-weight: 600;
+}
+
+.input-dark, .select-dark, .textarea-dark {
+  background-color: #333;
+  border: 1px solid #555;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  width: 100%;
+  border-radius: 2px;
+}
+
+.input-dark:focus {
+  border-color: #d46f13;
+  outline: none;
+}
+
+/* Checkboxes estilizados */
+.check-group {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.check-label {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  color: #ccc;
+}
+
+.check-label input {
+  accent-color: #007bff; /* Azul do print */
+}
+
+/* Seção Dourada (Dados Privados) */
+.panel-private {
+  border: 1px solid #5c4018;
+}
+.panel-private .panel-header {
+  background-color: #5c4018; /* Marrom escuro */
+  color: #ffcc80;
+}
+.panel-private .panel-body {
+  background-color: #2b251e; /* Fundo amarelado bem escuro */
+}
+
+/* Botões de Ação Fixos no Rodapé */
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #111;
+  border-top: 1px solid #333;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.btn-save {
+  background: linear-gradient(to bottom, #4caf50, #2e7d32);
+  border: 1px solid #2e7d32;
+  color: #fff;
+  padding: 5px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-cancel {
+  background: linear-gradient(to bottom, #d32f2f, #b71c1c);
+  border: 1px solid #b71c1c;
+  color: #fff;
+  padding: 5px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+/* Galeria Compacta */
+.gallery-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  background: #222;
+  padding: 5px;
+  border: 1px dotted #555;
+  min-height: 100px;
+}
+
+.gallery-item-small {
+  position: relative;
+  aspect-ratio: 4/3;
+  border: 1px solid #444;
+}
+
+.gallery-item-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-del-img {
+  position: absolute;
+  top: 0; right: 0;
+  background: red; color: #fff;
+  width: 15px; height: 15px;
+  font-size: 10px; display: flex;
+  align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+/* Responsividade */
+@media (max-width: 1000px) {
+  .intranet-grid { grid-template-columns: 1fr; }
+  .row-label { width: auto; text-align: left; min-width: 100px; }
+  .form-row { flex-wrap: wrap; }
+}

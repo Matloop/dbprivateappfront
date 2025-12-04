@@ -1,32 +1,57 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate, useParams } from 'react-router-dom';
+import { 
+  FaFileAlt, FaDollarSign, FaHome, FaBuilding, FaTh, 
+  FaYoutube, FaCube, FaLock, FaKey, FaImages, FaSave, FaTimes 
+} from 'react-icons/fa';
 
-// --- CONSTANTES E OPÇÕES ---
+// --- CONSTANTES E LISTAS (Baseado nos seus Prints) ---
+
+const ROOM_OPTS = [
+  "Área de Serviço", "Banheiro de Serviço", "Banheiro Social", "Biblioteca",
+  "Closet", "Copa", "Copa/Cozinha", "Cozinha", "Cozinha Americana",
+  "Demi-Suíte", "Dependência de Empregada", "Entrada de Serviço",
+  "Espaço Gourmet", "Estar Íntimo", "Hidromassagem", "Home Office",
+  "Jardim", "Lavabo", "Living", "Piscina Privativa", "Sacada / Varanda",
+  "Sacada com Churrasqueira", "Sacada Integrada", "Sacada Técnica",
+  "Sala", "Sala de Estar", "Sala de Estar Íntimo", "Sala de Jantar",
+  "Sala de TV", "Sala para 2 Ambientes", "Sala para 3 Ambientes",
+  "Suíte Master", "Suíte Standard", "Terraço"
+];
 
 const PROPERTY_OPTS = [
-  "Mobiliado", "Semimobiliado", "Vazio", "Frente Mar", "Quadra Mar",
-  "Vista Panorâmica", "Churrasqueira a Carvão", "Sacada Aberta",
-  "Sacada Integrada", "Ar Condicionado", "Aquecimento a Gás",
-  "Piso Porcelanato", "Piso Vinílico", "Automação Predial",
-  "Acabamento em Gesso", "Hidromassagem"
+  "Acabamento em Gesso", "Aceita Pet", "Andar Alto", "Aquecimento de Água",
+  "Ar Condicionado", "Calefação", "Carpete", "Churrasqueira", "Decorado",
+  "Despensa", "Fechadura Eletrônica", "Infra para Ar Split", "Internet / WiFi",
+  "Lareira", "Mezanino", "Móveis Planejados", "Piso Aquecido nos Banheiros",
+  "Piso Cerâmico", "Piso de Madeira", "Piso Laminado", "Piso Porcelanato",
+  "Piso Vinílico", "Sistema de Alarme", "TV a Cabo", "Ventilador de Teto",
+  "Vista Livre", "Vista Mar", "Vista Panorâmica"
 ];
 
 const DEVELOPMENT_OPTS = [
-  "Academia", "Piscina Adulto", "Piscina Infantil", "Piscina Térmica",
-  "Salão de Festas", "Espaço Gourmet", "Sala de Jogos", "Playground",
-  "Brinquedoteca", "Cinema", "Sauna", "Spa", "Elevador",
-  "Portaria 24h", "Bicicletário", "Entrada para Banhistas",
-  "Box de Praia", "Heliponto", "Gerador de Energia"
+  "Acessibilidade para PNE", "Automação Predial", "Bar", "Bicicletário",
+  "Boliche", "Box de Praia", "Brinquedoteca", "Câmeras de Segurança",
+  "Captação de Água", "Cinema", "Coworking", "Deck Molhado", "Depósito",
+  "Elevador", "Entrada para Banhistas", "Espaço Fitness", "Espaço Gourmet",
+  "Espaço Zen", "Estar Social", "Gás Central", "Gerador", 
+  "Hall Decorado e Mobiliado", "Heliponto", "Hidromassagem", "Horta",
+  "Infra para Veículos Elétricos", "Lavanderia Coletiva", "Lounge",
+  "Medidores Individuais", "Mini Mercado", "Painéis de Energia Solar",
+  "Pet Care", "Pet Place", "Piscina", "Piscina Infantil", "Piscina Térmica",
+  "Playground", "Pomar", "Portão Eletrônico", "Portaria 24h",
+  "Quadra de Padel", "Quadra de Tênis", "Quadra Esportiva", 
+  "Quiosque Externo", "RoofTop", "Sala de Jogos", "Sala de Reunião",
+  "Salão de Festas", "Sauna", "Solarium", "Spa"
 ];
 
 const BADGE_COLORS = [
   { label: 'Azul (Padrão)', value: '#0d6efd' },
   { label: 'Verde (Sucesso)', value: '#198754' },
   { label: 'Vermelho (Destaque)', value: '#dc3545' },
-  { label: 'Laranja (Alerta)', value: '#fd7e14' },
-  { label: 'Preto/Cinza', value: '#343a40' },
   { label: 'Dourado (Premium)', value: '#d4af37' },
+  { label: 'Preto', value: '#000000' },
 ];
 
 export function NewProperty() {
@@ -37,66 +62,107 @@ export function NewProperty() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditing);
 
+  // ESTADO GIGANTE COM TODOS OS CAMPOS
   const [formData, setFormData] = useState({
+    // --- Identificação ---
     title: '',
-    buildingName: '',
     subtitle: '',
+    oldRef: '',
     category: 'APARTAMENTO',
-    transactionType: 'VENDA',
-    status: 'DISPONIVEL',
+    
+    // Finalidade (Checkboxes)
+    isSale: true,
+    isRentAnnual: false,
+    isRentSeason: false,
+    isRentStudent: false,
+
+    status: 'DISPONIVEL', // Situação
+    constructionStage: 'PRONTO', // Estágio
+    
+    // --- Configuração ---
     isExclusive: false,
     showOnSite: true,
-    exclusivityDocUrl: '',
-    registrationNumber: '',
-    brokerNotes: '',
-    description: '',
+    hasSign: false, // Placa
+    
+    // --- Características Importantes (Checkbox) ---
+    isSeaFront: false,     // Frente Mar
+    isSeaQuadra: false,    // Quadra Mar
+    isDifferentiated: false, // Diferenciado
+    isHighStandard: false, // Alto Padrão
+    isFurnished: false,    // Mobiliado
+    isSemiFurnished: false, // Semimobiliado
+    isUnfurnished: false,  // Sem Mobília
 
-    // Tarja
+    // --- Tarja ---
     badgeText: '',
     badgeColor: '',
-
-    // Valores
+    
+    // --- Valores ---
     price: '',
+    promotionalPrice: '', 
+    hasDiscount: false,
     condoFee: '',
     iptuPrice: '',
+    
+    // --- Negociação ---
+    acceptsFinancing: false,
+    acceptsConstructionFinancing: false,
+    acceptsTrade: false,
+    acceptsVehicle: false,
+    isMcmv: false,
 
-    // Números e Áreas
+    // --- Detalhes Técnicos ---
     bedrooms: '',
     suites: '',
     bathrooms: '',
     garageSpots: '',
+    garageType: 'Privativa',
     privateArea: '',
     totalArea: '',
     garageArea: '',
-
-    // Datas
-    constructionStartDate: '',
-    deliveryDate: '',
-
-    // Endereço
-    address: {
-      zipCode: '',
-      state: 'SC',
-      city: 'Balneário Camboriú',
-      neighborhood: '',
-      street: '',
-      number: '',
-      complement: ''
+    solarPosition: '',
+    relativePosition: 'Frente',
+    
+    // --- Localização ---
+    address: { 
+      zipCode: '', state: 'SC', city: 'Balneário Camboriú', 
+      neighborhood: '', street: '', number: '', complement: '' 
     },
+    buildingName: '',
+    displayAddress: true,
 
-    // Arrays separados
-    propertyFeatures: [] as string[],
-    developmentFeatures: [] as string[],
+    // --- Mídia ---
+    videoUrl: '',
+    tourUrl: '',
+    tempImageUrl: '', 
+    images: [] as { url: string, isCover: boolean }[],
 
-    // Imagens
-    tempImageUrl: '',
-    images: [] as { url: string, isCover: boolean }[]
+    // --- Dados Privados (Interno) ---
+    ownerName: '',
+    ownerPhone: '',
+    ownerEmail: '',
+    keysLocation: '',
+    condoManager: '',
+    buildingAdministrator: '',
+    constructionCompany: '',
+    exclusivitySigned: false,
+    brokerNotes: '',
+    
+    // --- Texto ---
+    description: '',
+    
+    // --- Arrays de Checkboxes ---
+    roomFeatures: [] as string[],      // Ambientes
+    propertyFeatures: [] as string[],  // Características Imóvel
+    developmentFeatures: [] as string[] // Empreendimento
   });
 
-  // --- 1. CARREGAR DADOS (MÓDULO DE EDIÇÃO) ---
+  // --- CARREGAR DADOS ---
   useEffect(() => {
     if (isEditing) {
       fetchPropertyData();
+    } else {
+        setInitialLoading(false);
     }
   }, [id]);
 
@@ -112,55 +178,49 @@ export function NewProperty() {
 
       if (response.ok) {
         const data = await response.json();
-
+        
+        // Mapeamento seguro (evita null em inputs controlados)
         setFormData({
           ...data,
-          // Converte Nulls/Numbers para string vazia nos inputs
           price: data.price || '',
+          promotionalPrice: data.promotionalPrice || '',
           condoFee: data.condoFee || '',
           iptuPrice: data.iptuPrice || '',
+          
           bedrooms: data.bedrooms || '',
           suites: data.suites || '',
           bathrooms: data.bathrooms || '',
           garageSpots: data.garageSpots || '',
-          buildingName: data.buildingName || '',
           privateArea: data.privateArea || '',
           totalArea: data.totalArea || '',
           garageArea: data.garageArea || '',
+          
+          // Booleanos novos (default false)
+          isSale: data.isSale ?? true,
+          isSeaQuadra: data.isSeaQuadra ?? false,
+          
+          // Arrays (Se vier do back como objeto [{name: 'X'}], converte para ['X'])
+          // Se o back já mandar array de strings, remove o .map
+          roomFeatures: data.roomFeatures ? (typeof data.roomFeatures[0] === 'object' ? data.roomFeatures.map((f:any) => f.name) : data.roomFeatures) : [],
+          propertyFeatures: data.propertyFeatures ? (typeof data.propertyFeatures[0] === 'object' ? data.propertyFeatures.map((f:any) => f.name) : data.propertyFeatures) : [],
+          developmentFeatures: data.developmentFeatures ? (typeof data.developmentFeatures[0] === 'object' ? data.developmentFeatures.map((f:any) => f.name) : data.developmentFeatures) : [],
 
-          badgeText: data.badgeText || '',
-          badgeColor: data.badgeColor || '',
-
-          // Tratamento de Datas (YYYY-MM-DD)
-          constructionStartDate: data.constructionStartDate ? String(data.constructionStartDate).split('T')[0] : '',
-          deliveryDate: data.deliveryDate ? String(data.deliveryDate).split('T')[0] : '',
-
-          // Mapeando Features: Backend (Objeto) -> Frontend (Array de Strings)
-          propertyFeatures: data.propertyFeatures
-            ? data.propertyFeatures.map((f: any) => f.name)
-            : [],
-
-          developmentFeatures: data.developmentFeatures
-            ? data.developmentFeatures.map((f: any) => f.name)
-            : [],
-
-          address: data.address || { city: '', state: '', street: '', neighborhood: '', zipCode: '', number: '' },
+          address: data.address || { city: '', state: 'SC', street: '', neighborhood: '', zipCode: '', number: '' },
           images: data.images || [],
           tempImageUrl: ''
         });
       } else {
-        alert("Erro ao carregar imóvel. Talvez ele tenha sido excluído.");
+        alert("Imóvel não encontrado.");
         navigate('/intranet');
       }
     } catch (error) {
       console.error(error);
-      alert("Erro de conexão ao buscar dados.");
     } finally {
       setInitialLoading(false);
     }
   };
 
-  // --- HANDLERS (EVENTOS DE INPUT) ---
+  // --- HANDLERS ---
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -177,19 +237,14 @@ export function NewProperty() {
     }));
   };
 
-  // Lógica para marcar/desmarcar checkboxes nas listas
-  const handleFeatureToggle = (listName: 'propertyFeatures' | 'developmentFeatures', feature: string) => {
-    setFormData((prev) => {
-      const list = prev[listName];
-      if (list.includes(feature)) {
-        return { ...prev, [listName]: list.filter(f => f !== feature) }; // Remove
-      } else {
-        return { ...prev, [listName]: [...list, feature] }; // Adiciona
-      }
+  const handleListToggle = (listName: 'roomFeatures' | 'propertyFeatures' | 'developmentFeatures', item: string) => {
+    setFormData(prev => {
+        const list = prev[listName] || [];
+        if (list.includes(item)) return { ...prev, [listName]: list.filter(i => i !== item) };
+        return { ...prev, [listName]: [...list, item] };
     });
   };
 
-  // --- IMAGENS ---
   const addImage = () => {
     if (!formData.tempImageUrl) return;
     setFormData(prev => ({
@@ -206,324 +261,474 @@ export function NewProperty() {
     }));
   };
 
-  // --- SALVAR (SUBMIT) ---
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
-
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      // Monta o payload, convertendo strings para números e limpando dados
+      // Conversões Numéricas
       const payload = {
         ...formData,
         price: Number(formData.price),
+        promotionalPrice: formData.promotionalPrice ? Number(formData.promotionalPrice) : undefined,
         condoFee: formData.condoFee ? Number(formData.condoFee) : undefined,
         iptuPrice: formData.iptuPrice ? Number(formData.iptuPrice) : undefined,
-
+        
         bedrooms: Number(formData.bedrooms),
         suites: Number(formData.suites),
         bathrooms: Number(formData.bathrooms),
         garageSpots: Number(formData.garageSpots),
-
         privateArea: Number(formData.privateArea),
         totalArea: formData.totalArea ? Number(formData.totalArea) : undefined,
         garageArea: formData.garageArea ? Number(formData.garageArea) : undefined,
-
-        // Se a data vier vazia, manda undefined
-        constructionStartDate: formData.constructionStartDate || undefined,
-        deliveryDate: formData.deliveryDate || undefined,
-
-        // Remove campo temporário
-        tempImageUrl: undefined,
-
-        // Backend novo espera esses arrays
-        propertyFeatures: formData.propertyFeatures,
-        developmentFeatures: formData.developmentFeatures
+        
+        tempImageUrl: undefined
       };
 
-      const url = isEditing
-        ? `http://127.0.0.1:3000/properties/${id}`
+      const url = isEditing 
+        ? `http://127.0.0.1:3000/properties/${id}` 
         : 'http://127.0.0.1:3000/properties';
-
+      
       const method = isEditing ? 'PATCH' : 'POST';
 
       const response = await fetch(url, {
         method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
 
       if (response.ok) {
-        alert(isEditing ? 'Imóvel atualizado com sucesso!' : 'Imóvel cadastrado com sucesso!');
+        alert("Salvo com sucesso!");
         navigate('/intranet');
       } else {
-        const errorData = await response.json();
-        alert(`Erro: ${errorData.message || 'Falha ao salvar'}`);
+        const err = await response.json();
+        alert("Erro: " + (err.message || 'Falha ao salvar'));
       }
     } catch (error) {
       console.error(error);
-      alert('Erro de conexão com o servidor.');
+      alert('Erro de conexão.');
     } finally {
       setLoading(false);
     }
   };
 
-  // --- ESTILOS INLINE (Simples) ---
-  const sectionStyle = {
-    border: '1px solid #444',
-    padding: '15px',
-    borderRadius: '8px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '10px'
+  // --- ESTILOS INLINE (Design Dark Original) ---
+  const styles = {
+    container: { padding: '20px', maxWidth: '1200px', margin: 'auto', background: '#1a1a1a', color: '#fff', fontFamily: 'sans-serif' },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottom: '2px solid #d4af37', paddingBottom: 10 },
+    section: { border: '1px solid #444', padding: '15px', borderRadius: '4px', marginBottom: 20, background: '#222' },
+    sectionTitle: { fontSize: '1rem', color: '#d4af37', borderBottom: '1px solid #444', paddingBottom: 5, marginBottom: 15, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase' as const, fontWeight: 'bold' },
+    row: { display: 'flex', gap: '15px', flexWrap: 'wrap' as const, marginBottom: 10 },
+    col: { flex: 1, minWidth: '150px' },
+    label: { display: 'block', marginBottom: 5, fontSize: '0.85rem', color: '#ccc' },
+    input: { width: '100%', padding: '10px', background: '#333', border: '1px solid #555', color: '#fff', borderRadius: '4px', fontSize: '0.9rem' },
+    checkGroup: { display: 'flex', gap: 15, flexWrap: 'wrap' as const },
+    checkLabel: { display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', color: '#bbb' },
+    btnSave: { padding: '12px 30px', background: isEditing ? '#28a745' : '#d4af37', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 5 },
+    btnCancel: { padding: '12px 30px', background: '#dc3545', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 5 }
   };
-  const rowStyle = { display: 'flex', gap: '10px', flexWrap: 'wrap' as const };
-  const inputStyle = { padding: '10px', flex: 1, minWidth: '150px' };
 
-  if (initialLoading) {
-    return <div style={{ padding: 50, color: '#fff', textAlign: 'center' }}>Carregando dados do imóvel...</div>;
-  }
+  if (initialLoading) return <div style={{padding:50, color:'#fff', textAlign:'center'}}>Carregando dados...</div>;
 
   return (
-    <div style={{ padding: '20px', maxWidth: '900px', margin: 'auto', background: '#1a1a1a', color: '#fff', fontFamily: 'sans-serif' }}>
-      <h1 style={{ color: '#d4af37', marginBottom: '20px' }}>
-        {isEditing ? `Editar Imóvel #${id}` : 'Novo Imóvel'}
-      </h1>
+    <div style={styles.container}>
+      
+      {/* HEADER */}
+      <div style={styles.header}>
+        <h2 style={{margin:0}}>{isEditing ? `Editar Imóvel #${id}` : 'Novo Imóvel'}</h2>
+        <div style={{display:'flex', gap: 10}}>
+            <button type="button" style={styles.btnCancel} onClick={() => navigate('/intranet')}><FaTimes /> CANCELAR</button>
+            <button type="button" style={styles.btnSave} onClick={handleSubmit} disabled={loading}><FaSave /> {loading ? 'SALVANDO...' : 'SALVAR'}</button>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-        {/* --- 1. BLOCO DA TARJA --- */}
-        <div style={sectionStyle}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#d4af37' }}>
-            💳 Tarja de Destaque <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: '#aaa' }}>(Opcional)</span>
-          </h3>
-          <p style={{ fontSize: '0.85rem', color: '#888', margin: 0 }}>Texto curto para destacar o imóvel na lista (Ex: MOBILIADO)</p>
-
-          <div style={rowStyle}>
-            <div style={{ flex: 2 }}>
-              <input
-                name="badgeText"
-                placeholder="Texto da Tarja"
-                value={formData.badgeText}
-                onChange={handleChange}
-                style={inputStyle}
-              />
+      <form onSubmit={handleSubmit}>
+        
+        {/* 1. DADOS PRINCIPAIS */}
+        <div style={styles.section}>
+            <div style={styles.sectionTitle}><FaFileAlt /> Dados Principais</div>
+            
+            <div style={styles.row}>
+                <div style={{width: 100}}>
+                    <label style={styles.label}>Referência</label>
+                    <input disabled value={id || 'AUTO'} style={{...styles.input, opacity: 0.5, textAlign: 'center'}} />
+                </div>
+                <div style={{width: 150}}>
+                    <label style={styles.label}>Ref. Antiga</label>
+                    <input name="oldRef" value={formData.oldRef} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={styles.col}>
+                    <label style={styles.label}>Título do Anúncio *</label>
+                    <input name="title" value={formData.title} onChange={handleChange} required style={styles.input} />
+                </div>
             </div>
 
-            <div style={{ flex: 1 }}>
-              <select name="badgeColor" value={formData.badgeColor} onChange={handleChange} style={inputStyle}>
-                <option value="">Selecione a Cor</option>
-                {BADGE_COLORS.map(c => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+            {/* Checkboxes Superiores */}
+            <div style={{...styles.row, background: '#2a2a2a', padding: 10, borderRadius: 4}}>
+                <label style={styles.checkLabel}><input type="checkbox" name="showOnSite" checked={formData.showOnSite} onChange={handleChange} /> Exibir este imóvel no site</label>
+                <label style={styles.checkLabel}><input type="checkbox" name="isExclusive" checked={formData.isExclusive} onChange={handleChange} /> Imóvel Exclusivo</label>
+                <label style={styles.checkLabel}><input type="checkbox" name="hasSign" checked={formData.hasSign} onChange={handleChange} /> Placa em frente ao imóvel</label>
+            </div>
+
+            {/* Finalidade */}
+            <div style={{...styles.row, marginTop: 15}}>
+                <label style={{...styles.label, width: 100, paddingTop: 3}}>Finalidade:</label>
+                <div style={styles.checkGroup}>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isSale" checked={formData.isSale} onChange={handleChange} /> Venda</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isRentAnnual" checked={formData.isRentAnnual} onChange={handleChange} /> Aluguel Anual</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isRentSeason" checked={formData.isRentSeason} onChange={handleChange} /> Aluguel Temporada</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isRentStudent" checked={formData.isRentStudent} onChange={handleChange} /> Aluguel Estudante</label>
+                </div>
+            </div>
+
+            <div style={styles.row}>
+                <div style={styles.col}>
+                    <label style={styles.label}>Tipo de Imóvel *</label>
+                    <select name="category" value={formData.category} onChange={handleChange} style={styles.input}>
+                        <option value="APARTAMENTO">Apartamento</option>
+                        <option value="CASA">Casa</option>
+                        <option value="COBERTURA">Cobertura</option>
+                        <option value="TERRENO">Terreno</option>
+                        <option value="SALA_COMERCIAL">Sala Comercial</option>
+                    </select>
+                </div>
+                <div style={styles.col}>
+                    <label style={styles.label}>Situação *</label>
+                    <div style={{...styles.checkGroup, marginTop: 10}}>
+                        <label style={styles.checkLabel}><input type="radio" name="status" value="DISPONIVEL" checked={formData.status === 'DISPONIVEL'} onChange={handleChange} /> Disponível</label>
+                        <label style={styles.checkLabel}><input type="radio" name="status" value="VENDIDO" checked={formData.status === 'VENDIDO'} onChange={handleChange} /> Vendido</label>
+                        <label style={styles.checkLabel}><input type="radio" name="status" value="RESERVADO" checked={formData.status === 'RESERVADO'} onChange={handleChange} /> Reservado</label>
+                        <label style={styles.checkLabel}><input type="radio" name="status" value="NAO_DISPONIVEL" checked={formData.status === 'NAO_DISPONIVEL'} onChange={handleChange} /> Não Disp.</label>
+                        <label style={styles.checkLabel}><input type="radio" name="status" value="ALUGADO" checked={formData.status === 'ALUGADO'} onChange={handleChange} /> Alugado</label>
+                    </div>
+                </div>
+            </div>
+
+            <div style={styles.row}>
+                <div style={styles.col}>
+                    <label style={styles.label}>Estágio da Obra *</label>
+                    <div style={{...styles.checkGroup, marginTop: 10}}>
+                        <label style={styles.checkLabel}><input type="radio" name="constructionStage" value="LANCAMENTO" checked={formData.constructionStage === 'LANCAMENTO'} onChange={handleChange} /> Lançamento</label>
+                        <label style={styles.checkLabel}><input type="radio" name="constructionStage" value="EM_OBRA" checked={formData.constructionStage === 'EM_OBRA'} onChange={handleChange} /> Em Construção</label>
+                        <label style={styles.checkLabel}><input type="radio" name="constructionStage" value="PRONTO" checked={formData.constructionStage === 'PRONTO'} onChange={handleChange} /> Pronto para morar</label>
+                    </div>
+                </div>
+            </div>
+
+            {/* Características Importantes */}
+            <div style={{...styles.row, marginTop: 15, borderTop: '1px dashed #444', paddingTop: 15}}>
+                <label style={{...styles.label, width: 100}}>Destaques:</label>
+                <div style={styles.checkGroup}>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isSeaFront" checked={formData.isSeaFront} onChange={handleChange} /> Frente Mar</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isSeaQuadra" checked={formData.isSeaQuadra} onChange={handleChange} /> Quadra Mar</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isFurnished" checked={formData.isFurnished} onChange={handleChange} /> Mobiliado</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isHighStandard" checked={formData.isHighStandard} onChange={handleChange} /> Alto Padrão</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isDifferentiated" checked={formData.isDifferentiated} onChange={handleChange} /> Diferenciado</label>
+                </div>
+            </div>
+
+            {/* Tarja */}
+            <div style={{...styles.row, marginTop: 15, alignItems: 'center'}}>
+                <label style={{...styles.label, marginBottom: 0, marginRight: 10}}>💳 Tarja:</label>
+                <input name="badgeText" value={formData.badgeText} onChange={handleChange} style={{...styles.input, width: 300}} placeholder="Ex: DECORADO" />
+                <select name="badgeColor" value={formData.badgeColor} onChange={handleChange} style={{...styles.input, width: 150}}>
+                    <option value="">Selecione Cor</option>
+                    {BADGE_COLORS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+            </div>
+        </div>
+
+        {/* 2. VALORES */}
+        <div style={styles.section}>
+            <div style={styles.sectionTitle}><FaDollarSign /> Valores e Negociação</div>
+            
+            <div style={styles.row}>
+                <div style={styles.col}>
+                    <label style={styles.label}>Valor de Venda (R$)</label>
+                    <input type="number" name="price" value={formData.price} onChange={handleChange} style={{...styles.input, fontSize: '1.2rem', fontWeight:'bold'}} />
+                    <label style={{...styles.checkLabel, marginTop: 5}}>
+                        <input type="checkbox" name="hasDiscount" checked={formData.hasDiscount} onChange={handleChange} /> valor com desconto
+                    </label>
+                </div>
+                {formData.hasDiscount && (
+                    <div style={styles.col}>
+                        <label style={styles.label}>Valor Promocional</label>
+                        <input type="number" name="promotionalPrice" value={formData.promotionalPrice} onChange={handleChange} style={{...styles.input, borderColor: '#28a745'}} />
+                    </div>
+                )}
+            </div>
+
+            <div style={{...styles.row, background: '#2a2a2a', padding: 10, borderRadius: 4}}>
+                <div style={styles.checkGroup}>
+                    <label style={styles.checkLabel}><input type="checkbox" name="acceptsFinancing" checked={formData.acceptsFinancing} onChange={handleChange} /> Aceita financiamento</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="acceptsConstructionFinancing" checked={formData.acceptsConstructionFinancing} onChange={handleChange} /> Financiamento Construtora</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="acceptsTrade" checked={formData.acceptsTrade} onChange={handleChange} /> Aceita permuta</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="acceptsVehicle" checked={formData.acceptsVehicle} onChange={handleChange} /> Aceita veículo</label>
+                    <label style={styles.checkLabel}><input type="checkbox" name="isMcmv" checked={formData.isMcmv} onChange={handleChange} /> Minha Casa Minha Vida</label>
+                </div>
+            </div>
+
+            <div style={styles.row}>
+                <div style={styles.col}>
+                    <label style={styles.label}>IPTU Anual</label>
+                    <input type="number" name="iptuPrice" value={formData.iptuPrice} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={styles.col}>
+                    <label style={styles.label}>Condomínio Mensal</label>
+                    <input type="number" name="condoFee" value={formData.condoFee} onChange={handleChange} style={styles.input} />
+                </div>
+            </div>
+        </div>
+
+        {/* 3. DETALHAMENTO */}
+        <div style={styles.section}>
+            <div style={styles.sectionTitle}><FaTh /> Detalhamento</div>
+            <div style={styles.row}>
+                <div style={styles.col}>
+                    <label style={styles.label}>Área Privativa (m²)</label>
+                    <input type="number" name="privateArea" value={formData.privateArea} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={styles.col}>
+                    <label style={styles.label}>Área Total (m²)</label>
+                    <input type="number" name="totalArea" value={formData.totalArea} onChange={handleChange} style={styles.input} />
+                </div>
+            </div>
+            <div style={styles.row}>
+                <div style={{...styles.col, maxWidth: 100}}>
+                    <label style={styles.label}>Dormitórios</label>
+                    <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{...styles.col, maxWidth: 100}}>
+                    <label style={styles.label}>Suítes</label>
+                    <input type="number" name="suites" value={formData.suites} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{...styles.col, maxWidth: 100}}>
+                    <label style={styles.label}>Banheiros</label>
+                    <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} style={styles.input} />
+                </div>
+            </div>
+            <div style={styles.row}>
+                <div style={{flex:1}}>
+                    <label style={styles.label}>Vagas Garagem</label>
+                    <div style={{display:'flex', gap: 5}}>
+                        <input type="number" name="garageSpots" value={formData.garageSpots} onChange={handleChange} style={{...styles.input, width: 80}} />
+                        <select name="garageType" value={formData.garageType} onChange={handleChange} style={styles.input}>
+                            <option value="Privativa">Privativa</option>
+                            <option value="Rotativa">Rotativa</option>
+                            <option value="Numerada">Numerada</option>
+                        </select>
+                    </div>
+                </div>
+                <div style={{flex:1}}>
+                    <label style={styles.label}>Posição Solar</label>
+                    <select name="solarPosition" value={formData.solarPosition} onChange={handleChange} style={styles.input}>
+                        <option value="">Selecione...</option>
+                        <option value="Norte">Norte</option>
+                        <option value="Sul">Sul</option>
+                        <option value="Leste">Leste</option>
+                        <option value="Oeste">Oeste</option>
+                        <option value="Sol da Manhã">Sol da Manhã</option>
+                        <option value="Sol da Tarde">Sol da Tarde</option>
+                    </select>
+                </div>
+                <div style={{flex:1}}>
+                    <label style={styles.label}>Posição Relativa</label>
+                    <select name="relativePosition" value={formData.relativePosition} onChange={handleChange} style={styles.input}>
+                        <option value="Frente">Frente</option>
+                        <option value="Fundos">Fundos</option>
+                        <option value="Lateral">Lateral</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {/* 4. AS 3 LISTAS DE CARACTERÍSTICAS */}
+        <div style={styles.section}>
+            <div style={styles.sectionTitle}>Características e Infraestrutura</div>
+            <div style={{display:'flex', gap: 30, flexWrap:'wrap'}}>
+                
+                {/* Ambientes */}
+                <div style={{flex: 1, minWidth: 280}}>
+                    <h4 style={{color:'#ccc', borderBottom:'1px solid #444', paddingBottom:5, marginTop:0}}>Ambientes do Imóvel</h4>
+                    <div style={{display:'flex', flexDirection:'column', gap: 5, maxHeight: 300, overflowY:'auto', paddingRight:5}}>
+                        {ROOM_OPTS.map(item => (
+                            <label key={item} style={styles.checkLabel}>
+                                <input type="checkbox" checked={formData.roomFeatures.includes(item)} onChange={() => handleListToggle('roomFeatures', item)} />
+                                {item}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Características Imóvel */}
+                <div style={{flex: 1, minWidth: 280}}>
+                    <h4 style={{color:'#ccc', borderBottom:'1px solid #444', paddingBottom:5, marginTop:0}}>Características Imóvel</h4>
+                    <div style={{display:'flex', flexDirection:'column', gap: 5, maxHeight: 300, overflowY:'auto', paddingRight:5}}>
+                        {PROPERTY_OPTS.map(item => (
+                            <label key={item} style={styles.checkLabel}>
+                                <input type="checkbox" checked={formData.propertyFeatures.includes(item)} onChange={() => handleListToggle('propertyFeatures', item)} />
+                                {item}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Empreendimento */}
+                <div style={{flex: 1, minWidth: 280}}>
+                    <h4 style={{color:'#ccc', borderBottom:'1px solid #444', paddingBottom:5, marginTop:0}}>Empreendimento</h4>
+                    <div style={{display:'flex', flexDirection:'column', gap: 5, maxHeight: 300, overflowY:'auto', paddingRight:5}}>
+                        {DEVELOPMENT_OPTS.map(item => (
+                            <label key={item} style={styles.checkLabel}>
+                                <input type="checkbox" checked={formData.developmentFeatures.includes(item)} onChange={() => handleListToggle('developmentFeatures', item)} />
+                                {item}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {/* 5. LOCALIZAÇÃO */}
+        <div style={styles.section}>
+            <div style={styles.sectionTitle}><FaHome /> Localização</div>
+            <div style={styles.row}>
+                <div style={{width: 120}}>
+                    <label style={styles.label}>CEP</label>
+                    <input name="zipCode" value={formData.address.zipCode} onChange={handleAddressChange} style={styles.input} />
+                </div>
+                <div style={{flex: 1}}>
+                    <label style={styles.label}>Cidade</label>
+                    <input name="city" value={formData.address.city} onChange={handleAddressChange} style={styles.input} />
+                </div>
+                <div style={{width: 60}}>
+                    <label style={styles.label}>UF</label>
+                    <input name="state" value={formData.address.state} onChange={handleAddressChange} style={styles.input} />
+                </div>
+            </div>
+            <div style={styles.row}>
+                <div style={{flex: 1}}>
+                    <label style={styles.label}>Bairro</label>
+                    <input name="neighborhood" value={formData.address.neighborhood} onChange={handleAddressChange} style={styles.input} />
+                </div>
+                <div style={{flex: 2}}>
+                    <label style={styles.label}>Logradouro</label>
+                    <input name="street" value={formData.address.street} onChange={handleAddressChange} style={styles.input} />
+                </div>
+                <div style={{width: 100}}>
+                    <label style={styles.label}>Número</label>
+                    <input name="number" value={formData.address.number} onChange={handleAddressChange} style={styles.input} />
+                </div>
+                <div style={{width: 120}}>
+                    <label style={styles.label}>Compl.</label>
+                    <input name="complement" value={formData.address.complement} onChange={handleAddressChange} style={styles.input} />
+                </div>
+            </div>
+            <div style={styles.row}>
+                <div style={{flex: 1}}>
+                    <label style={styles.label}>Nome do Edifício</label>
+                    <input name="buildingName" value={formData.buildingName} onChange={handleChange} style={styles.input} placeholder="Ex: Edifício Aurora" />
+                </div>
+                <div style={{display:'flex', alignItems:'center', marginTop: 20}}>
+                    <label style={styles.checkLabel}><input type="checkbox" name="displayAddress" checked={formData.displayAddress} onChange={handleChange} /> Exibir endereço no site</label>
+                </div>
+            </div>
+        </div>
+
+        {/* 6. MÍDIA E FOTOS */}
+        <div style={styles.section}>
+            <div style={styles.sectionTitle}><FaImages /> Multimídia</div>
+            <div style={styles.row}>
+                <div style={{flex: 1}}>
+                    <label style={styles.label}><FaYoutube color="red"/> Vídeo YouTube</label>
+                    <input name="videoUrl" value={formData.videoUrl} onChange={handleChange} style={styles.input} placeholder="https://youtube.com/..." />
+                </div>
+                <div style={{flex: 1}}>
+                    <label style={styles.label}><FaCube color="#d4af37"/> Tour Virtual (Matterport)</label>
+                    <input name="tourUrl" value={formData.tourUrl} onChange={handleChange} style={styles.input} placeholder="URL do tour..." />
+                </div>
+            </div>
+            
+            <label style={{...styles.label, marginTop: 10}}>Galeria de Fotos</label>
+            <div style={styles.row}>
+                <input name="tempImageUrl" placeholder="Cole o link da imagem..." value={formData.tempImageUrl} onChange={handleChange} style={styles.input} />
+                <button type="button" onClick={addImage} style={{padding: '0 20px', background: '#444', color: '#fff', border:'none', cursor:'pointer'}}>Adicionar</button>
+            </div>
+            <div style={{display:'flex', gap: 10, flexWrap:'wrap', marginTop: 10}}>
+                {formData.images.map((img, idx) => (
+                    <div key={idx} style={{position:'relative', width: 100, height: 80}}>
+                        <img src={img.url} alt="" style={{width:'100%', height:'100%', objectFit:'cover', borderRadius: 4, border: '1px solid #555'}} />
+                        <button type="button" onClick={() => removeImage(idx)} style={{position:'absolute', top:-5, right:-5, background:'red', color:'#fff', border:'none', width: 20, height: 20, borderRadius:'50%', cursor:'pointer'}}>&times;</button>
+                        {img.isCover && <span style={{position:'absolute', bottom:0, right:0, background:'#d4af37', color:'#000', fontSize:9, padding:'1px 3px'}}>CAPA</span>}
+                    </div>
                 ))}
-              </select>
             </div>
-          </div>
-          {/* Preview */}
-          {formData.badgeText && (
-            <div style={{ marginTop: 5 }}>
-              <span style={{ fontSize: '0.8rem', color: '#aaa' }}>Prévia: </span>
-              <span style={{
-                background: formData.badgeColor || '#555',
-                color: '#fff', padding: '2px 8px', borderRadius: 4,
-                fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase'
-              }}>
-                {formData.badgeText}
-              </span>
+        </div>
+
+        {/* 7. DADOS PRIVADOS */}
+        <div style={{...styles.section, border: '1px solid #5c4018', background: '#2b251e'}}>
+            <div style={{...styles.sectionTitle, color: '#d4af37', borderBottomColor: '#5c4018'}}><FaLock /> Dados Privados (Uso Interno)</div>
+            
+            <div style={styles.row}>
+                <div style={{flex:1}}>
+                    <label style={styles.label}>Proprietário</label>
+                    <input name="ownerName" value={formData.ownerName} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{flex:1}}>
+                    <label style={styles.label}>Telefone</label>
+                    <input name="ownerPhone" value={formData.ownerPhone} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{flex:1}}>
+                    <label style={styles.label}>Email</label>
+                    <input name="ownerEmail" value={formData.ownerEmail} onChange={handleChange} style={styles.input} />
+                </div>
             </div>
-          )}
-        </div>
 
-        {/* --- 2. DADOS BÁSICOS --- */}
-        <div style={sectionStyle}>
-          <h3>Informações Básicas</h3>
-          <div style={rowStyle}>
-            <select name="category" value={formData.category} onChange={handleChange} style={inputStyle}>
-              <option value="APARTAMENTO">Apartamento</option>
-              <option value="CASA">Casa</option>
-              <option value="COBERTURA">Cobertura</option>
-              <option value="TERRENO">Terreno</option>
-              <option value="SALA_COMERCIAL">Sala Comercial</option>
-              <option value="GALPAO">Galpão</option>
-            </select>
-
-            <select name="transactionType" value={formData.transactionType} onChange={handleChange} style={inputStyle}>
-              <option value="VENDA">Venda</option>
-              <option value="LOCACAO">Locação</option>
-            </select>
-
-            {isEditing && (
-              <select name="status" value={formData.status} onChange={handleChange} style={{ ...inputStyle, borderColor: '#d4af37' }}>
-                <option value="DISPONIVEL">Disponível</option>
-                <option value="RESERVADO">Reservado</option>
-                <option value="VENDIDO">Vendido</option>
-                <option value="ALUGADO">Alugado</option>
-              </select>
-            )}
-          </div>
-          <input name="title" placeholder="Título do Anúncio *" value={formData.title} onChange={handleChange} required style={inputStyle} />
-          <input
-            name="buildingName"
-            placeholder="Nome do Edifício (Ex: Ed. Aurora)"
-            value={formData.buildingName}
-            onChange={handleChange}
-            style={inputStyle}
-          />
-          <input name="subtitle" placeholder="Subtítulo (Ex: 3 suítes com vista mar)" value={formData.subtitle || ''} onChange={handleChange} style={inputStyle} />
-          <div style={rowStyle}>
-            <label style={{ cursor: 'pointer' }}><input type="checkbox" name="isExclusive" checked={formData.isExclusive} onChange={handleChange} /> É Exclusivo?</label>
-            <label style={{ cursor: 'pointer' }}><input type="checkbox" name="showOnSite" checked={formData.showOnSite} onChange={handleChange} /> Mostrar no Site?</label>
-          </div>
-        </div>
-
-        {/* --- 3. VALORES --- */}
-        <div style={sectionStyle}>
-          <h3>Valores</h3>
-          <div style={rowStyle}>
-            <input type="number" name="price" placeholder="Valor Venda (R$) *" value={formData.price} onChange={handleChange} required style={inputStyle} />
-            <input type="number" name="condoFee" placeholder="Condomínio (R$)" value={formData.condoFee} onChange={handleChange} style={inputStyle} />
-            <input type="number" name="iptuPrice" placeholder="IPTU (R$)" value={formData.iptuPrice} onChange={handleChange} style={inputStyle} />
-          </div>
-        </div>
-
-        {/* --- 4. DETALHES --- */}
-        <div style={sectionStyle}>
-          <h3>Detalhes e Áreas</h3>
-          <div style={rowStyle}>
-            <input type="number" name="privateArea" placeholder="Área Privativa (m²) *" value={formData.privateArea} onChange={handleChange} required style={inputStyle} />
-            <input type="number" name="totalArea" placeholder="Área Total (m²)" value={formData.totalArea} onChange={handleChange} style={inputStyle} />
-            <input type="number" name="garageArea" placeholder="Área Garagem (m²)" value={formData.garageArea} onChange={handleChange} style={inputStyle} />
-          </div>
-          <div style={rowStyle}>
-            <input type="number" name="bedrooms" placeholder="Dormitórios" value={formData.bedrooms} onChange={handleChange} style={inputStyle} />
-            <input type="number" name="suites" placeholder="Suítes" value={formData.suites} onChange={handleChange} style={inputStyle} />
-            <input type="number" name="bathrooms" placeholder="Banheiros" value={formData.bathrooms} onChange={handleChange} style={inputStyle} />
-            <input type="number" name="garageSpots" placeholder="Vagas" value={formData.garageSpots} onChange={handleChange} style={inputStyle} />
-          </div>
-          <div style={rowStyle}>
-            <input type="text" name="registrationNumber" placeholder="Nº Matrícula" value={formData.registrationNumber} onChange={handleChange} style={inputStyle} />
-          </div>
-        </div>
-
-        {/* --- 5. ENDEREÇO --- */}
-        <div style={sectionStyle}>
-          <h3>Localização</h3>
-          <div style={rowStyle}>
-            <input name="zipCode" placeholder="CEP" value={formData.address.zipCode} onChange={handleAddressChange} style={inputStyle} />
-            <input name="city" placeholder="Cidade" value={formData.address.city} onChange={handleAddressChange} style={inputStyle} />
-            <input name="state" placeholder="UF" value={formData.address.state} onChange={handleAddressChange} style={{ ...inputStyle, maxWidth: '60px' }} />
-          </div>
-          <div style={rowStyle}>
-            <input name="neighborhood" placeholder="Bairro" value={formData.address.neighborhood} onChange={handleAddressChange} style={inputStyle} />
-            <input name="street" placeholder="Rua" value={formData.address.street} onChange={handleAddressChange} style={inputStyle} />
-            <input name="number" placeholder="Nº" value={formData.address.number} onChange={handleAddressChange} style={{ ...inputStyle, maxWidth: '100px' }} />
-          </div>
-          <input name="complement" placeholder="Complemento" value={formData.address.complement} onChange={handleAddressChange} style={inputStyle} />
-        </div>
-
-        {/* --- 6. DATAS --- */}
-        <div style={sectionStyle}>
-          <h3>Datas da Obra</h3>
-          <div style={rowStyle}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.8rem', color: '#aaa' }}>Início</label>
-              <input type="date" name="constructionStartDate" value={formData.constructionStartDate} onChange={handleChange} style={{ ...inputStyle, width: '100%' }} />
+            <div style={styles.row}>
+                <div style={{flex:1}}>
+                    <label style={styles.label}>Síndico</label>
+                    <input name="condoManager" value={formData.condoManager} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{flex:1}}>
+                    <label style={styles.label}>Administradora</label>
+                    <input name="buildingAdministrator" value={formData.buildingAdministrator} onChange={handleChange} style={styles.input} />
+                </div>
+                <div style={{flex:1}}>
+                    <label style={styles.label}>Construtora</label>
+                    <input name="constructionCompany" value={formData.constructionCompany} onChange={handleChange} style={styles.input} />
+                </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.8rem', color: '#aaa' }}>Entrega Prevista</label>
-              <input type="date" name="deliveryDate" value={formData.deliveryDate} onChange={handleChange} style={{ ...inputStyle, width: '100%' }} />
+
+            <div style={styles.row}>
+                <div style={{flex:1}}>
+                    <label style={styles.label}><FaKey /> Onde estão as chaves?</label>
+                    <input name="keysLocation" value={formData.keysLocation} onChange={handleChange} style={styles.input} placeholder="Ex: Portaria" />
+                </div>
+                <div style={{display:'flex', alignItems:'center', marginTop: 20, flex: 1}}>
+                    <label style={styles.checkLabel}><input type="checkbox" name="exclusivitySigned" checked={formData.exclusivitySigned} onChange={handleChange} /> Autorização de Venda Assinada</label>
+                </div>
             </div>
-          </div>
+
+            <div style={{marginTop: 10}}>
+                <label style={styles.label}>Observações Internas (Não aparece no site)</label>
+                <textarea name="brokerNotes" value={formData.brokerNotes} onChange={handleChange} style={{...styles.input, resize:'vertical'}} rows={3} />
+            </div>
         </div>
 
-        {/* --- 7. CARACTERÍSTICAS PRIVATIVAS (DO IMÓVEL) --- */}
-        <div style={sectionStyle}>
-          <h3 style={{ color: '#d4af37' }}>Características do Imóvel</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
-            {PROPERTY_OPTS.map(feat => (
-              <label key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', color: '#ccc' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.propertyFeatures.includes(feat)}
-                  onChange={() => handleFeatureToggle('propertyFeatures', feat)}
-                  style={{ width: 16, height: 16, accentColor: '#d4af37' }}
-                />
-                {feat}
-              </label>
-            ))}
-          </div>
+        {/* 8. DESCRIÇÃO */}
+        <div style={styles.section}>
+            <div style={styles.sectionTitle}><FaFileAlt /> Descrição Pública</div>
+            <textarea name="description" value={formData.description} onChange={handleChange} style={{...styles.input, resize:'vertical'}} rows={8} />
         </div>
 
-        {/* --- 8. CARACTERÍSTICAS COMUNS (DO EMPREENDIMENTO) --- */}
-        <div style={sectionStyle}>
-          <h3 style={{ color: '#28a745' }}>Infraestrutura do Empreendimento</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
-            {DEVELOPMENT_OPTS.map(feat => (
-              <label key={feat} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', cursor: 'pointer', color: '#ccc' }}>
-                <input
-                  type="checkbox"
-                  checked={formData.developmentFeatures.includes(feat)}
-                  onChange={() => handleFeatureToggle('developmentFeatures', feat)}
-                  style={{ width: 16, height: 16, accentColor: '#28a745' }}
-                />
-                {feat}
-              </label>
-            ))}
-          </div>
+        {/* BOTÕES FLUTUANTES OU FIXOS */}
+        <div style={{display:'flex', justifyContent:'flex-end', gap: 15, marginTop: 30, paddingBottom: 50}}>
+            <button type="button" style={styles.btnCancel} onClick={() => navigate('/intranet')}>CANCELAR</button>
+            <button type="submit" style={styles.btnSave} disabled={loading}>{loading ? 'SALVANDO...' : 'SALVAR IMÓVEL'}</button>
         </div>
-
-        {/* --- 9. GALERIA --- */}
-        <div style={sectionStyle}>
-          <h3>Galeria de Fotos</h3>
-          <div style={rowStyle}>
-            <input name="tempImageUrl" placeholder="Cole o link da imagem aqui..." value={formData.tempImageUrl} onChange={handleChange} style={inputStyle} />
-            <button type="button" onClick={addImage} style={{ padding: '0 20px', cursor: 'pointer', background: '#444', color: '#fff', border: 'none' }}>Adicionar</button>
-          </div>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
-            {formData.images.map((img, idx) => (
-              <div key={idx} style={{ position: 'relative', width: '100px', height: '80px' }}>
-                <img src={img.url} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
-                <button type="button" onClick={() => removeImage(idx)} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer' }}>&times;</button>
-                {img.isCover && <span style={{ position: 'absolute', bottom: 0, left: 0, background: '#d4af37', fontSize: '10px', padding: '2px 4px', color: '#000' }}>Capa</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* --- 10. DESCRIÇÃO E OBSERVAÇÕES --- */}
-        <div style={sectionStyle}>
-          <h3>Descrição Completa</h3>
-          <textarea name="description" rows={5} value={formData.description || ''} onChange={handleChange} style={{ ...inputStyle, resize: 'vertical' }} />
-        </div>
-
-        <div style={sectionStyle}>
-          <h3>Observações Internas (Corretor)</h3>
-          <textarea name="brokerNotes" rows={3} value={formData.brokerNotes || ''} onChange={handleChange} style={{ ...inputStyle, resize: 'vertical' }} />
-        </div>
-
-        {/* BOTÃO FINAL */}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: '15px',
-            background: isEditing ? '#28a745' : '#d4af37',
-            color: isEditing ? '#fff' : '#000',
-            border: 'none',
-            fontWeight: 'bold',
-            fontSize: '1.1rem',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1,
-            marginTop: '20px'
-          }}
-        >
-          {loading ? 'Processando...' : (isEditing ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR IMÓVEL')}
-        </button>
 
       </form>
     </div>
