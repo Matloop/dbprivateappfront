@@ -15,6 +15,7 @@ import { Intranet } from './pages/Intranet'
 import { NewProperty } from './pages/NewProperty'
 import { PropertiesList } from './pages/PropertiesList' // Caso use rota separada
 import { PropertyDetails } from './pages/PropertyDetails'
+import { About } from './pages/About'
 
 export default function App() {
   const [session, setSession] = useState<any>(null)
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/vendas" element={<SalesPage />} />
           <Route path="/imovel/:id" element={<PropertyDetails />} />
+          <Route path="/sobre" element={<About />} />
 
           {/* Adicione Sobre e Contato aqui futuramente */}
         </Route>
