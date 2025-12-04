@@ -9,6 +9,8 @@ import './PropertyDetails.css';
 
 // Interface atualizada
 interface Property {
+  badgeColor: string;
+  badgeText: string;
   id: number;
   title: string;
   subtitle?: string;
@@ -152,6 +154,22 @@ export function PropertyDetails() {
             
             {/* Info Básica */}
             <div className="info-header">
+                {property.badgeText && (
+    <span style={{ 
+      backgroundColor: property.badgeColor || '#d4af37', // Dourado padrão se vier sem cor
+      color: '#fff',
+      padding: '4px 10px',
+      fontSize: '0.8rem',
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      borderRadius: '4px',
+      marginBottom: '5px',
+      display: 'inline-block',
+      boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+    }}>
+      {property.badgeText}
+    </span>
+  )}
                 <h1 className="prop-location">{property.address?.city} - {property.address?.neighborhood}</h1>
                 <h2 className="prop-title-small">
                     {property.title} <span style={{color:'#666'}}>#{property.id}</span>
