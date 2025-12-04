@@ -1,0 +1,127 @@
+/* Container da Sidebar */
+.sidebar-filter {
+  background-color: #111;
+  border: 1px solid #333;
+  border-radius: 4px;
+  width: 280px;          /* Largura fixa */
+  min-width: 280px;      /* Impede encolhimento */
+  flex-shrink: 0;
+  font-family: 'Segoe UI', sans-serif;
+  color: #ccc;
+  height: fit-content;
+  box-sizing: border-box; /* Importante para o padding não somar na largura */
+}
+
+/* Grupos de Filtro */
+.filter-group {
+  padding: 15px;
+  border-bottom: 1px solid #222;
+  box-sizing: border-box;
+}
+
+.header-group {
+  border-left: 3px solid #d4af37;
+  background-color: #151515; /* Leve destaque no header */
+}
+
+.filter-title-main { 
+  color: #fff; 
+  margin: 0 0 10px 0; 
+  font-size: 1rem; 
+  font-weight: 600;
+}
+
+.filter-subtitle { 
+  color: #d4af37; 
+  font-size: 0.75rem; 
+  margin: 0 0 10px 0; 
+  text-transform: uppercase; 
+  letter-spacing: 0.5px; 
+  font-weight: bold;
+}
+
+/* Inputs e Selects */
+.dark-input, .dark-select {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  color: #fff;
+  padding: 10px; /* Padding confortável */
+  border-radius: 4px;
+  margin-bottom: 5px;
+  box-sizing: border-box; /* CRÍTICO: Impede o input de estourar a caixa */
+  font-size: 0.9rem;
+}
+
+.dark-input:focus, .dark-select:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+/* Busca */
+.search-input-wrapper { 
+  position: relative; 
+  width: 100%;
+}
+
+.search-icon { 
+  position: absolute; 
+  right: 10px; 
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  pointer-events: none;
+}
+
+/* Checkboxes */
+.checkbox-list { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+}
+
+.checkbox-item { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  font-size: 0.85rem; 
+  cursor: pointer; 
+}
+
+.checkbox-item:hover { color: #fff; }
+
+.checkbox-item input { 
+  accent-color: #d4af37; 
+  width: 16px; 
+  height: 16px; 
+}
+
+/* Botões de Garagem */
+.garage-buttons { display: flex; gap: 5px; }
+
+.garage-btn {
+  flex: 1; 
+  background: #222; 
+  border: 1px solid #444; 
+  color: #888; 
+  padding: 6px 0; 
+  cursor: pointer; 
+  border-radius: 3px;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.garage-btn.active { 
+  background: #d4af37; 
+  color: #000; 
+  border-color: #d4af37; 
+  font-weight: bold; 
+}
+
+.garage-btn:hover:not(.active) {
+  border-color: #666;
+  color: #fff;
+}
+
+/* Range inputs (min/max) */
+.range-inputs { display: flex; gap: 10px; }

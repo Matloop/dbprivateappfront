@@ -52,7 +52,7 @@ export default function App() {
            ========================================= */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/vendas" element={<SalesPage />} />
+          
           <Route path="/imovel/:id" element={<PropertyDetails />} />
           <Route path="/sobre" element={<About />} />
 
@@ -89,7 +89,7 @@ export default function App() {
           path="/properties/edit/:id" 
           element={session ? <NewProperty /> : <Navigate to="/login" />} 
         />
-
+        <Route path="/vendas" element={<SalesPage />} />
         {/* =========================================
             404 - Página Não Encontrada
            ========================================= */}

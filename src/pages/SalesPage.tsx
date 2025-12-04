@@ -1,195 +1,81 @@
-import { useEffect, useState } from 'react';
-import { PropertyCard, type Property } from '../components/PropertyCard';
-import { FaTh, FaList, FaSearch } from 'react-icons/fa';
-import './SalesPage.css'; // Certifique-se que o CSS que mandei antes está aqui
+import React, { useState, useEffect } from 'react';
+import { SidebarFilter } from '../components/SidebarFilter';
+import { PropertyCard } from '../components/PropertyCard';
+import { Navbar } from '../components/Navbar';
+import './SalesPage.css'; // Importa o CSS que você mandou
 
-export function SalesPage() {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+export const SalesPage = () => {
+  const [properties, setProperties] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Filtros (Estado para UI)
-  const [filters, setFilters] = useState({
-    bedrooms: null as number | null,
-    suites: null as number | null,
-    garages: null as number | null,
-  });
+  const fetchProperties = async (filters: any = {}) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      Object.keys(filters).forEach(key => {
+        const value = filters[key];
+        if (value !== '' && value !== null && value !== undefined) {
+          if (Array.isArray(value)) {
+            if (value.length > 0) value.forEach(v => params.append(key, v));
+          } else {
+            if (typeof value === 'number' && value === 0) return;
+            params.append(key, String(value));
+          }
+        }
+      });
 
-  // Busca Imóveis
-  useEffect(() => {
-    // Usando IP direto para evitar delay de DNS local
-    fetch('http://127.0.0.1:3000/properties')
-      .then(res => res.json())
-      .then(data => {
+      // Lembre-se: use 127.0.0.1 para evitar delay local
+      const res = await fetch(`http://127.0.0.1:3000/properties?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
         setProperties(data);
-        setLoading(false);
-      })
-      .catch(err => console.error("Erro:", err));
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProperties();
   }, []);
-
-  // Helpers para renderizar botões e checkbox
-  const renderNumberButtons = (field: 'bedrooms' | 'suites' | 'garages', currentValue: number | null) => (
-    <div className="number-btn-group">
-      {[1, 2, 3, 4, 5].map(num => (
-        <button
-          key={num}
-          className={`number-btn ${currentValue === num ? 'active' : ''}`}
-          onClick={() => setFilters(prev => ({ ...prev, [field]: prev[field] === num ? null : num }))}
-        >
-          {num}+
-        </button>
-      ))}
-    </div>
-  );
-
-  const renderCheckbox = (label: string, count?: number) => (
-    <label className="checkbox-row">
-      <div className="checkbox-label">
-        <input type="checkbox" style={{ accentColor: '#d4af37' }} />
-        <span>{label}</span>
-      </div>
-      {count !== undefined && <span className="checkbox-count">{count}</span>}
-    </label>
-  );
 
   return (
     <div className="sales-page-container">
-      
-      {/* HEADER INTERNO (Breadcrumb e Título) */}
+      <Navbar />
+
+      {/* Header opcional para Breadcrumb ou Título da Página */}
       <div className="sales-header-bar">
-        <div>
-           <h1 style={{fontSize: '1.8rem', fontWeight: 300, color: '#d4af37', margin: 0}}>Imóveis à Venda</h1>
-           <span className="breadcrumb">Home / Vendas</span>
-        </div>
-        <div style={{color: '#888', fontSize: '0.9rem'}}>
-            <strong>{properties.length}</strong> imóveis encontrados
-        </div>
+        <h2 style={{margin: 0, fontSize: '1.5rem', color: '#d4af37'}}>Imóveis à Venda</h2>
+        <span className="breadcrumb">Home / Vendas</span>
       </div>
 
       <div className="sales-main-layout">
         
-        {/* --- GRID DE IMÓVEIS (ESQUERDA) --- */}
-        <main className="sales-grid-area">
-            
-            {/* Barra de Ordenação */}
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 20, alignItems: 'center', fontSize: '0.9rem', color: '#888'}}>
-                <div style={{display:'flex', gap: 10, alignItems: 'center'}}>
-                    Ordenar por: 
-                    <select style={{background:'#1a1a1a', border:'1px solid #333', color:'#fff', padding: '5px 10px', borderRadius: 4}}>
-                        <option>DATA MAIS RECENTE</option>
-                        <option>MAIOR PREÇO</option>
-                        <option>MENOR PREÇO</option>
-                    </select>
+        {/* 1. ÁREA DE GRID (AGORA NA ESQUERDA) */}
+        <div className="sales-grid-area">
+          {loading ? (
+            <div style={{ padding: 20, color: '#aaa' }}>Carregando imóveis...</div>
+          ) : (
+            <div className="sales-grid">
+              {properties.map((p) => (
+                <PropertyCard key={p.id} property={p} />
+              ))}
+              
+              {properties.length === 0 && (
+                <div style={{ gridColumn: '1 / -1', padding: 40, textAlign: 'center', border: '1px dashed #333', borderRadius: 4, color: '#666' }}>
+                  Nenhum imóvel encontrado com estes filtros.
                 </div>
-                <div style={{display:'flex', gap: 10}}>
-                    <FaTh color="#fff" cursor="pointer" title="Grade"/>
-                    <FaList color="#444" cursor="pointer" title="Lista"/>
-                </div>
+              )}
             </div>
+          )}
+        </div>
 
-            {loading ? (
-                <p style={{color: '#fff'}}>Carregando imóveis...</p>
-            ) : (
-                <div className="sales-grid">
-                    {properties.map(prop => (
-                        <PropertyCard key={prop.id} property={prop} />
-                    ))}
-                </div>
-            )}
-        </main>
-
-        {/* --- SIDEBAR DE FILTROS (DIREITA) --- */}
-        <aside className="sales-sidebar">
-            <div className="sidebar-header">
-                <h3>Encontre seu Imóvel</h3>
-            </div>
-
-            {/* Busca Texto */}
-            <div className="filter-section">
-                <div style={{position: 'relative'}}>
-                    <input type="text" placeholder="busca por ref ou título..." className="filter-input" style={{paddingRight: 30}} />
-                    <FaSearch style={{position: 'absolute', right: 10, top: 12, color: '#666'}} />
-                </div>
-            </div>
-
-            {/* Localização */}
-            <div className="filter-section">
-                <div className="filter-title">LOCALIZAÇÃO</div>
-                <label style={{display:'block', marginBottom:5, fontSize:'0.8rem', color:'#888'}}>Cidade</label>
-                <select className="filter-select" style={{marginBottom: 10}}>
-                    <option>QUALQUER</option>
-                    <option>Balneário Camboriú</option>
-                    <option>Itapema</option>
-                </select>
-
-                <label style={{display:'block', marginBottom:5, fontSize:'0.8rem', color:'#888'}}>Bairros</label>
-                <select className="filter-select" disabled>
-                    <option>Escolha a cidade...</option>
-                </select>
-            </div>
-
-            {/* Tipo de Imóvel */}
-            <div className="filter-section">
-                <div className="filter-title">TIPO DE IMÓVEL</div>
-                {renderCheckbox("Qualquer")}
-                {renderCheckbox("Apartamentos (todos)", 75)}
-                {renderCheckbox("Apartamento", 65)}
-                {renderCheckbox("Cobertura", 1)}
-                {renderCheckbox("Casa em Condomínio", 3)}
-            </div>
-
-            {/* Características */}
-            <div className="filter-section">
-                <div className="filter-title">CARACTERÍSTICAS</div>
-                {renderCheckbox("Frente para o mar", 21)}
-                {renderCheckbox("Quadra do Mar", 12)}
-                {renderCheckbox("Mobiliado", 48)}
-                {renderCheckbox("Alto Padrão", 72)}
-            </div>
-
-            {/* Dormitórios */}
-            <div className="filter-section">
-                <div className="filter-title">DORMITÓRIOS</div>
-                {renderNumberButtons('bedrooms', filters.bedrooms)}
-            </div>
-
-            {/* Suítes */}
-            <div className="filter-section">
-                <div className="filter-title">SUÍTES</div>
-                {renderNumberButtons('suites', filters.suites)}
-            </div>
-
-            {/* Garagens */}
-            <div className="filter-section">
-                <div className="filter-title">GARAGENS</div>
-                {renderNumberButtons('garages', filters.garages)}
-            </div>
-
-            {/* Faixa de Preço */}
-            <div className="filter-section">
-                <div className="filter-title">FAIXA DE PREÇO</div>
-                <div className="range-inputs">
-                    <div className="range-input-wrapper">
-                        <label style={{fontSize:'0.8rem', color:'#888', display:'block', marginBottom:5}}>Mínimo</label>
-                        <span className="range-symbol">R$</span>
-                        <input type="number" className="range-input-field" placeholder="" />
-                    </div>
-                    <div className="range-input-wrapper">
-                        <label style={{fontSize:'0.8rem', color:'#888', display:'block', marginBottom:5}}>Máximo</label>
-                        <span className="range-symbol">R$</span>
-                        <input type="number" className="range-input-field" placeholder="ilimitado" />
-                    </div>
-                </div>
-            </div>
-            
-            <div style={{padding: 15}}>
-                <button style={{width: '100%', padding: '12px', background: '#d4af37', border: 'none', fontWeight: 'bold', cursor: 'pointer', borderRadius: 4}}>
-                    FILTRAR
-                </button>
-            </div>
-
-        </aside>
+        {/* 2. SIDEBAR (AGORA NA DIREITA) */}
+        <SidebarFilter onFilterChange={(filters) => fetchProperties(filters)} />
 
       </div>
     </div>
   );
-}
+};
