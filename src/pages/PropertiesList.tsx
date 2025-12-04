@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './PropertiesList.css'; 
+import './PropertiesList.css';
 
 // --- INTERFACES ATUALIZADAS ---
 interface PropertyImage {
@@ -16,6 +16,7 @@ interface Property {
   category: string;
   status: string;
   createdAt: string;
+  updatedAt: string;
   images: PropertyImage[];
   address?: {
     city: string;
@@ -78,10 +79,10 @@ export function PropertiesList() {
   const handleImportDwv = async () => {
     const inputText = window.prompt("Cole o ENDEREÇO e o LINK DO DWV (tudo junto):");
     if (!inputText) return;
-    
+
     if (!inputText.includes('http')) {
-        alert("O texto colado precisa conter um link (http...)");
-        return;
+      alert("O texto colado precisa conter um link (http...)");
+      return;
     }
 
     setImporting(true);
@@ -98,7 +99,7 @@ export function PropertiesList() {
 
       if (response.ok) {
         alert("Imóvel importado com sucesso!");
-        fetchProperties(); 
+        fetchProperties();
       } else {
         alert("Erro ao importar.");
       }
@@ -126,24 +127,32 @@ export function PropertiesList() {
   };
 
   // --- FORMATADORES ---
-  const formatCurrency = (v: number) => 
+  const formatCurrency = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
-  
-  const formatDate = (d: string) => 
-    new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+  const formatDateTime = (dateString: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DISPONIVEL': return '#28a745';
       case 'VENDIDO': return '#dc3545';
-      case 'RESERVADO': return '#ffc107'; 
+      case 'RESERVADO': return '#ffc107';
       default: return '#6c757d';
     }
   };
 
   return (
     <div className="properties-container">
-      
+
       {/* HEADER */}
       <div className="properties-header">
         <h1>{importing ? '⏳ Importando...' : '🏢 Gestão de Imóveis'}</h1>
@@ -160,17 +169,18 @@ export function PropertiesList() {
             <tr>
               <th style={{ width: '70px' }}>Fotos</th>
               <th style={{ width: '60px' }}>Ref</th>
-              
+
               {/* Coluna Imóvel cresce para ocupar espaço */}
-              <th>Imóvel</th> 
+              <th>Imóvel</th>
 
               {/* NOVAS COLUNAS */}
               <th style={{ width: '110px' }}>Config.</th>
               <th style={{ width: '130px' }}>Destaque</th>
-              
+
               <th style={{ width: '100px' }}>Situação</th>
               <th style={{ width: '120px' }}>Valor</th>
-              <th style={{ width: '80px' }}>Data</th>
+              <th style={{ width: '140px', textAlign: 'center' }}>Cadastro</th>
+              <th style={{ width: '140px', textAlign: 'center' }}>Atualização</th>
               <th style={{ width: '100px', textAlign: 'center' }}>Ações</th>
             </tr>
           </thead>
@@ -185,7 +195,7 @@ export function PropertiesList() {
 
             {properties.map((prop) => (
               <tr key={prop.id} className="table-row">
-                
+
                 {/* 1. Foto */}
                 <td>
                   <div className="thumbnail-container" onClick={() => openGallery(prop.images)}>
@@ -214,13 +224,13 @@ export function PropertiesList() {
                 {/* 4. CONFIGURAÇÃO (Dormitórios e Vagas) */}
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.85rem', color: '#ccc' }}>
-                    <div style={{display:'flex', alignItems:'center', gap: 5}}>
-                        <span>🛏</span> 
-                        {prop.bedrooms} 
-                        {prop.suites > 0 && <span style={{fontSize:'0.75rem', color:'#888'}}>({prop.suites} st)</span>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span>🛏</span>
+                      {prop.bedrooms}
+                      {prop.suites > 0 && <span style={{ fontSize: '0.75rem', color: '#888' }}>({prop.suites} st)</span>}
                     </div>
-                    <div style={{display:'flex', alignItems:'center', gap: 5}}>
-                        <span>🚗</span> {prop.garageSpots}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span>🚗</span> {prop.garageSpots}
                     </div>
                   </div>
                 </td>
@@ -229,20 +239,20 @@ export function PropertiesList() {
                 <td>
                   {prop.badgeText ? (
                     <div className="badge-tarja" style={{ backgroundColor: prop.badgeColor || '#555', justifyContent: 'center' }}>
-                       {prop.badgeText}
+                      {prop.badgeText}
                     </div>
                   ) : (
-                    <span style={{color: '#444', fontSize: '0.8rem'}}>-</span>
+                    <span style={{ color: '#444', fontSize: '0.8rem' }}>-</span>
                   )}
                 </td>
 
                 {/* 6. Situação */}
                 <td>
-                  <span 
+                  <span
                     className="status-badge"
-                    style={{ 
-                      color: getStatusColor(prop.status), 
-                      border: `1px solid ${getStatusColor(prop.status)}` 
+                    style={{
+                      color: getStatusColor(prop.status),
+                      border: `1px solid ${getStatusColor(prop.status)}`
                     }}
                   >
                     {prop.status}
@@ -253,11 +263,17 @@ export function PropertiesList() {
                 <td className="price-text">{formatCurrency(Number(prop.price))}</td>
 
                 {/* 8. Data */}
-                <td>{formatDate(prop.createdAt)}</td>
+                <td style={{ textAlign: 'center', fontSize: '0.8rem', color: '#ccc' }}>
+                  {formatDateTime(prop.createdAt)}
+                </td>
+
+                <td style={{ textAlign: 'center', fontSize: '0.8rem', color: '#ccc' }}>
+                  {formatDateTime(prop.updatedAt)}
+                </td>
 
                 {/* 9. Ações */}
                 <td style={{ textAlign: 'center' }}>
-                  <button 
+                  <button
                     className="btn btn-primary btn-icon"
                     onClick={() => navigate(`/properties/edit/${prop.id}`)}
                     style={{ fontSize: '0.75rem', padding: '6px 12px' }}
