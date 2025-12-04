@@ -126,3 +126,44 @@
   .search-inputs-row { flex-direction: column; }
   .search-select, .search-btn-submit { width: 100%; }
 }
+/* --- RESPONSIVIDADE LANDING PAGE --- */
+@media (max-width: 768px) {
+  /* Container da Busca */
+  .search-left-container {
+    padding: 20px; /* Reduz padding lateral */
+    justify-content: center; /* Centraliza */
+  }
+
+  .search-box-flat {
+    max-width: 100%; /* Ocupa tudo */
+    padding: 20px;
+  }
+
+  /* Empilha os inputs (Selects e Campo de texto um embaixo do outro) */
+  .search-inputs-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  /* Faz cada input ocupar 100% da largura */
+  .search-select, 
+  .search-input-group, 
+  .search-btn-submit {
+    width: 100%;
+  }
+  
+  .search-btn-submit {
+    height: 50px; /* Botão mais alto para facilitar o toque */
+  }
+
+  /* Títulos das Seções */
+  .section-title-bar h2 {
+    font-size: 1.3rem;
+  }
+
+  /* Grid de Imóveis (Garante que não vaze a tela) */
+  .properties-grid {
+    grid-template-columns: 1fr; /* Uma coluna só no mobile */
+    padding-bottom: 40px;
+  }
+}
