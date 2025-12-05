@@ -1,0 +1,67 @@
+/* src/components/Breadcrumb.css */
+
+.breadcrumb-wrapper {
+  /* "Preto Diferente": Um tom de cinza carvão escuro que destaca do fundo #121212 */
+  background-color: #1e1e1e; 
+  
+  /* Borda sutil para separar do conteúdo */
+  border-bottom: 1px solid #333;
+  
+  padding: 15px 5%;
+  font-size: 0.9rem;
+  color: #999; /* Cor base do texto */
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  
+  /* Sombra sutil para dar profundidade ("chamativo") */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); 
+  z-index: 10;
+  position: relative;
+}
+
+.breadcrumb-item {
+  cursor: pointer;
+  text-decoration: none;
+  color: #aaa; /* Cinza claro */
+  transition: all 0.2s;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.breadcrumb-item:hover {
+  color: #d4af37; /* Dourado ao passar o mouse */
+  text-decoration: none;
+}
+
+.breadcrumb-separator {
+  font-size: 0.75rem;
+  color: #555; /* Separador mais escuro */
+}
+
+.breadcrumb-current {
+  color: #fff; /* Branco puro para o item atual (destaque máximo) */
+  font-weight: 700;
+  cursor: default;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+  
+  /* Opcional: Se quiser o último item Dourado, troque #fff por #d4af37 abaixo */
+  /* color: #d4af37; */
+}
+
+/* Ajuste mobile */
+@media (max-width: 768px) {
+  .breadcrumb-wrapper {
+    padding: 12px 15px;
+    font-size: 0.8rem;
+  }
+  .breadcrumb-current {
+    max-width: 200px;
+  }
+}

@@ -4,10 +4,12 @@ import './SidebarFilter.css';
 
 interface FilterProps {
   onFilterChange: (filters: any) => void;
+  initialFilters?: any; // <--- NOVA PROP
 }
 
-export const SidebarFilter = ({ onFilterChange }: FilterProps) => {
-  const [filters, setFilters] = useState({
+export const SidebarFilter = ({ onFilterChange, initialFilters }: FilterProps) => {
+  // Estado inicial padrão
+  const defaultFilters = {
     search: '',
     city: '',
     neighborhood: '',
@@ -19,9 +21,25 @@ export const SidebarFilter = ({ onFilterChange }: FilterProps) => {
     maxPrice: '',
     minArea: '',
     maxArea: ''
-  });
+  };
 
-  // Debounce: Aguarda 600ms após a última alteração para disparar a busca
+  const [filters, setFilters] = useState(defaultFilters);
+
+  // --- ATUALIZA O ESTADO SE VIER DADOS DA URL (INITIAL FILTERS) ---
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters((prev) => ({
+        ...prev,
+        ...initialFilters,
+        // Garante que arrays venham como arrays (caso venha string da URL)
+        types: Array.isArray(initialFilters.types) 
+          ? initialFilters.types 
+          : (initialFilters.types ? [initialFilters.types] : []),
+      }));
+    }
+  }, [initialFilters]);
+
+  // Debounce: Aguarda 600ms para disparar a busca para o pai
   useEffect(() => {
     const timer = setTimeout(() => {
       onFilterChange(filters);
@@ -29,27 +47,24 @@ export const SidebarFilter = ({ onFilterChange }: FilterProps) => {
     return () => clearTimeout(timer);
   }, [filters]);
 
-  // Handler genérico para inputs de texto e número
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handler para Checkboxes (Arrays)
   const handleCheckbox = (group: 'types' | 'negotiation', value: string) => {
     setFilters(prev => {
       const list = prev[group];
       return list.includes(value)
-        ? { ...prev, [group]: list.filter(item => item !== value) } // Remove
-        : { ...prev, [group]: [...list, value] }; // Adiciona
+        ? { ...prev, [group]: list.filter(item => item !== value) }
+        : { ...prev, [group]: [...list, value] };
     });
   };
 
-  // Handler para Botões de Garagem (Toggle)
   const handleGarage = (num: number) => {
     setFilters(prev => ({ 
       ...prev, 
-      garageSpots: prev.garageSpots === num ? 0 : num // Se clicar no mesmo, desmarca
+      garageSpots: prev.garageSpots === num ? 0 : num 
     }));
   };
 
@@ -61,23 +76,22 @@ export const SidebarFilter = ({ onFilterChange }: FilterProps) => {
         <h3 className="filter-title-main">Encontre seu Imóvel</h3>
         <div className="search-input-wrapper">
           <input 
-            type="text" 
-            name="search" 
+            type="text" name="search" 
+            value={filters.search} // Controlled Input
             placeholder="Ref, título ou edifício..." 
-            className="dark-input" 
-            style={{ paddingRight: '35px' }} // Espaço para a lupa
+            className="dark-input" style={{ paddingRight: '35px' }}
             onChange={handleChange}
           />
           <FaSearch className="search-icon"/>
         </div>
       </div>
 
-      {/* 2. LOCALIZAÇÃO */}
+      {/* 2. LOCALIZAÇÃO (Values controlados pelo State) */}
       <div className="filter-group">
         <h4 className="filter-subtitle">LOCALIZAÇÃO</h4>
         <div style={{ marginBottom: 10 }}>
             <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: 5 }}>Cidade</label>
-            <select name="city" className="dark-select" onChange={handleChange}>
+            <select name="city" className="dark-select" onChange={handleChange} value={filters.city}>
                 <option value="">Todas as cidades</option>
                 <option value="Balneário Camboriú">Balneário Camboriú</option>
                 <option value="Itapema">Itapema</option>
@@ -86,12 +100,13 @@ export const SidebarFilter = ({ onFilterChange }: FilterProps) => {
         </div>
         <div>
             <label style={{ fontSize: '0.8rem', color: '#888', display: 'block', marginBottom: 5 }}>Bairros</label>
-            <select name="neighborhood" className="dark-select" onChange={handleChange}>
+            <select name="neighborhood" className="dark-select" onChange={handleChange} value={filters.neighborhood}>
                 <option value="">Todos os bairros</option>
                 <option value="Centro">Centro</option>
                 <option value="Barra Sul">Barra Sul</option>
                 <option value="Barra Norte">Barra Norte</option>
                 <option value="Pioneiros">Pioneiros</option>
+                <option value="Nações">Nações</option>
             </select>
         </div>
       </div>

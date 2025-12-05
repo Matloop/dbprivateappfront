@@ -193,3 +193,18 @@
     width: 100%;
   }
 }
+
+/* Header Topo */
+.sales-header-bar {
+  background-color: #1a1a1a;
+  padding: 20px 4%;
+  border-bottom: 1px solid #333;
+  display: flex;
+  /* MUDANÇA: Alinha tudo à esquerda e empilha se necessário */
+  flex-direction: column; 
+  align-items: flex-start; 
+  justify-content: center;
+  gap: 10px; /* Espaço entre título e breadcrumb */
+  min-height: 60px;
+}
+
