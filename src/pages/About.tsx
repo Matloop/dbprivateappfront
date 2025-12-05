@@ -1,5 +1,4 @@
-import React from 'react';
-import { FaDollarSign, FaRegNewspaper, FaEnvelope } from 'react-icons/fa';
+import { FaDollarSign, FaEnvelope } from 'react-icons/fa';
 import './About.css';
 
 export const About = () => {

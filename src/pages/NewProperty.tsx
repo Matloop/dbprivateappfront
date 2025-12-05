@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  FaFileAlt, FaDollarSign, FaHome, FaBuilding, FaTh, 
+  FaFileAlt, FaDollarSign, FaHome, FaTh, 
   FaYoutube, FaCube, FaLock, FaKey, FaImages, FaSave, FaTimes 
 } from 'react-icons/fa';
 
