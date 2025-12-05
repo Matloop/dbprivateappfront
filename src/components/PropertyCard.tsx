@@ -33,8 +33,8 @@ export const PropertyCard = ({ property }: PropertyCardProps) => {
   const navigate = useNavigate();
   
   // Hook de favoritos (tenta usar, se der erro de contexto ignora visualmente)
-  let isFavorite = (id: number) => false;
-  let toggleFavorite = (id: number) => {};
+  let isFavorite = (_id: number) => false;
+  let toggleFavorite = (_id: number) => {};
 
   try {
     const favHook = useFavorites();
