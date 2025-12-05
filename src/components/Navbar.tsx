@@ -1,6 +1,5 @@
-import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPhoneAlt, FaWhatsapp, FaInstagram, FaHome, FaSearch } from 'react-icons/fa';
+import { FaPhoneAlt, FaWhatsapp, FaInstagram, FaHome } from 'react-icons/fa';
 import './Navbar.css';
 import { useFavorites } from '../hooks/useFavorites';
 

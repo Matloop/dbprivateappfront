@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Navbar } from '../components/Navbar';
+import { useEffect, useState } from 'react';
 import { PropertyCard } from '../components/PropertyCard';
 import { useFavorites } from '../hooks/useFavorites';
 import { FaHeartBroken } from 'react-icons/fa';
-import { FloatingWhatsApp } from '../components/FloatingWhatsapp';
 
 export const FavoritesPage = () => {
   const { favorites } = useFavorites();

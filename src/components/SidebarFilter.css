@@ -75,7 +75,7 @@ input[type=number] {
 
 /* CHECKBOXES */
 .checkbox-list { display: flex; flex-direction: column; gap: 8px; }
-.checkbox-item { display: flex; alignItems: center; gap: 8px; font-size: 0.9rem; cursor: pointer; color: #aaa; }
+.checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; color: #aaa; }
 .checkbox-item:hover { color: #fff; }
 .checkbox-item input { accent-color: #d4af37; width: 16px; height: 16px; cursor: pointer; }
 

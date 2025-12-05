@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { SidebarFilter } from '../components/SidebarFilter';
 import { PropertyCard } from '../components/PropertyCard';
-import { Navbar } from '../components/Navbar';
 import { Breadcrumb } from '../components/Breadcrumb'; // <--- IMPORTAR
 import './SalesPage.css';
 

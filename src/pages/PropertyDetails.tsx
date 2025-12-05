@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Breadcrumb } from '../components/Breadcrumb';
 import { useFavorites } from '../hooks/useFavorites'; // <--- IMPORTANTE
 import { 
@@ -33,7 +33,6 @@ interface Property {
 
 export function PropertyDetails() {
   const { id } = useParams();
-  const navigate = useNavigate();
   
   // --- HOOK DE FAVORITOS ---
   const { isFavorite, toggleFavorite } = useFavorites(); 

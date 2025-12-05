@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaMapMarkerAlt, FaBed, FaShower, FaCar, FaRulerCombined, FaRegStar } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import './PropertyCard.css';
@@ -31,10 +30,9 @@ interface PropertyCardProps {
 
 export const PropertyCard = ({ property }: PropertyCardProps) => {
   const navigate = useNavigate();
-  const { isFavorite, toggleFavorite } = useFavorites(); // Usa o hook
+  useFavorites(); // Usa o hook
   
   // Verifica se este imóvel específico é favorito
-  const favorite = isFavorite(property.id);
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
 
