@@ -21,47 +21,11 @@ export function LandingPage() {
   return (
     <div className="landing-container">
       
-      {/* 1. BARRA DE PESQUISA (Alinhada à Esquerda, Sem Imagem) */}
-      <div className="search-left-container">
-        <div className="search-box-flat">
-          
-          <h3 className="search-label-title">Encontre seu Imóvel</h3>
-          
-          <div className="search-inputs-row">
-            {/* Select 1 */}
-            <select className="search-select">
-              <option>Todos os Imóveis</option>
-              <option>Apartamento</option>
-              <option>Casa</option>
-              <option>Cobertura</option>
-            </select>
-            
-            {/* Select 2 */}
-            <select className="search-select">
-              <option>Todos os Valores</option>
-              <option>Até R$ 1.000.000</option>
-              <option>R$ 1M a R$ 3M</option>
-              <option>Acima de R$ 3.000.000</option>
-            </select>
+      
+      
 
-            {/* Input de Texto */}
-            <div className="search-input-group">
-              <input 
-                type="text" 
-                className="search-input" 
-                placeholder="digite a cidade ou bairro..." 
-              />
-              <FaMapMarkerAlt className="input-icon" />
-            </div>
-
-            {/* Botão de Busca */}
-            <button className="search-btn-submit">
-              <FaSearch />
-            </button>
-          </div>
-
-        </div>
-      </div>
+        
+      
 
       {/* 2. VITRINE DE IMÓVEIS */}
       <section className="landing-content">
