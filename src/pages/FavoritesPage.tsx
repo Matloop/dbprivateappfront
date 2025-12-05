@@ -3,6 +3,7 @@ import { Navbar } from '../components/Navbar';
 import { PropertyCard } from '../components/PropertyCard';
 import { useFavorites } from '../hooks/useFavorites';
 import { FaHeartBroken } from 'react-icons/fa';
+import { FloatingWhatsApp } from '../components/FloatingWhatsapp';
 
 export const FavoritesPage = () => {
   const { favorites } = useFavorites();
@@ -41,7 +42,7 @@ export const FavoritesPage = () => {
       <div style={{ padding: '30px 5%', borderBottom: '1px solid #333' }}>
         <h2 style={{ margin: 0, color: '#d4af37', fontSize: '1.8rem', fontWeight: 300 }}>Meus Favoritos</h2>
       </div>
-
+        
       <div style={{ padding: '30px 5%' }}>
         {loading ? (
           <div style={{ color: '#888' }}>Carregando favoritos...</div>

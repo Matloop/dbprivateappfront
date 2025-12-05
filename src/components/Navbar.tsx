@@ -76,7 +76,6 @@ export const Navbar = () => {
             )}
           </Link>
           
-          <FaSearch className="search-btn" />
         </div>
       </nav>
     </div>

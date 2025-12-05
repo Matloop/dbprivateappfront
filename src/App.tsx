@@ -57,6 +57,8 @@ export default function App() {
           <Route path="/imovel/:id" element={<PropertyDetails />} />
           <Route path="/sobre" element={<About />} />
           <Route path="/favoritos" element={<FavoritesPage />} /> 
+          <Route path="/vendas" element={<SalesPage />} />
+
         </Route>
 
         {/* =========================================
@@ -89,7 +91,6 @@ export default function App() {
           path="/properties/edit/:id" 
           element={session ? <NewProperty /> : <Navigate to="/login" />} 
         />
-        <Route path="/vendas" element={<SalesPage />} />
         {/* =========================================
             404 - Página Não Encontrada
            ========================================= */}
