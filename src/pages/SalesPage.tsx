@@ -72,7 +72,6 @@ export const SalesPage = () => {
 
   return (
     <div className="sales-page-container">
-      <Navbar />
       
       {/* --- AQUI ENTRA O COMPONENTE MODULARIZADO --- */}
       <Breadcrumb items={getBreadcrumbItems()} />
