@@ -1,13 +1,14 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Adicionei useNavigate
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Breadcrumb } from '../components/Breadcrumb';
+import { useFavorites } from '../hooks/useFavorites'; // <--- IMPORTANTE
 import { 
   FaBed, FaBath, FaCar, FaRulerCombined, FaWhatsapp, 
-  FaRegStar, FaPrint, FaDollarSign, 
+  FaRegStar, FaStar, FaPrint, FaDollarSign, // <--- FaStar adicionado
   FaCommentDots, FaUser, FaEnvelope, FaPhoneAlt, FaAngleDoubleRight, 
   FaChevronLeft, FaChevronRight 
 } from 'react-icons/fa';
 import './PropertyDetails.css';
-import { Breadcrumb } from '../components/Breadcrumb';
 
 interface Property {
   id: number;
@@ -21,7 +22,7 @@ interface Property {
   garageSpots: number;
   privateArea: number;
   images: { url: string; isCover: boolean }[];
-  address?: { city: string; neighborhood: string; state: string }; // Adicionei state
+  address?: { city: string; neighborhood: string; state: string };
   badgeText?: string;
   badgeColor?: string;
   buildingName?: string;
@@ -32,44 +33,12 @@ interface Property {
 
 export function PropertyDetails() {
   const { id } = useParams();
-  const navigate = useNavigate(); // Hook de navegação
-  const [property, setProperty] = useState<Property | null>(null);
-  const breadcrumbItems = [
-    { label: 'Vendas', path: '/vendas' },
-  ];
-
-  if (property) {
-    // 1. Tipo (Apartamentos)
-    breadcrumbItems.push({
-        label: property.category.charAt(0).toUpperCase() + property.category.slice(1).toLowerCase() + 's',
-        path: `/vendas?types=${property.category}`
-    });
-
-    if (property.address) {
-        // 2. Estado (SC)
-        breadcrumbItems.push({ label: property.address.state, path: '' }); // Estado geralmente não filtra sozinho na URL atual
-
-        // 3. Cidade (Balneário)
-        breadcrumbItems.push({
-            label: property.address.city,
-            path: `/vendas?city=${property.address.city}`
-        });
-
-        // 4. Bairro (Centro)
-        breadcrumbItems.push({
-            label: property.address.neighborhood,
-            path: `/vendas?city=${property.address.city}&neighborhood=${property.address.neighborhood}`
-        });
-    }
-
-    // 5. Título do Imóvel (Último item, não clicável)
-    breadcrumbItems.push({
-        label: property.buildingName || property.title,
-        path: ''
-    });
-  }
-
+  const navigate = useNavigate();
   
+  // --- HOOK DE FAVORITOS ---
+  const { isFavorite, toggleFavorite } = useFavorites(); 
+
+  const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -90,25 +59,30 @@ export function PropertyDetails() {
       .catch(err => console.error(err));
   }, [id]);
 
-  // --- FUNÇÕES DE NAVEGAÇÃO DO FILTRO ---
-  const goToSales = () => navigate('/vendas');
-  
-  const filterByCategory = () => {
-    if (property) navigate(`/vendas?types=${property.category}`);
-  };
-
-  const filterByCity = () => {
-    if (property?.address) navigate(`/vendas?city=${property.address.city}`);
-  };
-
-  const filterByNeighborhood = () => {
-    if (property?.address) {
-      // Filtra por Cidade AND Bairro
-      navigate(`/vendas?city=${property.address.city}&neighborhood=${property.address.neighborhood}`);
+  // --- LÓGICA DO BREADCRUMB ---
+  const breadcrumbItems = [{ label: 'Vendas', path: '/vendas' }];
+  if (property) {
+    breadcrumbItems.push({
+        label: property.category.charAt(0).toUpperCase() + property.category.slice(1).toLowerCase() + 's',
+        path: `/vendas?types=${property.category}`
+    });
+    if (property.address) {
+        breadcrumbItems.push({ label: property.address.state, path: '' });
+        breadcrumbItems.push({
+            label: property.address.city,
+            path: `/vendas?city=${property.address.city}`
+        });
+        breadcrumbItems.push({
+            label: property.address.neighborhood,
+            path: `/vendas?city=${property.address.city}&neighborhood=${property.address.neighborhood}`
+        });
     }
-  };
+    breadcrumbItems.push({
+        label: property.buildingName || property.title,
+        path: ''
+    });
+  }
 
-  // --- FUNÇÕES DE GALERIA ---
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!property?.images) return;
@@ -127,31 +101,29 @@ export function PropertyDetails() {
     window.open(`https://wa.me/5547996535489?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const formatCurrency = (val?: number) => val ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val) : 'Consulte-nos';
-
-  // Helper para formatar texto (APARTAMENTO -> Apartamentos)
-  const formatCategory = (cat: string) => {
-    return cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase() + 's';
+  const handleEmailSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert(`Mensagem simulada enviada!`);
   };
+
+  const formatCurrency = (val?: number) => val ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val) : 'Consulte-nos';
 
   if (loading) return <div style={{padding: 50, textAlign:'center', color:'#fff', background:'#121212', height:'100vh'}}>Carregando...</div>;
   if (!property) return <div style={{padding: 50, textAlign:'center', color:'#fff'}}>Imóvel não encontrado.</div>;
 
   const currentImage = property.images && property.images[activeIndex] ? property.images[activeIndex].url : '';
-
-    function handleEmailSubmit(event: FormEvent<HTMLFormElement>): void {
-        throw new Error('Function not implemented.');
-    }
+  
+  // Verifica se é favorito
+  const favorite = isFavorite(property.id);
 
   return (
     <div className="details-container">
       
-        <Breadcrumb items={breadcrumbItems} />
-
+      <Breadcrumb items={breadcrumbItems} />
 
       <div className="details-content-wrapper">
         
-        {/* COLUNA ESQUERDA */}
+        {/* ESQUERDA */}
         <div className="details-left-col">
             <div className="gallery-wrapper">
                 <div className="gallery-main-frame">
@@ -181,9 +153,7 @@ export function PropertyDetails() {
                     <div className="features-block">
                         <h4 className="features-title">Ambientes</h4>
                         <div className="features-list">
-                            {property.roomFeatures.map((feat, i) => (
-                                <div key={i} className="feature-item"><span className="feature-bullet">»</span> {feat.name}</div>
-                            ))}
+                            {property.roomFeatures.map((feat, i) => <div key={i} className="feature-item"><span className="feature-bullet">»</span> {feat.name}</div>)}
                         </div>
                     </div>
                 )}
@@ -191,9 +161,7 @@ export function PropertyDetails() {
                     <div className="features-block">
                         <h4 className="features-title">Características do Imóvel</h4>
                         <div className="features-list">
-                            {property.propertyFeatures.map((feat, i) => (
-                                <div key={i} className="feature-item"><span className="feature-bullet">»</span> {feat.name}</div>
-                            ))}
+                            {property.propertyFeatures.map((feat, i) => <div key={i} className="feature-item"><span className="feature-bullet">»</span> {feat.name}</div>)}
                         </div>
                     </div>
                 )}
@@ -201,16 +169,14 @@ export function PropertyDetails() {
                     <div className="features-block">
                         <h4 className="features-title">Empreendimento</h4>
                         <div className="features-list">
-                            {property.developmentFeatures.map((feat, i) => (
-                                <div key={i} className="feature-item"><span className="feature-bullet">»</span> {feat.name}</div>
-                            ))}
+                            {property.developmentFeatures.map((feat, i) => <div key={i} className="feature-item"><span className="feature-bullet">»</span> {feat.name}</div>)}
                         </div>
                     </div>
                 )}
             </div>
         </div>
 
-        {/* COLUNA DIREITA */}
+        {/* DIREITA (SIDEBAR) */}
         <aside className="details-right-col">
             {property.badgeText && (
                 <div style={{marginBottom: 10}}>
@@ -240,7 +206,23 @@ export function PropertyDetails() {
             </button>
 
             <div className="actions-row">
-                <button className="action-link"><FaRegStar /> Adicionar aos Favoritos</button>
+                {/* --- BOTÃO FAVORITOS FUNCIONAL --- */}
+                <button 
+                    className="action-link" 
+                    onClick={() => toggleFavorite(property.id)}
+                    style={{color: favorite ? '#d4af37' : '#888'}} // Muda cor do texto
+                >
+                    {favorite ? (
+                        <>
+                            <FaStar color="#d4af37" /> Remover dos Favoritos
+                        </>
+                    ) : (
+                        <>
+                            <FaRegStar /> Adicionar aos Favoritos
+                        </>
+                    )}
+                </button>
+
                 <button className="action-link"><FaPrint /> Imprimir</button>
                 <button className="action-link"><FaDollarSign /> Financiamentos</button>
             </div>

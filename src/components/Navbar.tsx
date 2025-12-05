@@ -2,10 +2,11 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPhoneAlt, FaWhatsapp, FaInstagram, FaHome, FaSearch } from 'react-icons/fa';
 import './Navbar.css';
+import { useFavorites } from '../hooks/useFavorites';
 
 export const Navbar = () => {
   const navigate = useNavigate();
-
+  const { favorites } = useFavorites();
   return (
     <div className="site-header-wrapper">
       
@@ -62,7 +63,18 @@ export const Navbar = () => {
             VENDAS <span style={{fontSize: 10, marginLeft: 3}}>▼</span>
           </Link>
           
-          <Link to="/contato" className="nav-link">CONTATO</Link>
+          <Link to="/favoritos" className="nav-link" style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+            FAVORITOS
+            {favorites.length > 0 && (
+                <span style={{
+                    background: '#d4af37', color: '#000', borderRadius: '50%', 
+                    fontSize: '0.7rem', width: '18px', height: '18px', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
+                }}>
+                    {favorites.length}
+                </span>
+            )}
+          </Link>
           
           <FaSearch className="search-btn" />
         </div>

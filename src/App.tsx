@@ -16,6 +16,7 @@ import { NewProperty } from './pages/NewProperty'
 import { PropertiesList } from './pages/PropertiesList' // Caso use rota separada
 import { PropertyDetails } from './pages/PropertyDetails'
 import { About } from './pages/About'
+import { FavoritesPage } from './pages/FavoritesPage'
 
 export default function App() {
   const [session, setSession] = useState<any>(null)
@@ -55,8 +56,7 @@ export default function App() {
           
           <Route path="/imovel/:id" element={<PropertyDetails />} />
           <Route path="/sobre" element={<About />} />
-
-          {/* Adicione Sobre e Contato aqui futuramente */}
+          <Route path="/favoritos" element={<FavoritesPage />} /> 
         </Route>
 
         {/* =========================================
