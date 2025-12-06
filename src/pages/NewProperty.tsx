@@ -5,6 +5,7 @@ import {
   FaFileAlt, FaDollarSign, FaHome, FaTh, 
   FaYoutube, FaCube, FaLock, FaKey, FaImages, FaSave, FaTimes 
 } from 'react-icons/fa';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://98.93.10.61.nip.io";
 
 // --- CONSTANTES E LISTAS (Baseado nos seus Prints) ---
 
@@ -174,7 +175,7 @@ export function NewProperty() {
       const sessionStr = storageKey ? localStorage.getItem(storageKey) : null;
       const token = sessionStr ? JSON.parse(sessionStr)?.access_token : null;
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/properties/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/properties/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -291,8 +292,8 @@ export function NewProperty() {
       };
 
       const url = isEditing 
-        ? `${import.meta.env.VITE_API_URL}/properties/${id}` 
-        : `${import.meta.env.VITE_API_URL}/properties`;
+        ? `${API_BASE_URL}/properties/${id}` 
+        : `${API_BASE_URL}/properties`;
       
       const method = isEditing ? 'PATCH' : 'POST';
 
