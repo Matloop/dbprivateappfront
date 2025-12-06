@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PropertiesList.css';
+const API_URL = import.meta.env.VITE_API_URL || "https://98.93.10.61.nip.io";
 
 // --- INTERFACES ATUALIZADAS ---
 interface PropertyImage {
@@ -63,7 +64,7 @@ export function PropertiesList() {
     try {
       const token = getFastToken();
       // 127.0.0.1 para evitar delay do IPv6
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/properties`, {
+      const response = await fetch(`${API_URL}/properties`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (response.ok) {
@@ -89,7 +90,7 @@ export function PropertiesList() {
     setImporting(true);
     try {
       const token = getFastToken();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/properties`, {
+      const response = await fetch(`${API_URL}/properties`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
