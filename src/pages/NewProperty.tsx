@@ -156,7 +156,9 @@ export function NewProperty() {
     propertyFeatures: [] as string[],  // Características Imóvel
     developmentFeatures: [] as string[] // Empreendimento
   });
-
+  console.log("🔍 URL da API (ENV):", import.meta.env.VITE_API_URL);
+  console.log("🔍 ID na URL:", id);
+  console.log("🔍 Editando?", isEditing);
   // --- CARREGAR DADOS ---
   useEffect(() => {
     if (isEditing) {
