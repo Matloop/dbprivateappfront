@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PropertiesList.css';
-const API_URL = import.meta.env.VITE_API_URL || "https://98.93.10.61.nip.io";
 
 // --- INTERFACES ATUALIZADAS ---
 interface PropertyImage {
@@ -32,6 +31,8 @@ interface Property {
   suites: number;
   garageSpots: number;
 }
+
+const API_URL = import.meta.env.VITE_API_URL || "https://98.93.10.61.nip.io";
 
 export function PropertiesList() {
   const navigate = useNavigate();
@@ -111,6 +112,50 @@ export function PropertiesList() {
       setImporting(false);
     }
   };
+  
+    // --- IMPORTAR SCRAPER ANTIGO (LEGADO) ---
+  const handleImportLegacy = async () => {
+    // 1. Pede a página para começar
+    const pageInput = window.prompt("Digite o número da página para importar (Ex: 1, 2, 3... ou 0 para TUDO):", "1");
+    if (pageInput === null) return; // Cancelou
+
+    const pageNum = parseInt(pageInput);
+    if (isNaN(pageNum)) {
+      alert("Número inválido.");
+      return;
+    }
+
+    // 2. Confirmação se for importar TUDO (0)
+    if (pageNum === 0) {
+      const confirm = window.confirm("ATENÇÃO: Importar TUDO (0) pode levar vários minutos ou horas. O servidor continuará rodando em background mesmo se você fechar esta janela.\n\nDeseja iniciar?");
+      if (!confirm) return;
+    }
+
+    setImporting(true);
+    try {
+      const token = getFastToken();
+      
+      // Chama o endpoint de trigger
+      const response = await fetch(`${API_URL}/properties/trigger-scraper?page=${pageNum}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`Sucesso: ${data.message}\n\nO robô está rodando no servidor. Atualize a lista em alguns minutos.`);
+        // Opcional: Recarregar a lista depois de um tempo
+        setTimeout(() => fetchProperties(), 5000);
+      } else {
+        alert("Erro ao iniciar o robô.");
+      }
+    } catch (e) {
+      alert("Erro de conexão com o servidor.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
 
   // --- GALERIA ---
   const openGallery = (images: PropertyImage[]) => {
@@ -159,7 +204,8 @@ export function PropertiesList() {
       <div className="properties-header">
         <h1>{importing ? '⏳ Importando...' : '🏢 Gestão de Imóveis'}</h1>
         <div className="header-actions">
-          <button className="btn btn-outline" onClick={handleImportDwv} disabled={importing}>📥 Importar</button>
+           <button className="btn btn-outline" onClick={handleImportLegacy} disabled={importing}>🤖 Importar Legado</button>
+          <button className="btn btn-outline" onClick={handleImportDwv} disabled={importing}>📥 Importar DWV</button>
           <button className="btn btn-primary" onClick={() => navigate('/properties/new')} disabled={importing}>+ Novo Imóvel</button>
         </div>
       </div>
