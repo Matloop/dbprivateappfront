@@ -1,10 +1,13 @@
 import React from 'react';
-import { FaMapMarkerAlt, FaBed, FaShower, FaCar, FaRulerCombined, FaRegStar, FaStar } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { Bed, Bath, Car, Ruler, MapPin, Star } from 'lucide-react'; // Ícones modernos do pacote padrão
 import { useFavorites } from '../hooks/useFavorites';
-import './PropertyCard.css';
 
-// 1. Definição do objeto de dados (O Imóvel em si)
+// Componentes Shadcn UI
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
 export interface Property {
   id: number;
   title: string;
@@ -22,17 +25,14 @@ export interface Property {
   totalArea: number;
 }
 
-// 2. Definição das Props do Componente (O que o componente recebe do pai)
-// O componente espera receber um atributo chamado 'property' que contém os dados acima
 interface PropertyCardProps {
   property: Property;
 }
 
-// 3. O Componente
 export const PropertyCard = ({ property }: PropertyCardProps) => {
   const navigate = useNavigate();
   
-  // Hook de favoritos (tenta usar, se der erro de contexto ignora visualmente)
+  // Hook de favoritos seguro
   let isFavorite = (_id: number) => false;
   let toggleFavorite = (_id: number) => {};
 
@@ -41,7 +41,7 @@ export const PropertyCard = ({ property }: PropertyCardProps) => {
     isFavorite = favHook.isFavorite;
     toggleFavorite = favHook.toggleFavorite;
   } catch (e) {
-    // Caso o hook seja usado fora do provider, evita crash
+    // Silencia erro se fora do provider
   }
 
   const favorite = isFavorite(property.id);
@@ -49,80 +49,89 @@ export const PropertyCard = ({ property }: PropertyCardProps) => {
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
 
-  const badgeStyle = {
-    backgroundColor: property.badgeColor || 'rgba(20, 20, 20, 0.9)'
-  };
-
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFavorite(property.id);
   };
 
   return (
-    <div className="property-card" onClick={() => navigate(`/imovel/${property.id}`)}>
-
-      <div className="card-image-container">
+    <Card 
+      className="group cursor-pointer overflow-hidden border-muted bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+      onClick={() => navigate(`/imovel/${property.id}`)}
+    >
+      {/* --- IMAGEM --- */}
+      <div className="relative h-64 w-full overflow-hidden bg-muted">
         <img
           src={property.images && property.images.length > 0 ? property.images[0].url : 'https://via.placeholder.com/400x300?text=Sem+Foto'}
           alt={property.title}
-          className="card-image"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          loading="lazy"
         />
 
         {property.badgeText && (
-          <div className="card-badge" style={badgeStyle}>
+          <Badge 
+            className="absolute right-0 top-4 rounded-l-md rounded-r-none border-0 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-md"
+            style={{ backgroundColor: property.badgeColor || '#000' }}
+          >
             {property.badgeText}
-          </div>
+          </Badge>
         )}
       </div>
 
-      <div className="card-content">
-        <div className="card-location">
-          <FaMapMarkerAlt size={12} color="#ccc" />
-          {property.address?.city} – {property.address?.neighborhood}
+      {/* --- CONTEÚDO --- */}
+      <CardContent className="flex flex-col gap-3 p-4">
+        {/* Localização */}
+        <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <MapPin className="h-3 w-3" />
+          <span className="truncate">{property.address?.city} — {property.address?.neighborhood}</span>
         </div>
 
-        <h3 className="card-title">
-          {property.buildingName
-            ? `${property.category} no ${property.buildingName}`
-            : property.title}
-        </h3>
-
-        {property.buildingName && (
-             <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '-4px', marginBottom: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {property.title}
-             </div>
-        )}
-
-        <div className="card-features">
-          <div className="feature-item" title="Dormitórios">
-            <span style={{ fontWeight: 'bold' }}>{property.bedrooms}</span> <FaBed />
-          </div>
-          <div className="feature-item" title="Banheiros">
-            <span style={{ fontWeight: 'bold' }}>{property.bathrooms}</span> <FaShower />
-          </div>
-          <div className="feature-item" title="Vagas">
-            <span style={{ fontWeight: 'bold' }}>{property.garageSpots}</span> <FaCar />
-          </div>
-          <div className="feature-item" title="Área Privativa">
-            <span style={{ fontStyle: 'italic' }}>{property.privateArea}</span> <span style={{ fontSize: 10 }}>m²</span> <FaRulerCombined />
-          </div>
+        {/* Título e Edifício */}
+        <div>
+          <h3 className="truncate text-lg font-semibold text-foreground">
+            {property.buildingName 
+              ? `${property.category} no ${property.buildingName}` 
+              : property.title}
+          </h3>
+          {property.buildingName && (
+             <p className="truncate text-sm text-muted-foreground">{property.title}</p>
+          )}
         </div>
 
-        <div className="card-footer">
-          <div className="card-price">
-            {formatCurrency(Number(property.price))}
+        {/* Ícones (Dorm, Vaga, etc) */}
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1" title="Dormitórios">
+            <span className="font-bold text-foreground">{property.bedrooms}</span> <Bed className="h-4 w-4" />
           </div>
-          
-          <div onClick={handleFavoriteClick} style={{ cursor: 'pointer' }}>
-            {favorite ? (
-                <FaStar size={18} color="#d4af37" />
-            ) : (
-                <FaRegStar size={18} color="#ccc" />
-            )}
+          <div className="flex items-center gap-1" title="Banheiros">
+            <span className="font-bold text-foreground">{property.bathrooms}</span> <Bath className="h-4 w-4" />
+          </div>
+          <div className="flex items-center gap-1" title="Vagas">
+            <span className="font-bold text-foreground">{property.garageSpots}</span> <Car className="h-4 w-4" />
+          </div>
+          <div className="flex items-center gap-1" title="Área Privativa">
+            <span className="text-foreground">{property.privateArea}</span><span className="text-[10px]">m²</span> <Ruler className="h-4 w-4" />
           </div>
         </div>
+      </CardContent>
 
-      </div>
-    </div>
+      {/* --- RODAPÉ (Preço e Favorito) --- */}
+      <CardFooter className="flex items-center justify-between border-t border-border p-4 pt-4">
+        <span className="text-xl font-bold text-primary">
+          {formatCurrency(Number(property.price))}
+        </span>
+        
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 hover:bg-muted"
+          onClick={handleFavoriteClick}
+        >
+          <Star 
+            className={`h-5 w-5 transition-colors ${favorite ? 'fill-primary text-primary' : 'text-muted-foreground'}`} 
+          />
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
