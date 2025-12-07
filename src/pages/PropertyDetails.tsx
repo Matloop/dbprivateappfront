@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { api } from '@/lib/api';
 import { useFavorites } from '../hooks/useFavorites';
 import { Breadcrumb } from '../components/Breadcrumb';
+import { PropertyMap } from '@/components/PropertyMap';
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -219,8 +220,21 @@ export function PropertyDetails() {
               </div>
             </div>
           </div>
+          <div className="space-y-6 mt-10">
+  <h3 className="text-xl font-bold text-foreground border-l-4 border-primary pl-3">Localização</h3>
+  <div className="text-muted-foreground mb-4 text-sm">
+    <MapPin className="inline-block w-4 h-4 mr-1 text-primary"/>
+    {property.address?.street}, {property.address?.neighborhood} - {property.address?.city}
+  </div>
+  
+  <PropertyMap 
+    address={property.address?.street || ''} 
+    neighborhood={property.address?.neighborhood || ''}
+    city={property.address?.city || 'Balneário Camboriú'} 
+  />
+</div>
         </div>
-
+                
         {/* --- COLUNA DIREITA (CONTATO CLEAN) --- */}
         <div className="lg:col-span-4 relative">
           <div className="sticky top-6 space-y-6">
