@@ -1,362 +1,70 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './PropertiesList.css';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Download, CloudDownload } from "lucide-react";
+import { toast } from "sonner";
 
-// --- INTERFACES ATUALIZADAS ---
-interface PropertyImage {
-  url: string;
-  isCover: boolean;
-}
-
-interface Property {
-  id: number;
-  title: string;
-  subtitle?: string;
-  price: number;
-  category: string;
-  status: string;
-  buildingName?: string;
-  createdAt: string;
-  updatedAt: string;
-  images: PropertyImage[];
-  address?: {
-    city: string;
-    state: string;
-    neighborhood: string;
-  };
-  // Novos campos para a tabela
-  badgeText?: string;
-  badgeColor?: string;
-  bedrooms: number;
-  suites: number;
-  garageSpots: number;
-}
-
-const API_URL = import.meta.env.VITE_API_URL || "https://98.93.10.61.nip.io";
+import { api } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { columns, Property } from "./properties/columns"; // Ajuste o caminho se necessário
 
 export function PropertiesList() {
   const navigate = useNavigate();
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [data, setData] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
-  const [importing, setImporting] = useState(false);
-
-  // Estados da Galeria
-  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
-  const [galleryImages, setGalleryImages] = useState<PropertyImage[]>([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  useEffect(() => {
-    fetchProperties();
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsGalleryOpen(false);
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, []);
-
-  // --- FUNÇÕES ---
-  const getFastToken = () => {
-    const storageKey = Object.keys(localStorage).find(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
-    const sessionStr = storageKey ? localStorage.getItem(storageKey) : null;
-    return sessionStr ? JSON.parse(sessionStr)?.access_token : null;
-  };
 
   const fetchProperties = async () => {
     try {
-      const token = getFastToken();
-      // 127.0.0.1 para evitar delay do IPv6
-      const response = await fetch(`${API_URL}/properties`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setProperties(data);
-      }
+      setLoading(true);
+      const res = await api.get("/properties");
+      setData(res.data);
     } catch (error) {
-      console.error("Erro ao buscar imóveis:", error);
+      console.error(error);
+      toast.error("Erro ao carregar lista de imóveis.");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchProperties();
+  }, []);
+
   const handleImportDwv = async () => {
-    const inputText = window.prompt("Cole o ENDEREÇO e o LINK DO DWV (tudo junto):");
-    if (!inputText) return;
-
-    if (!inputText.includes('http')) {
-      alert("O texto colado precisa conter um link (http...)");
-      return;
-    }
-
-    setImporting(true);
+    const url = window.prompt("Cole o link do imóvel DWV:");
+    if (!url) return;
+    
+    toast.info("Iniciando importação...");
     try {
-      const token = getFastToken();
-      const response = await fetch(`${API_URL}/properties`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ url: inputText })
-      });
-
-      if (response.ok) {
-        alert("Imóvel importado com sucesso!");
-        fetchProperties();
-      } else {
-        alert("Erro ao importar.");
-      }
-    } catch (e) {
-      alert("Erro de conexão.");
-    } finally {
-      setImporting(false);
-    }
-  };
-  
-    // --- IMPORTAR SCRAPER ANTIGO (LEGADO) ---
-  const handleImportLegacy = async () => {
-    // 1. Pede a página para começar
-    const pageInput = window.prompt("Digite o número da página para importar (Ex: 1, 2, 3... ou 0 para TUDO):", "1");
-    if (pageInput === null) return; // Cancelou
-
-    const pageNum = parseInt(pageInput);
-    if (isNaN(pageNum)) {
-      alert("Número inválido.");
-      return;
-    }
-
-    // 2. Confirmação se for importar TUDO (0)
-    if (pageNum === 0) {
-      const confirm = window.confirm("ATENÇÃO: Importar TUDO (0) pode levar vários minutos ou horas. O servidor continuará rodando em background mesmo se você fechar esta janela.\n\nDeseja iniciar?");
-      if (!confirm) return;
-    }
-
-    setImporting(true);
-    try {
-      const token = getFastToken();
-      
-      // Chama o endpoint de trigger
-      const response = await fetch(`${API_URL}/properties/trigger-scraper?page=${pageNum}`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        alert(`Sucesso: ${data.message}\n\nO robô está rodando no servidor. Atualize a lista em alguns minutos.`);
-        // Opcional: Recarregar a lista depois de um tempo
-        setTimeout(() => fetchProperties(), 5000);
-      } else {
-        alert("Erro ao iniciar o robô.");
-      }
-    } catch (e) {
-      alert("Erro de conexão com o servidor.");
-    } finally {
-      setImporting(false);
-    }
-  };
-
-
-  // --- GALERIA ---
-  const openGallery = (images: PropertyImage[]) => {
-    if (!images.length) return;
-    setGalleryImages(images);
-    setCurrentImageIndex(0);
-    setIsGalleryOpen(true);
-  };
-  const nextImage = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
-  };
-  const prevImage = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
-  };
-
-  // --- FORMATADORES ---
-  const formatCurrency = (v: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
-
-  const formatDateTime = (dateString: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'DISPONIVEL': return '#28a745';
-      case 'VENDIDO': return '#dc3545';
-      case 'RESERVADO': return '#ffc107';
-      default: return '#6c757d';
+      await api.post("/properties/import-dwv", { url });
+      toast.success("Imóvel importado com sucesso!");
+      fetchProperties();
+    } catch {
+      toast.error("Erro na importação.");
     }
   };
 
   return (
-    <div className="properties-container">
-
-      {/* HEADER */}
-      <div className="properties-header">
-        <h1>{importing ? '⏳ Importando...' : '🏢 Gestão de Imóveis'}</h1>
-        <div className="header-actions">
-           <button className="btn btn-outline" onClick={handleImportLegacy} disabled={importing}>🤖 Importar Legado</button>
-          <button className="btn btn-outline" onClick={handleImportDwv} disabled={importing}>📥 Importar DWV</button>
-          <button className="btn btn-primary" onClick={() => navigate('/properties/new')} disabled={importing}>+ Novo Imóvel</button>
+    <div className="container mx-auto py-10 max-w-6xl">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">Gestão de Imóveis</h1>
+          <p className="text-muted-foreground">Gerencie seu portfólio imobiliário</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleImportDwv}>
+            <CloudDownload className="mr-2 h-4 w-4" /> Importar DWV
+          </Button>
+          <Button onClick={() => navigate("/properties/new")} className="bg-primary text-black font-bold">
+            <Plus className="mr-2 h-4 w-4" /> Novo Imóvel
+          </Button>
         </div>
       </div>
 
-      {/* TABELA */}
-      <div className="table-wrapper">
-        <table className="properties-table">
-          <thead>
-            <tr>
-              <th style={{ width: '70px' }}>Fotos</th>
-              <th style={{ width: '60px' }}>Ref</th>
-
-              {/* Coluna Imóvel cresce para ocupar espaço */}
-              <th>Imóvel</th>
-
-              {/* NOVAS COLUNAS */}
-              <th style={{ width: '110px' }}>Config.</th>
-              <th style={{ width: '130px' }}>Destaque</th>
-
-              <th style={{ width: '100px' }}>Situação</th>
-              <th style={{ width: '120px' }}>Valor</th>
-              <th style={{ width: '140px', textAlign: 'center' }}>Cadastro</th>
-              <th style={{ width: '140px', textAlign: 'center' }}>Atualização</th>
-              <th style={{ width: '100px', textAlign: 'center' }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {properties.length === 0 && !loading && (
-              <tr>
-                <td colSpan={9} style={{ textAlign: 'center', padding: 30, color: '#666' }}>
-                  Nenhum imóvel cadastrado. Clique em <b>+ Novo Imóvel</b>.
-                </td>
-              </tr>
-            )}
-
-            {properties.map((prop) => (
-              <tr key={prop.id} className="table-row">
-
-                {/* 1. Foto */}
-                <td>
-                  <div className="thumbnail-container" onClick={() => openGallery(prop.images)}>
-                    {prop.images && prop.images.length > 0 ? (
-                      <>
-                        <img src={prop.images[0].url} alt="capa" className="thumbnail-img" />
-                        <div className="thumbnail-count">{prop.images.length}</div>
-                      </>
-                    ) : (
-                      <div className="no-photo">Sem Foto</div>
-                    )}
-                  </div>
-                </td>
-
-                {/* 2. Referência */}
-                <td style={{ color: '#666' }}>#{prop.id}</td>
-
-                {/* 3. Imóvel (Limpo, sem tarja) */}
-                <td>
-                  <div className="property-title">{prop.title}</div>
-                  {prop.buildingName && (
-                    <div style={{ fontSize: '0.85rem', color: '#d4af37', fontWeight: 'bold', marginTop: 2 }}>
-                      🏢 {prop.buildingName}
-                    </div>
-                  )}
-                  <div className="property-subtitle">
-                    {prop.address?.neighborhood} - {prop.category}
-                  </div>
-                </td>
-
-                {/* 4. CONFIGURAÇÃO (Dormitórios e Vagas) */}
-                <td>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.85rem', color: '#ccc' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span>🛏</span>
-                      {prop.bedrooms}
-                      {prop.suites > 0 && <span style={{ fontSize: '0.75rem', color: '#888' }}>({prop.suites} st)</span>}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span>🚗</span> {prop.garageSpots}
-                    </div>
-                  </div>
-                </td>
-
-                {/* 5. TARJA / DESTAQUE (Nova Coluna) */}
-                <td>
-                  {prop.badgeText ? (
-                    <div className="badge-tarja" style={{ backgroundColor: prop.badgeColor || '#555', justifyContent: 'center' }}>
-                      {prop.badgeText}
-                    </div>
-                  ) : (
-                    <span style={{ color: '#444', fontSize: '0.8rem' }}>-</span>
-                  )}
-                </td>
-
-                {/* 6. Situação */}
-                <td>
-                  <span
-                    className="status-badge"
-                    style={{
-                      color: getStatusColor(prop.status),
-                      border: `1px solid ${getStatusColor(prop.status)}`
-                    }}
-                  >
-                    {prop.status}
-                  </span>
-                </td>
-
-                {/* 7. Valor */}
-                <td className="price-text">{formatCurrency(Number(prop.price))}</td>
-
-                {/* 8. Data */}
-                <td style={{ textAlign: 'center', fontSize: '0.8rem', color: '#ccc' }}>
-                  {formatDateTime(prop.createdAt)}
-                </td>
-
-                <td style={{ textAlign: 'center', fontSize: '0.8rem', color: '#ccc' }}>
-                  {formatDateTime(prop.updatedAt)}
-                </td>
-
-                {/* 9. Ações */}
-                <td style={{ textAlign: 'center' }}>
-                  <button
-                    className="btn btn-primary btn-icon"
-                    onClick={() => navigate(`/properties/edit/${prop.id}`)}
-                    style={{ fontSize: '0.75rem', padding: '6px 12px' }}
-                  >
-                    ✏️ Editar
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* --- LIGHTBOX --- */}
-      {isGalleryOpen && galleryImages.length > 0 && (
-        <div className="lightbox-overlay" onClick={() => setIsGalleryOpen(false)}>
-          <button className="lightbox-close" onClick={() => setIsGalleryOpen(false)}>&times;</button>
-          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <img src={galleryImages[currentImageIndex].url} alt="Galeria" className="lightbox-img" />
-            {galleryImages.length > 1 && (
-              <>
-                <button className="lightbox-nav nav-prev" onClick={prevImage}>❮</button>
-                <button className="lightbox-nav nav-next" onClick={nextImage}>❯</button>
-              </>
-            )}
-            <div className="lightbox-counter">
-              Imagem {currentImageIndex + 1} de {galleryImages.length}
-            </div>
-          </div>
-        </div>
+      {loading ? (
+        <div className="text-center py-20 text-muted-foreground">Carregando imóveis...</div>
+      ) : (
+        <DataTable columns={columns} data={data} />
       )}
     </div>
   );
