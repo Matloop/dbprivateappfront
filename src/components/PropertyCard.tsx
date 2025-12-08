@@ -12,13 +12,16 @@ import { cn } from '@/lib/utils';
 // --- FUNÇÃO CORRETORA DE URL ---
 const fixImageSource = (url: string) => {
   if (!url) return '/placeholder.jpg';
-  // Se a URL vier como localhost ou 127.0.0.1, trocamos pelo backend de produção
+
+  if (process.env.NODE_ENV === 'development') {
+    return url;
+  }
+
   if (url.includes('localhost') || url.includes('127.0.0.1')) {
     return url.replace(/http:\/\/(localhost|127\.0\.0\.1):3000/g, 'https://98.93.10.61.nip.io');
   }
   return url;
 };
-
 export interface Property {
   id: number;
   title: string;
