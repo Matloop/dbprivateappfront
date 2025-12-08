@@ -12,8 +12,11 @@ import { useProperties } from "@/hooks/useProperties"
 export function PropertiesList() {
   const router = useRouter()
   
-  // Busca todos os imóveis (sem filtros para trazer tudo)
-  const { data, isLoading, isError, refetch } = useProperties()
+  // O hook agora retorna um objeto InfiniteData, não um array direto
+  const { data: queryData, isLoading, isError, refetch } = useProperties()
+
+  // CORREÇÃO: Achatamos as páginas para criar um único array de imóveis para a Tabela
+  const flattenedData = queryData?.pages.flatMap((page) => page.data) || []
 
   const handleImportDwv = async () => {
     const url = window.prompt("Cole o link do imóvel DWV:")
@@ -23,7 +26,7 @@ export function PropertiesList() {
     try {
       await api.post("/properties/import-dwv", { url })
       toast.success("Imóvel importado com sucesso!", { id: toastId })
-      refetch() // Atualiza a tabela
+      refetch() // Atualiza a lista
     } catch (error) {
       console.error(error)
       toast.error("Erro na importação.", { id: toastId })
@@ -54,7 +57,8 @@ export function PropertiesList() {
       ) : isError ? (
         <div className="text-red-500 text-center">Erro ao carregar dados.</div>
       ) : (
-        <DataTable columns={columns} data={data || []} />
+        // Passamos o array tratado 'flattenedData' em vez de 'queryData'
+        <DataTable columns={columns} data={flattenedData} />
       )}
     </div>
   )
