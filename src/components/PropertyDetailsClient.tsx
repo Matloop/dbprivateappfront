@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image'; // Importamos para otimizar thumbnails também
 import {
     Bed, Bath, Car, Ruler, MapPin,
     MessageCircle, Star, Share2,
@@ -24,7 +25,6 @@ import {
 } from "@/components/ui/carousel";
 
 // --- IMPORTAÇÃO DINÂMICA DO MAPA ---
-// Isso resolve o erro "window is not defined" do Leaflet no Next.js
 const PropertyMap = dynamic(
     () => import('@/components/PropertyMap'),
     {
@@ -33,9 +33,19 @@ const PropertyMap = dynamic(
     }
 );
 
+// --- FUNÇÃO CORRETORA DE URL ---
+const fixImageSource = (url: string) => {
+    if (!url) return '/placeholder.jpg';
+    if (process.env.NODE_ENV === 'development') return url;
+    if (url.includes('localhost') || url.includes('127.0.0.1')) {
+        return url.replace(/http:\/\/(localhost|127\.0\.0\.1):3000/g, 'https://98.93.10.61.nip.io');
+    }
+    return url;
+};
+
 interface PropertyDetailsClientProps {
-    property: any;          // Dados do imóvel principal
-    similarProperties: any[]; // Lista de imóveis semelhantes
+    property: any;          
+    similarProperties: any[]; 
 }
 
 export function PropertyDetailsClient({ property, similarProperties }: PropertyDetailsClientProps) {
@@ -49,10 +59,12 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
 
     if (!property) return <div className="text-center py-20 text-gray-400">Imóvel não encontrado.</div>;
 
-    const currentImage = property.images?.[activeImgIndex]?.url || '';
+    // Correção da URL da imagem atual
+    const rawImage = property.images?.[activeImgIndex]?.url || '';
+    const currentImage = fixImageSource(rawImage);
+    
     const favorite = isFavorite(property.id);
 
-    // Handlers
     const handleNextImg = () => {
         if (!property?.images?.length) return;
         setActiveImgIndex((prev) => (prev + 1) % property.images.length);
@@ -97,13 +109,16 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
 
             <div className="max-w-[1600px] mx-auto px-5 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
-                {/* COLUNA ESQUERDA (Mídia e Info) */}
+                {/* COLUNA ESQUERDA */}
                 <div className="lg:col-span-8 w-full">
 
                     {/* GALERIA */}
                     <div className="flex flex-col lg:flex-row gap-4 h-auto lg:h-[550px] mb-10 group">
                         <div className="flex-1 bg-black relative rounded-md overflow-hidden border border-[#222]">
+                            {/* Background Blur */}
                             <div className="absolute inset-0 bg-cover bg-center opacity-20 blur-2xl" style={{ backgroundImage: `url(${currentImage})` }} />
+                            
+                            {/* Imagem Principal (Sem next/image aqui para manter controle total do aspect ratio na galeria principal, mas poderia migrar) */}
                             <img src={currentImage} alt={property.title} className="relative h-full w-full object-contain z-10" />
 
                             <div className="absolute inset-0 z-20 flex items-center justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -124,7 +139,8 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
                                     onClick={() => setActiveImgIndex(idx)}
                                     className={`relative aspect-[4/3] w-[120px] lg:w-full flex-shrink-0 rounded-md overflow-hidden border-2 ${idx === activeImgIndex ? 'border-primary' : 'border-transparent opacity-50'}`}
                                 >
-                                    <img src={img.url} alt="thumb" className="h-full w-full object-cover" />
+                                    {/* Aplicando fixImageSource na Thumb */}
+                                    <img src={fixImageSource(img.url)} alt="thumb" className="h-full w-full object-cover" />
                                 </button>
                             ))}
                         </div>
@@ -239,9 +255,7 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
             <div className="mt-10 mb-10 max-w-[1600px] mx-auto px-5">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><MapPin size={20} /> Localização</h3>
                 <PropertyMap
-                    // Monta o endereço completo para o componente exibir no popup
                     address={`${property.address?.street}, ${property.address?.number} - ${property.address?.neighborhood}, ${property.address?.city}`}
-                    // Lat e Lng podem vir zerados se o backend não tiver geocoding
                     lat={0}
                     lng={0}
                 />
