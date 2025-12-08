@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
+import Image, { ImageLoaderProps } from 'next/image';
 import {
     Bed, Bath, Car, Ruler, MapPin,
     MessageCircle, Star, Share2,
-    ChevronLeft, ChevronRight, Send, Phone
+    ChevronLeft, ChevronRight, Send, Phone, ImageIcon
 } from 'lucide-react';
 import { toast } from "sonner";
 import { useFavorites } from '@/hooks/useFavorites';
@@ -34,13 +34,23 @@ const PropertyMap = dynamic(
 );
 
 // --- FUNÇÃO CORRETORA DE URL ---
-const fixImageSource = (url: string) => {
-    if (!url) return '/placeholder.jpg';
-    if (process.env.NODE_ENV === 'development') return url;
-    if (url.includes('localhost') || url.includes('127.0.0.1')) {
-        return url.replace(/http:\/\/(localhost|127\.0\.0\.1):3000/g, 'https://98.93.10.61.nip.io');
+const fixImageSource = (url: string | undefined | null) => {
+    if (!url || url === '') return '/placeholder.jpg';
+    
+    // Se for URL relativa local (ex: /uploads/...), mantemos
+    if (url.startsWith('/')) return url;
+
+    // Em produção, se vier localhost, tentamos corrigir (opcional, depende do seu backend)
+    if (process.env.NODE_ENV === 'production' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+        return url.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/g, 'https://98.93.10.61.nip.io');
     }
     return url;
+};
+
+// --- LOADER PERSONALIZADO (SOLUÇÃO 2) ---
+// Isso impede que o Next.js tente adicionar /_next/image?url=... na frente da URL
+const customLoader = ({ src }: ImageLoaderProps) => {
+  return src;
 };
 
 interface PropertyDetailsClientProps {
@@ -51,6 +61,12 @@ interface PropertyDetailsClientProps {
 export function PropertyDetailsClient({ property, similarProperties }: PropertyDetailsClientProps) {
     const { isFavorite, toggleFavorite } = useFavorites();
     const [activeImgIndex, setActiveImgIndex] = useState(0);
+    const [isLocalDev, setIsLocalDev] = useState(false);
+
+    // Detectar ambiente de desenvolvimento no cliente
+    useEffect(() => {
+        setIsLocalDev(window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1'));
+    }, []);
 
     // Formulário
     const [formName, setFormName] = useState('');
@@ -59,13 +75,13 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
 
     if (!property) return <div className="text-center py-20 text-gray-400">Imóvel não encontrado.</div>;
 
-    // Criar array de imagens seguro com fallback
+    // Criar array de imagens seguro
     const images = property.images && property.images.length > 0 
         ? property.images 
         : [{ url: '/placeholder.jpg' }];
     
-    // Correção da URL da imagem atual
-    const currentImage = fixImageSource(images[activeImgIndex]?.url || '');
+    // URL da imagem ativa
+    const currentImage = fixImageSource(images[activeImgIndex]?.url);
     
     const favorite = isFavorite(property.id);
 
@@ -116,16 +132,33 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
 
                     {/* GALERIA */}
                     <div className="flex flex-col lg:flex-row gap-4 h-auto lg:h-[550px] mb-10 group">
-                        <div className="flex-1 bg-black relative rounded-md overflow-hidden border border-[#222]">
-                            {/* Background Blur */}
-                            <div className="absolute inset-0 bg-cover bg-center opacity-20 blur-2xl" style={{ backgroundImage: `url(${currentImage})` }} />
+                        
+                        {/* --- IMAGEM PRINCIPAL --- */}
+                        <div className="flex-1 bg-black relative rounded-md overflow-hidden border border-[#222] min-h-[300px] lg:min-h-full">
                             
-                            {/* Imagem Principal */}
-                            <img src={currentImage} alt={property.title} className="relative h-full w-full object-contain z-10" />
+                            <Image 
+                                key={currentImage} // Importante: força o React a recriar o componente se a URL mudar
+                                loader={customLoader} // Solução 2: Garante que a URL não seja alterada
+                                src={currentImage} 
+                                alt={property.title} 
+                                fill
+                                className="object-contain z-10"
+                                // ORDEM DE CARREGAMENTO: Prioridade máxima para a imagem grande
+                                priority={true} 
+                                // SOLUÇÃO 1: Se for localhost, desliga otimização do servidor Next
+                                unoptimized={true} 
+                                sizes="(max-width: 1200px) 100vw, 800px"
+                                onError={(e) => {
+                                    // Fallback de emergência para <img> nativo se o Next/Image falhar catastroficamente
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null;
+                                    target.src = '/placeholder.jpg';
+                                }}
+                            />
 
                             <div className="absolute inset-0 z-20 flex items-center justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={handlePrevImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full"><ChevronLeft /></button>
-                                <button onClick={handleNextImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full"><ChevronRight /></button>
+                                <button onClick={handlePrevImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full backdrop-blur-sm"><ChevronLeft /></button>
+                                <button onClick={handleNextImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full backdrop-blur-sm"><ChevronRight /></button>
                             </div>
 
                             <div className="absolute top-4 left-4 z-20">
@@ -133,21 +166,37 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
                             </div>
                         </div>
 
-                        {/* Thumbs */}
-                        <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto w-full lg:w-[130px] h-[100px] lg:h-full scrollbar-hide">
-                            {images.map((img: any, idx: number) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => setActiveImgIndex(idx)}
-                                    className={`relative aspect-[4/3] w-[120px] lg:w-full flex-shrink-0 rounded-md overflow-hidden border-2 ${idx === activeImgIndex ? 'border-primary' : 'border-transparent opacity-50'}`}
-                                >
-                                    <img src={fixImageSource(img.url)} alt="thumb" className="h-full w-full object-cover" />
-                                </button>
-                            ))}
-                        </div>
+                        {/* --- THUMBS (MINIATURAS) --- */}
+                        {images.length > 1 && (
+                            <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto w-full lg:w-[130px] h-[100px] lg:h-full scrollbar-hide">
+                                {images.map((img: any, idx: number) => {
+                                    const thumbUrl = fixImageSource(img.url);
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setActiveImgIndex(idx)}
+                                            className={`relative aspect-[4/3] w-[120px] lg:w-full flex-shrink-0 rounded-md overflow-hidden border-2 ${idx === activeImgIndex ? 'border-primary' : 'border-transparent opacity-50'}`}
+                                        >
+                                            <Image 
+                                                loader={customLoader}
+                                                src={thumbUrl} 
+                                                alt="thumb" 
+                                                fill
+                                                className="object-cover"
+                                                // ORDEM DE CARREGAMENTO: Lazy para carregar depois da principal
+                                                loading="lazy"
+                                                // SOLUÇÃO 1: Desliga otimização
+                                                unoptimized={true}
+                                                sizes="150px"
+                                            />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
-                    {/* TITULO E ÍCONES */}
+                    {/* DADOS DO IMÓVEL */}
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xs uppercase tracking-widest">
                             <span>{property.category}</span><span>•</span><span>{property.address?.neighborhood}</span>
