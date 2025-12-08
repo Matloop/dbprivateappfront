@@ -1,13 +1,15 @@
+'use client';
+
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { usePathname } from "next/navigation";
 
 export function ScrollToTop() {
-  const { pathname } = useLocation();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Sempre que a rota (pathname) mudar, joga o scroll para o topo (0, 0)
+    // Sempre que a rota mudar, joga o scroll para o topo
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  return null; // Esse componente não renderiza nada visualmente
+  return null;
 }
