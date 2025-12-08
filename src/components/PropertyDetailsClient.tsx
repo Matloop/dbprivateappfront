@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
     Bed, Bath, Car, Ruler, MapPin,
     MessageCircle, Star, Share2,
@@ -17,10 +18,20 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 } from "@/components/ui/carousel";
-import PropertyMap from './PropertyMap';
+
+// --- IMPORTAÇÃO DINÂMICA DO MAPA ---
+// Isso resolve o erro "window is not defined" do Leaflet no Next.js
+const PropertyMap = dynamic(
+    () => import('@/components/PropertyMap'),
+    {
+        ssr: false,
+        loading: () => <Skeleton className="h-[400px] w-full rounded-xl bg-[#1a1a1a] border border-[#333]" />
+    }
+);
 
 interface PropertyDetailsClientProps {
     property: any;          // Dados do imóvel principal
@@ -36,7 +47,7 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
     const [formEmail, setFormEmail] = useState('');
     const [formPhone, setFormPhone] = useState('');
 
-    if (!property) return <div className="text-center py-20">Imóvel não encontrado.</div>;
+    if (!property) return <div className="text-center py-20 text-gray-400">Imóvel não encontrado.</div>;
 
     const currentImage = property.images?.[activeImgIndex]?.url || '';
     const favorite = isFavorite(property.id);
@@ -223,17 +234,19 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
                 </div>
 
             </div>
-            <div className="mt-10 mb-10 max-w-[1600px] mx-auto px-5">
-                <h3 className="text-xl font-bold text-white mb-4">Localização</h3>
-                <PropertyMap
-                    // Correção: Juntamos rua, número, bairro e cidade em uma única string de endereço
-                    address={`${property.address?.street}, ${property.address?.number} - ${property.address?.neighborhood}, ${property.address?.city}`}
 
-                    // Removemos 'city' e 'neighborhood' isolados pois o componente não aceita
+            {/* MAPA */}
+            <div className="mt-10 mb-10 max-w-[1600px] mx-auto px-5">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><MapPin size={20} /> Localização</h3>
+                <PropertyMap
+                    // Monta o endereço completo para o componente exibir no popup
+                    address={`${property.address?.street}, ${property.address?.number} - ${property.address?.neighborhood}, ${property.address?.city}`}
+                    // Lat e Lng podem vir zerados se o backend não tiver geocoding
                     lat={0}
                     lng={0}
                 />
             </div>
+
             {/* SEMELHANTES */}
             {similarProperties.length > 0 && (
                 <div className="max-w-[1600px] mx-auto px-5 mt-20 pt-10 border-t border-[#222]">
@@ -251,9 +264,7 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
                             <CarouselNext className="right-2 bg-black/80 text-white border-none" />
                         </Carousel>
                     </div>
-
                 </div>
-
             )}
         </div>
     );
