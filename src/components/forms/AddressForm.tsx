@@ -3,7 +3,6 @@ import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/for
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { PropertyFormValues } from "@/schemas/propertySchema";
 import { MapPin } from "lucide-react";
 
 export function AddressForm({ form }: { form: any }) {

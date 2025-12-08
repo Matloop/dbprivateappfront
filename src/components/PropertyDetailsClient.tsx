@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Bed, Bath, Car, Ruler, MapPin, 
-  MessageCircle, Star, Share2, 
-  ChevronLeft, ChevronRight, Send, Phone 
+import {
+    Bed, Bath, Car, Ruler, MapPin,
+    MessageCircle, Star, Share2,
+    ChevronLeft, ChevronRight, Send, Phone
 } from 'lucide-react';
 import { toast } from "sonner";
 import { useFavorites } from '@/hooks/useFavorites';
@@ -17,244 +17,244 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious 
+import {
+    Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 } from "@/components/ui/carousel";
 import PropertyMap from './PropertyMap';
 
 interface PropertyDetailsClientProps {
-  property: any;          // Dados do imóvel principal
-  similarProperties: any[]; // Lista de imóveis semelhantes
+    property: any;          // Dados do imóvel principal
+    similarProperties: any[]; // Lista de imóveis semelhantes
 }
 
 export function PropertyDetailsClient({ property, similarProperties }: PropertyDetailsClientProps) {
-  const { isFavorite, toggleFavorite } = useFavorites(); 
-  const [activeImgIndex, setActiveImgIndex] = useState(0);
+    const { isFavorite, toggleFavorite } = useFavorites();
+    const [activeImgIndex, setActiveImgIndex] = useState(0);
 
-  // Formulário
-  const [formName, setFormName] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
+    // Formulário
+    const [formName, setFormName] = useState('');
+    const [formEmail, setFormEmail] = useState('');
+    const [formPhone, setFormPhone] = useState('');
 
-  if (!property) return <div className="text-center py-20">Imóvel não encontrado.</div>;
+    if (!property) return <div className="text-center py-20">Imóvel não encontrado.</div>;
 
-  const currentImage = property.images?.[activeImgIndex]?.url || '';
-  const favorite = isFavorite(property.id);
+    const currentImage = property.images?.[activeImgIndex]?.url || '';
+    const favorite = isFavorite(property.id);
 
-  // Handlers
-  const handleNextImg = () => {
-    if (!property?.images?.length) return;
-    setActiveImgIndex((prev) => (prev + 1) % property.images.length);
-  };
+    // Handlers
+    const handleNextImg = () => {
+        if (!property?.images?.length) return;
+        setActiveImgIndex((prev) => (prev + 1) % property.images.length);
+    };
 
-  const handlePrevImg = () => {
-    if (!property?.images?.length) return;
-    setActiveImgIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
-  };
+    const handlePrevImg = () => {
+        if (!property?.images?.length) return;
+        setActiveImgIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+    };
 
-  const handleWhatsApp = () => {
-    const text = `Olá, tenho interesse no imóvel ${property.title} (Ref: ${property.id})`;
-    window.open(`https://wa.me/554796510619?text=${encodeURIComponent(text)}`, '_blank');
-  };
+    const handleWhatsApp = () => {
+        const text = `Olá, tenho interesse no imóvel ${property.title} (Ref: ${property.id})`;
+        window.open(`https://wa.me/554796510619?text=${encodeURIComponent(text)}`, '_blank');
+    };
 
-  const handleLeadSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("Solicitação enviada!");
-    setFormName(''); setFormPhone(''); setFormEmail('');
-  };
+    const handleLeadSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        toast.success("Solicitação enviada!");
+        setFormName(''); setFormPhone(''); setFormEmail('');
+    };
 
-  const formatCurrency = (val?: number) => val ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val) : 'Consulte';
-  const getFeatureName = (feat: any) => typeof feat === 'string' ? feat : feat.name;
+    const formatCurrency = (val?: number) => val ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val) : 'Consulte';
+    const getFeatureName = (feat: any) => typeof feat === 'string' ? feat : feat.name;
 
-  const indoorFeatures = [...(property.roomFeatures || []), ...(property.propertyFeatures || [])];
+    const indoorFeatures = [...(property.roomFeatures || []), ...(property.propertyFeatures || [])];
 
-  const breadcrumbItems = [
-    { label: 'Vendas', path: '/vendas' },
-    { label: property.address?.city || 'Cidade', path: `/vendas?city=${property.address?.city}` },
-    { label: `Ref ${property.id}`, path: '' }
-  ];
+    const breadcrumbItems = [
+        { label: 'Vendas', path: '/vendas' },
+        { label: property.address?.city || 'Cidade', path: `/vendas?city=${property.address?.city}` },
+        { label: `Ref ${property.id}`, path: '' }
+    ];
 
-  return (
-    <div className="min-h-screen bg-[#121212] text-[#e0e0e0] pb-20 font-sans">
-      
-      {/* Breadcrumbs */}
-      <div className="w-full border-b border-[#222]">
-        <div className="max-w-[1600px] mx-auto">
-           <Breadcrumb items={breadcrumbItems} className="bg-transparent border-none px-5 py-4 shadow-none" />
-        </div>
-      </div>
+    return (
+        <div className="min-h-screen bg-[#121212] text-[#e0e0e0] pb-20 font-sans">
 
-      <div className="max-w-[1600px] mx-auto px-5 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        
-        {/* COLUNA ESQUERDA (Mídia e Info) */}
-        <div className="lg:col-span-8 w-full">
-          
-          {/* GALERIA */}
-          <div className="flex flex-col lg:flex-row gap-4 h-auto lg:h-[550px] mb-10 group">
-            <div className="flex-1 bg-black relative rounded-md overflow-hidden border border-[#222]">
-              <div className="absolute inset-0 bg-cover bg-center opacity-20 blur-2xl" style={{ backgroundImage: `url(${currentImage})` }} />
-              <img src={currentImage} alt={property.title} className="relative h-full w-full object-contain z-10" />
-              
-              <div className="absolute inset-0 z-20 flex items-center justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={handlePrevImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full"><ChevronLeft /></button>
-                <button onClick={handleNextImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full"><ChevronRight /></button>
-              </div>
-              
-              <div className="absolute top-4 left-4 z-20">
-                {property.badgeText && <Badge className="bg-primary text-black font-bold uppercase">{property.badgeText}</Badge>}
-              </div>
-            </div>
-
-            {/* Thumbs */}
-            <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto w-full lg:w-[130px] h-[100px] lg:h-full scrollbar-hide">
-              {property.images?.map((img: any, idx: number) => (
-                <button 
-                  key={idx} 
-                  onClick={() => setActiveImgIndex(idx)}
-                  className={`relative aspect-[4/3] w-[120px] lg:w-full flex-shrink-0 rounded-md overflow-hidden border-2 ${idx === activeImgIndex ? 'border-primary' : 'border-transparent opacity-50'}`}
-                >
-                  <img src={img.url} alt="thumb" className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* TITULO E ÍCONES */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xs uppercase tracking-widest">
-              <span>{property.category}</span><span>•</span><span>{property.address?.neighborhood}</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-light text-white leading-tight mb-2">{property.title}</h1>
-            <div className="flex items-center text-[#888] gap-2 text-sm">
-              <MapPin className="h-4 w-4 text-primary" /> <span>{property.address?.city}, {property.address?.state}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8 border-y border-[#222] mb-8">
-            {[
-              { icon: Bed, val: property.bedrooms, label: "Quartos" },
-              { icon: Bath, val: property.bathrooms, label: "Banheiros" },
-              { icon: Car, val: property.garageSpots, label: "Vagas" },
-              { icon: Ruler, val: property.privateArea, label: "Privativos", unit: "m²" },
-            ].map((item, i) => (
-              <div key={i} className="flex flex-col items-center md:items-start p-2">
-                <div className="flex items-center gap-2 text-white mb-1">
-                    <item.icon className="h-5 w-5 text-primary" />
-                    <span className="text-2xl font-light">{item.val} <span className="text-sm text-[#666]">{item.unit}</span></span>
+            {/* Breadcrumbs */}
+            <div className="w-full border-b border-[#222]">
+                <div className="max-w-[1600px] mx-auto">
+                    <Breadcrumb items={breadcrumbItems} className="bg-transparent border-none px-5 py-4 shadow-none" />
                 </div>
-                <span className="text-[10px] text-[#666] uppercase tracking-widest font-bold">{item.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="mb-12">
-            <h3 className="text-xl font-medium text-white mb-4 border-l-4 border-primary pl-3">Sobre o Imóvel</h3>
-            <p className="whitespace-pre-line text-[#ccc] leading-relaxed font-light text-justify">{property.description}</p>
-          </div>
-
-          {/* CARACTERÍSTICAS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {indoorFeatures.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium text-white mb-4">Características</h3>
-                <ul className="space-y-2">
-                  {indoorFeatures.map((feat: any, i: number) => (
-                    <li key={i} className="flex items-start text-sm text-[#bbb]">
-                      <span className="text-primary mr-2 font-bold">✓</span>{getFeatureName(feat)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-             {property.developmentFeatures?.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium text-white mb-4">Empreendimento</h3>
-                <ul className="space-y-2">
-                  {property.developmentFeatures.map((feat: any, i: number) => (
-                    <li key={i} className="flex items-start text-sm text-[#bbb]">
-                      <span className="text-primary mr-2 font-bold">✓</span>{getFeatureName(feat)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* COLUNA DIREITA (Sidebar) */}
-        <div className="lg:col-span-4 w-full relative">
-          <div className="lg:sticky lg:top-6 space-y-6">
-            <Card className="border border-[#222] bg-[#1a1a1a] shadow-xl">
-              <CardContent className="p-6 space-y-6">
-                <div>
-                  <p className="text-xs text-[#666] uppercase tracking-widest font-bold mb-1">Valor de Venda</p>
-                  <div className="text-3xl font-bold text-white tracking-tight">{formatCurrency(Number(property.price))}</div>
-                </div>
-                <Button className="w-full h-12 bg-[#25D366] hover:bg-[#1da851] text-white font-bold uppercase gap-2" onClick={handleWhatsApp}>
-                  <MessageCircle size={18} /> Chamar no WhatsApp
-                </Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => toggleFavorite(property.id)} className={`flex-1 border-[#333] bg-transparent hover:bg-[#333] ${favorite ? 'text-primary border-primary/50' : 'text-[#888]'}`}>
-                    <Star className={`mr-2 h-4 w-4 ${favorite ? "fill-primary" : ""}`} /> Favorito
-                  </Button>
-                  <Button variant="outline" className="flex-1 border-[#333] bg-transparent hover:bg-[#333] text-[#888]">
-                    <Share2 className="mr-2 h-4 w-4" /> Compartilhar
-                  </Button>
-                </div>
-                <Separator className="bg-[#333]" />
-                <form onSubmit={handleLeadSubmit} className="space-y-4">
-                  <div className="space-y-3">
-                    <Input placeholder="Nome completo" className="bg-[#121212] border-[#333] text-white" value={formName} onChange={e => setFormName(e.target.value)} />
-                    <Input placeholder="Telefone" className="bg-[#121212] border-[#333] text-white" value={formPhone} onChange={e => setFormPhone(e.target.value)} />
-                    <Input placeholder="E-mail" className="bg-[#121212] border-[#333] text-white" value={formEmail} onChange={e => setFormEmail(e.target.value)} />
-                  </div>
-                  <Button type="submit" variant="ghost" className="w-full text-primary border border-primary/20">Enviar Solicitação <Send className="ml-2 h-3 w-3" /></Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <div className="flex items-center gap-4 px-4 py-2 border border-[#222] rounded-lg bg-[#1a1a1a]">
-              <div className="h-10 w-10 rounded-full bg-[#121212] border border-[#333] flex items-center justify-center text-primary font-bold">DB</div>
-              <div className="flex-1"><p className="text-sm font-bold text-white">Danillo Bezerra</p><p className="text-xs text-[#666]">CRECI 4.109-J</p></div>
-              <a href="tel:+554796510619" className="text-[#666] hover:text-white"><Phone size={18} /></a>
             </div>
-          </div>
-          
-        </div>
-        
-      </div>
+
+            <div className="max-w-[1600px] mx-auto px-5 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+
+                {/* COLUNA ESQUERDA (Mídia e Info) */}
+                <div className="lg:col-span-8 w-full">
+
+                    {/* GALERIA */}
+                    <div className="flex flex-col lg:flex-row gap-4 h-auto lg:h-[550px] mb-10 group">
+                        <div className="flex-1 bg-black relative rounded-md overflow-hidden border border-[#222]">
+                            <div className="absolute inset-0 bg-cover bg-center opacity-20 blur-2xl" style={{ backgroundImage: `url(${currentImage})` }} />
+                            <img src={currentImage} alt={property.title} className="relative h-full w-full object-contain z-10" />
+
+                            <div className="absolute inset-0 z-20 flex items-center justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={handlePrevImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full"><ChevronLeft /></button>
+                                <button onClick={handleNextImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full"><ChevronRight /></button>
+                            </div>
+
+                            <div className="absolute top-4 left-4 z-20">
+                                {property.badgeText && <Badge className="bg-primary text-black font-bold uppercase">{property.badgeText}</Badge>}
+                            </div>
+                        </div>
+
+                        {/* Thumbs */}
+                        <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto w-full lg:w-[130px] h-[100px] lg:h-full scrollbar-hide">
+                            {property.images?.map((img: any, idx: number) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setActiveImgIndex(idx)}
+                                    className={`relative aspect-[4/3] w-[120px] lg:w-full flex-shrink-0 rounded-md overflow-hidden border-2 ${idx === activeImgIndex ? 'border-primary' : 'border-transparent opacity-50'}`}
+                                >
+                                    <img src={img.url} alt="thumb" className="h-full w-full object-cover" />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* TITULO E ÍCONES */}
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xs uppercase tracking-widest">
+                            <span>{property.category}</span><span>•</span><span>{property.address?.neighborhood}</span>
+                        </div>
+                        <h1 className="text-3xl md:text-4xl font-light text-white leading-tight mb-2">{property.title}</h1>
+                        <div className="flex items-center text-[#888] gap-2 text-sm">
+                            <MapPin className="h-4 w-4 text-primary" /> <span>{property.address?.city}, {property.address?.state}</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8 border-y border-[#222] mb-8">
+                        {[
+                            { icon: Bed, val: property.bedrooms, label: "Quartos" },
+                            { icon: Bath, val: property.bathrooms, label: "Banheiros" },
+                            { icon: Car, val: property.garageSpots, label: "Vagas" },
+                            { icon: Ruler, val: property.privateArea, label: "Privativos", unit: "m²" },
+                        ].map((item, i) => (
+                            <div key={i} className="flex flex-col items-center md:items-start p-2">
+                                <div className="flex items-center gap-2 text-white mb-1">
+                                    <item.icon className="h-5 w-5 text-primary" />
+                                    <span className="text-2xl font-light">{item.val} <span className="text-sm text-[#666]">{item.unit}</span></span>
+                                </div>
+                                <span className="text-[10px] text-[#666] uppercase tracking-widest font-bold">{item.label}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mb-12">
+                        <h3 className="text-xl font-medium text-white mb-4 border-l-4 border-primary pl-3">Sobre o Imóvel</h3>
+                        <p className="whitespace-pre-line text-[#ccc] leading-relaxed font-light text-justify">{property.description}</p>
+                    </div>
+
+                    {/* CARACTERÍSTICAS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        {indoorFeatures.length > 0 && (
+                            <div>
+                                <h3 className="text-lg font-medium text-white mb-4">Características</h3>
+                                <ul className="space-y-2">
+                                    {indoorFeatures.map((feat: any, i: number) => (
+                                        <li key={i} className="flex items-start text-sm text-[#bbb]">
+                                            <span className="text-primary mr-2 font-bold">✓</span>{getFeatureName(feat)}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        {property.developmentFeatures?.length > 0 && (
+                            <div>
+                                <h3 className="text-lg font-medium text-white mb-4">Empreendimento</h3>
+                                <ul className="space-y-2">
+                                    {property.developmentFeatures.map((feat: any, i: number) => (
+                                        <li key={i} className="flex items-start text-sm text-[#bbb]">
+                                            <span className="text-primary mr-2 font-bold">✓</span>{getFeatureName(feat)}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* COLUNA DIREITA (Sidebar) */}
+                <div className="lg:col-span-4 w-full relative">
+                    <div className="lg:sticky lg:top-6 space-y-6">
+                        <Card className="border border-[#222] bg-[#1a1a1a] shadow-xl">
+                            <CardContent className="p-6 space-y-6">
+                                <div>
+                                    <p className="text-xs text-[#666] uppercase tracking-widest font-bold mb-1">Valor de Venda</p>
+                                    <div className="text-3xl font-bold text-white tracking-tight">{formatCurrency(Number(property.price))}</div>
+                                </div>
+                                <Button className="w-full h-12 bg-[#25D366] hover:bg-[#1da851] text-white font-bold uppercase gap-2" onClick={handleWhatsApp}>
+                                    <MessageCircle size={18} /> Chamar no WhatsApp
+                                </Button>
+                                <div className="flex gap-2">
+                                    <Button variant="outline" onClick={() => toggleFavorite(property.id)} className={`flex-1 border-[#333] bg-transparent hover:bg-[#333] ${favorite ? 'text-primary border-primary/50' : 'text-[#888]'}`}>
+                                        <Star className={`mr-2 h-4 w-4 ${favorite ? "fill-primary" : ""}`} /> Favorito
+                                    </Button>
+                                    <Button variant="outline" className="flex-1 border-[#333] bg-transparent hover:bg-[#333] text-[#888]">
+                                        <Share2 className="mr-2 h-4 w-4" /> Compartilhar
+                                    </Button>
+                                </div>
+                                <Separator className="bg-[#333]" />
+                                <form onSubmit={handleLeadSubmit} className="space-y-4">
+                                    <div className="space-y-3">
+                                        <Input placeholder="Nome completo" className="bg-[#121212] border-[#333] text-white" value={formName} onChange={e => setFormName(e.target.value)} />
+                                        <Input placeholder="Telefone" className="bg-[#121212] border-[#333] text-white" value={formPhone} onChange={e => setFormPhone(e.target.value)} />
+                                        <Input placeholder="E-mail" className="bg-[#121212] border-[#333] text-white" value={formEmail} onChange={e => setFormEmail(e.target.value)} />
+                                    </div>
+                                    <Button type="submit" variant="ghost" className="w-full text-primary border border-primary/20">Enviar Solicitação <Send className="ml-2 h-3 w-3" /></Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+
+                        <div className="flex items-center gap-4 px-4 py-2 border border-[#222] rounded-lg bg-[#1a1a1a]">
+                            <div className="h-10 w-10 rounded-full bg-[#121212] border border-[#333] flex items-center justify-center text-primary font-bold">DB</div>
+                            <div className="flex-1"><p className="text-sm font-bold text-white">Danillo Bezerra</p><p className="text-xs text-[#666]">CRECI 4.109-J</p></div>
+                            <a href="tel:+554796510619" className="text-[#666] hover:text-white"><Phone size={18} /></a>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
             <div className="mt-10 mb-10 max-w-[1600px] mx-auto px-5">
-            <h3 className="text-xl font-bold text-white mb-4">Localização</h3>
-            <PropertyMap 
-                // Se sua API não retorna lat/lng, o componente PropertyMap usa o endereço
-                address={`${property.address?.street}, ${property.address?.number}`}
-                city={property.address?.city}
-                neighborhood={property.address?.neighborhood}
-                lat={0} // Se tiver latitude no banco, passe aqui
-                lng={0} // Se tiver longitude no banco, passe aqui
-            />
+                <h3 className="text-xl font-bold text-white mb-4">Localização</h3>
+                <PropertyMap
+                    // Correção: Juntamos rua, número, bairro e cidade em uma única string de endereço
+                    address={`${property.address?.street}, ${property.address?.number} - ${property.address?.neighborhood}, ${property.address?.city}`}
+
+                    // Removemos 'city' e 'neighborhood' isolados pois o componente não aceita
+                    lat={0}
+                    lng={0}
+                />
+            </div>
+            {/* SEMELHANTES */}
+            {similarProperties.length > 0 && (
+                <div className="max-w-[1600px] mx-auto px-5 mt-20 pt-10 border-t border-[#222]">
+                    <h2 className="text-2xl font-light text-white mb-8 border-l-4 border-primary pl-4">Imóveis <span className="font-bold">Semelhantes</span></h2>
+                    <div className="px-1">
+                        <Carousel opts={{ align: "start", loop: true }} className="w-full">
+                            <CarouselContent className="-ml-4">
+                                {similarProperties.map((simProp) => (
+                                    <CarouselItem key={simProp.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                                        <PropertyCard property={simProp} />
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="left-2 bg-black/80 text-white border-none" />
+                            <CarouselNext className="right-2 bg-black/80 text-white border-none" />
+                        </Carousel>
+                    </div>
+
+                </div>
+
+            )}
         </div>
-      {/* SEMELHANTES */}
-      {similarProperties.length > 0 && (
-        <div className="max-w-[1600px] mx-auto px-5 mt-20 pt-10 border-t border-[#222]">
-          <h2 className="text-2xl font-light text-white mb-8 border-l-4 border-primary pl-4">Imóveis <span className="font-bold">Semelhantes</span></h2>
-          <div className="px-1">
-            <Carousel opts={{ align: "start", loop: true }} className="w-full">
-              <CarouselContent className="-ml-4">
-                {similarProperties.map((simProp) => (
-                  <CarouselItem key={simProp.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                    <PropertyCard property={simProp} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-2 bg-black/80 text-white border-none" />
-              <CarouselNext className="right-2 bg-black/80 text-white border-none" />
-            </Carousel>
-          </div>
-          
-        </div>
-        
-      )}
-    </div>
-  );
+    );
 }
