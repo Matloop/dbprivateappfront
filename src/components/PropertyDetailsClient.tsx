@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
-import Image from 'next/image'; // Importamos para otimizar thumbnails também
+import Image from 'next/image';
 import {
     Bed, Bath, Car, Ruler, MapPin,
     MessageCircle, Star, Share2,
@@ -59,20 +59,22 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
 
     if (!property) return <div className="text-center py-20 text-gray-400">Imóvel não encontrado.</div>;
 
+    // Criar array de imagens seguro com fallback
+    const images = property.images && property.images.length > 0 
+        ? property.images 
+        : [{ url: '/placeholder.jpg' }];
+    
     // Correção da URL da imagem atual
-    const rawImage = property.images?.[activeImgIndex]?.url || '';
-    const currentImage = fixImageSource(rawImage);
+    const currentImage = fixImageSource(images[activeImgIndex]?.url || '');
     
     const favorite = isFavorite(property.id);
 
     const handleNextImg = () => {
-        if (!property?.images?.length) return;
-        setActiveImgIndex((prev) => (prev + 1) % property.images.length);
+        setActiveImgIndex((prev) => (prev + 1) % images.length);
     };
 
     const handlePrevImg = () => {
-        if (!property?.images?.length) return;
-        setActiveImgIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+        setActiveImgIndex((prev) => (prev - 1 + images.length) % images.length);
     };
 
     const handleWhatsApp = () => {
@@ -118,7 +120,7 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
                             {/* Background Blur */}
                             <div className="absolute inset-0 bg-cover bg-center opacity-20 blur-2xl" style={{ backgroundImage: `url(${currentImage})` }} />
                             
-                            {/* Imagem Principal (Sem next/image aqui para manter controle total do aspect ratio na galeria principal, mas poderia migrar) */}
+                            {/* Imagem Principal */}
                             <img src={currentImage} alt={property.title} className="relative h-full w-full object-contain z-10" />
 
                             <div className="absolute inset-0 z-20 flex items-center justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -133,13 +135,12 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
 
                         {/* Thumbs */}
                         <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto w-full lg:w-[130px] h-[100px] lg:h-full scrollbar-hide">
-                            {property.images?.map((img: any, idx: number) => (
+                            {images.map((img: any, idx: number) => (
                                 <button
                                     key={idx}
                                     onClick={() => setActiveImgIndex(idx)}
                                     className={`relative aspect-[4/3] w-[120px] lg:w-full flex-shrink-0 rounded-md overflow-hidden border-2 ${idx === activeImgIndex ? 'border-primary' : 'border-transparent opacity-50'}`}
                                 >
-                                    {/* Aplicando fixImageSource na Thumb */}
                                     <img src={fixImageSource(img.url)} alt="thumb" className="h-full w-full object-cover" />
                                 </button>
                             ))}

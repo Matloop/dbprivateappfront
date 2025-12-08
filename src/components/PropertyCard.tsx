@@ -2,21 +2,19 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image'; // <--- Otimização Nativa
+import Image from 'next/image';
 import { Bed, Bath, Car, Ruler, MapPin, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-// Função para corrigir URLs (Localhost vs Produção)
 const fixImageSource = (url: string) => {
   if (!url) return '/placeholder.jpg';
-  
-  // Em desenvolvimento, usa a URL original (localhost)
+  // Em desenvolvimento, retorna a URL crua (http://localhost:3000...)
   if (process.env.NODE_ENV === 'development') return url;
-
-  // Em produção, troca localhost pelo servidor real
+  
+  // Em produção, corrige para o servidor online
   if (url.includes('localhost') || url.includes('127.0.0.1')) {
     return url.replace(/http:\/\/(localhost|127\.0\.0\.1):3000/g, 'https://98.93.10.61.nip.io');
   }
@@ -68,8 +66,10 @@ export const PropertyCard = ({ property }: { property: Property }) => {
     toggleFavorite(property.id);
   };
 
-  // Pega a URL corrigida
   const currentImageUrl = fixImageSource(images[currentImgIndex].url);
+  
+  // Verifica se é ambiente local
+  const isLocalDev = process.env.NODE_ENV === 'development';
 
   return (
     <Link href={`/imovel/${property.id}`} className="block group">
@@ -77,20 +77,26 @@ export const PropertyCard = ({ property }: { property: Property }) => {
         
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-black group/image">
           {/* 
-             AQUI ESTÁ A MÁGICA DA PERFORMANCE:
-             1. 'fill': Preenche o container pai
-             2. 'sizes': Diz ao Next para gerar versões pequenas (33vw = 1/3 da tela em desktop)
-             3. O Next converte para WebP automaticamente e reduz o tamanho do arquivo.
+             SOLUÇÃO BRUTA: 
+             Se for local, usa <img> normal (o navegador lida melhor).
+             Se for produção, usa <Image> do Next (otimizado).
           */}
-          <Image
-            src={currentImageUrl}
-            alt={property.title}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            quality={60} // <--- Reduzi a qualidade para 60% (padrão é 75). Fica muito mais leve.
-            priority={false} // Carregamento lazy
-          />
+          {isLocalDev ? (
+             <img
+                src={currentImageUrl}
+                alt={property.title}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+             />
+          ) : (
+             <Image
+                src={currentImageUrl}
+                alt={property.title}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                quality={60}
+             />
+          )}
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
 
