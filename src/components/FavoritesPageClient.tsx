@@ -13,16 +13,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function FavoritesPageClient() {
   const router = useRouter();
   const { favorites } = useFavorites();
-  
-  // Garantir que o componente montou para evitar erro de hidratação com localStorage
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Busca os imóveis APENAS se houver favoritos
-  // Passamos os IDs separados por vírgula para a API (ex: ids="1,5,9")
-  const { data: properties, isLoading } = useProperties(
+  // Usa o mesmo hook, mas trata o dado depois
+  const { data, isLoading } = useProperties(
     favorites.length > 0 ? { ids: favorites.join(',') } : undefined
   );
+
+  // Achatamos as páginas para pegar os imóveis, caso existam
+  const properties = data?.pages.flatMap(page => page.data) || [];
 
   const breadcrumbItems = [
     { label: 'Home', path: '/' },
@@ -33,8 +33,6 @@ export function FavoritesPageClient() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      
-      {/* Header */}
       <div className="border-b border-border bg-card/50">
          <div className="container mx-auto px-4 py-4">
              <Breadcrumb items={breadcrumbItems} className="bg-transparent border-none p-0 shadow-none" />
@@ -47,7 +45,6 @@ export function FavoritesPageClient() {
 
       <div className="container mx-auto px-4 py-10">
         
-        {/* State: Vazio (Sem favoritos) */}
         {favorites.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-xl bg-card/30">
             <div className="bg-muted/20 p-6 rounded-full mb-4">
@@ -66,7 +63,6 @@ export function FavoritesPageClient() {
           </div>
         )}
 
-        {/* State: Carregando API */}
         {isLoading && favorites.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map(i => (
@@ -79,8 +75,7 @@ export function FavoritesPageClient() {
           </div>
         )}
 
-        {/* State: Lista Renderizada */}
-        {!isLoading && properties && properties.length > 0 && (
+        {!isLoading && properties.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in">
             {properties.map((property: any) => (
               <PropertyCard key={property.id} property={property} />

@@ -1,7 +1,7 @@
-'use client'; // Importante
+'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Mudança aqui
+import { useRouter } from 'next/navigation';
 import { Search, MapPin, Building2, DollarSign } from 'lucide-react';
 import { PropertyCard } from '@/components/PropertyCard';
 import { useProperties } from '@/hooks/useProperties';
@@ -11,13 +11,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function LandingPageClient() {
-  const router = useRouter(); // Mudança aqui
+  const router = useRouter();
   
   const [searchCity, setSearchCity] = useState('');
   const [searchType, setSearchType] = useState('');
-  const [searchTerm, setSearchTerm] = useState(''); // Adicionado estado para o input de texto
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: properties, isLoading, isError } = useProperties();
+  // 1. Mudança aqui: O retorno agora é um objeto "infinite query", não um array direto.
+  // Renomeei de 'properties' para 'queryData' para evitar confusão.
+  const { data: queryData, isLoading, isError } = useProperties();
+
+  // 2. Extração dos dados: "Achatamos" as páginas para ter um array simples de imóveis
+  const featuredProperties = queryData?.pages.flatMap((page) => page.data) || [];
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -25,14 +30,13 @@ export function LandingPageClient() {
     if (searchType && searchType !== 'all') params.append('types', searchType);
     if (searchTerm) params.append('search', searchTerm);
     
-    router.push(`/vendas?${params.toString()}`); // Mudança aqui
+    router.push(`/vendas?${params.toString()}`);
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* ... (O RESTO DO JSX É IDÊNTICO AO QUE FIZEMOS NO PASSO ANTERIOR) ... */}
-      {/* Vou colocar aqui só o trecho do Input que mudou ligeiramente */}
       
+      {/* HERO SECTION / BUSCA */}
       <section className="bg-card border-b border-border py-12 px-[5%]">
         <div className="w-full max-w-7xl mx-auto">
           <div className="bg-[#1a1a1a] p-6 md:p-8 rounded-lg border border-white/10 shadow-2xl flex flex-col gap-6">
@@ -46,7 +50,6 @@ export function LandingPageClient() {
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 items-center">
-              {/* Selects... (Mesmo código de antes) */}
                <div className="w-full md:w-[240px]">
                 <Select value={searchCity} onValueChange={setSearchCity}>
                   <SelectTrigger className="bg-background border-input h-12">
@@ -82,7 +85,6 @@ export function LandingPageClient() {
                 </Select>
               </div>
 
-              {/* Input com State */}
               <div className="w-full relative">
                 <Input 
                   placeholder="Ex: Edifício Aurora, Frente Mar..." 
@@ -129,7 +131,8 @@ export function LandingPageClient() {
 
         {!isLoading && !isError && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {properties?.slice(0, 8).map((prop: any) => (
+            {/* 3. Correção: Usamos o array extraído (featuredProperties) para o slice */}
+            {featuredProperties.slice(0, 8).map((prop: any) => (
               <PropertyCard key={prop.id} property={prop} />
             ))}
           </div>

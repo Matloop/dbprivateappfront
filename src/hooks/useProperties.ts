@@ -1,16 +1,22 @@
-import { useQuery } from '@tanstack/react-query';
-import { getProperties, PropertyFilters } from '../lib/api';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { getProperties, PropertyFilters } from '@/lib/api';
 
-// Hook para buscar lista de imóveis
-export const useProperties = (filters?: PropertyFilters) => {
-  return useQuery({
-    // A queryKey define quando o React Query deve refazer a busca.
-    // Se "filters" mudar, ele busca automaticamente.
+export function useProperties(filters?: PropertyFilters) {
+  return useInfiniteQuery({
     queryKey: ['properties', filters],
-    
-    queryFn: () => getProperties(filters),
-    
-    // Mantém os dados no cache por 5 minutos antes de considerar "velho"
-    staleTime: 1000 * 60 * 5, 
+    queryFn: async ({ pageParam = 1 }) => {
+      // Passa a página atual para a API
+      return getProperties({ ...filters, page: pageParam as number });
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      // Verifica se existe próxima página baseado no meta do backend
+      if (lastPage.meta.page < lastPage.meta.lastPage) {
+        return lastPage.meta.page + 1;
+      }
+      return undefined; // Não tem mais páginas
+    },
+    // Mantém os dados antigos enquanto busca novos filtros (opcional, melhora UX)
+    placeholderData: (previousData) => previousData, 
   });
-};
+}
