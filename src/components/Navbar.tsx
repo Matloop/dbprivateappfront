@@ -10,6 +10,9 @@ import { cn } from '@/lib/utils';
 export const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname(); // Substituto do useLocation
+  if (pathname.startsWith('/intranet') || pathname.startsWith('/login')) {
+    return null;
+  }
   const { favorites } = useFavorites();
 
   const isActive = (path: string) => pathname === path;
