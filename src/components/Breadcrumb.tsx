@@ -1,18 +1,20 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Breadcrumb.css';
+import { ChevronRight, Home } from 'lucide-react';
+import { cn } from '@/lib/utils'; // Utilitário do shadcn que você já tem
 
 interface BreadcrumbItemProps {
   label: string;
-  path?: string; // Se tiver path, navega. Se não, é o item atual (texto estático)
-  action?: () => void; // Ou uma função customizada
+  path?: string;
+  action?: () => void;
 }
 
 interface BreadcrumbProps {
   items: BreadcrumbItemProps[];
+  className?: string;
 }
 
-export const Breadcrumb = ({ items }: BreadcrumbProps) => {
+export const Breadcrumb = ({ items, className }: BreadcrumbProps) => {
   const navigate = useNavigate();
 
   const handleClick = (item: BreadcrumbItemProps) => {
@@ -24,24 +26,32 @@ export const Breadcrumb = ({ items }: BreadcrumbProps) => {
   };
 
   return (
-    <div className="breadcrumb-wrapper">
-      {/* Sempre começa com Home */}
-      <span className="breadcrumb-item" onClick={() => navigate('/')}>
-        Home
-      </span>
+    <div className={cn(
+      "w-full bg-card border-b border-white/10 shadow-md relative z-10",
+      "px-[5%] py-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground",
+      className
+    )}>
+      {/* Item Home */}
+      <button 
+        onClick={() => navigate('/')} 
+        className="flex items-center hover:text-primary transition-colors duration-200"
+      >
+        <Home className="w-4 h-4" />
+      </button>
 
       {items.map((item, index) => (
         <React.Fragment key={index}>
-          <span className="breadcrumb-separator">›</span>
+          <ChevronRight className="w-4 h-4 text-white/20" />
           
-          {/* Se não for o último item, é link */}
           {index < items.length - 1 ? (
-            <span className="breadcrumb-item" onClick={() => handleClick(item)}>
+            <button 
+              onClick={() => handleClick(item)}
+              className="hover:text-primary transition-colors duration-200 font-medium capitalize"
+            >
               {item.label}
-            </span>
+            </button>
           ) : (
-            /* O último item é o atual (destaque) */
-            <span className="breadcrumb-current">
+            <span className="text-white font-bold truncate max-w-[200px] md:max-w-md capitalize">
               {item.label}
             </span>
           )}
