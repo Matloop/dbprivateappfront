@@ -9,7 +9,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-// --- FUNÇÃO CORRETORA DE URL ---
+// --- FUNÇÃO CORRETORA DE URL
 const fixImageSource = (url: string) => {
   if (!url) return '/placeholder.jpg';
 
