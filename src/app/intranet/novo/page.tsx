@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-    ArrowLeft, Save, Loader2, FileText, DollarSign, Home, LayoutGrid, 
-    Image as ImageIcon, Lock, Search, Briefcase, Key, Plus, UploadCloud, Trash
+    ArrowLeft, Save, Loader2, Plus, 
+    FileText, DollarSign, Home, LayoutGrid, Image as ImageIcon, Lock, Search, Briefcase, Key
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
@@ -19,24 +19,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Badge } from "@/components/ui/badge";
 
-// --- LISTAS DE OPÇÕES ---
 const ROOM_OPTS = ["Área de Serviço", "Banheiro de Serviço", "Banheiro Social", "Biblioteca", "Closet", "Copa", "Copa/Cozinha", "Cozinha", "Cozinha Americana", "Demi-Suíte", "Dependência de Empregada", "Entrada de Serviço", "Espaço Gourmet", "Estar Íntimo", "Hidromassagem", "Home Office", "Jardim", "Lavabo", "Living", "Piscina Privativa", "Sacada / Varanda", "Sacada com Churrasqueira", "Sacada Integrada", "Sacada Técnica", "Sala", "Sala de Estar", "Sala de Estar Íntimo", "Sala de Jantar", "Sala de TV", "Sala para 2 Ambientes", "Sala para 3 Ambientes", "Suíte Master", "Suíte Standard", "Terraço"];
 const PROPERTY_OPTS = ["Acabamento em Gesso", "Aceita Pet", "Andar Alto", "Aquecimento de Água", "Ar Condicionado", "Calefação", "Carpete", "Churrasqueira", "Decorado", "Despensa", "Fechadura Eletrônica", "Infra para Ar Split", "Internet / WiFi", "Lareira", "Mezanino", "Móveis Planejados", "Piso Aquecido nos Banheiros", "Piso Cerâmico", "Piso de Madeira", "Piso Laminado", "Piso Porcelanato", "Piso Vinílico", "Sistema de Alarme", "TV a Cabo", "Ventilador de Teto", "Vista Livre", "Vista Mar", "Vista Panorâmica"];
 const DEVELOPMENT_OPTS = ["Acessibilidade para PNE", "Automação Predial", "Bar", "Bicicletário", "Boliche", "Box de Praia", "Brinquedoteca", "Câmeras de Segurança", "Captação de Água", "Cinema", "Coworking", "Deck Molhado", "Depósito", "Elevador", "Entrada para Banhistas", "Espaço Fitness", "Espaço Gourmet", "Espaço Zen", "Estar Social", "Gás Central", "Gerador", "Hall Decorado e Mobiliado", "Heliponto", "Hidromassagem", "Horta", "Infra para Veículos Elétricos", "Lavanderia Coletiva", "Lounge", "Medidores Individuais", "Mini Mercado", "Painéis de Energia Solar", "Pet Care", "Pet Place", "Piscina", "Piscina Infantil", "Piscina Térmica", "Playground", "Pomar", "Portão Eletrônico", "Portaria 24h", "Quadra de Padel", "Quadra de Tênis", "Quadra Esportiva", "Quiosque Externo", "RoofTop", "Sala de Jogos", "Sala de Reunião", "Salão de Festas", "Sauna", "Solarium", "Spa"];
 const BADGE_COLORS = [{ label: 'Azul (Padrão)', value: '#0d6efd' }, { label: 'Verde (Sucesso)', value: '#198754' }, { label: 'Vermelho (Destaque)', value: '#dc3545' }, { label: 'Dourado (Premium)', value: '#d4af37' }, { label: 'Preto', value: '#000000' }];
 
-export default function EditPropertyPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function NewPropertyPage() {
     const router = useRouter();
-    
-    // --- HOOKS DEVEM FICAR AQUI NO TOPO ---
-    const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [tempImageUrl, setTempImageUrl] = useState('');
-    
-    // Estados do Upload (Movidos para cima do return condicional)
-    const [isDragging, setIsDragging] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
 
     const form = useForm({
         defaultValues: {
@@ -57,65 +48,24 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
             videoUrl: '', tourUrl: '', images: [] as { url: string, isCover: boolean }[],
             ownerName: '', ownerPhone: '', ownerEmail: '', keysLocation: '', exclusivitySigned: false, 
             brokerNotes: '', onus: '', paymentDetails: '', incorporation: '', deliveryDate: '',
-            registrationNumber: '', branch: 'matriz', responsibleBroker: '',
+            registrationNumber: '', branch: 'matriz', responsibleBroker: 'Danillo Bezerra',
             metaTitle: '', metaDescription: '', description: '',
             roomFeatures: [] as string[], propertyFeatures: [] as string[], developmentFeatures: [] as string[]
         }
     });
 
-    useEffect(() => {
-        let mounted = true;
-        async function loadData() {
-            try {
-                const { data } = await api.get(`/properties/${id}`);
-                if (mounted) {
-                    form.reset({
-                        ...data,
-                        roomFeatures: data.roomFeatures?.map((f:any) => f.name) || [],
-                        propertyFeatures: data.propertyFeatures?.map((f:any) => f.name) || [],
-                        developmentFeatures: data.developmentFeatures?.map((f:any) => f.name) || [],
-                        price: Number(data.price) || 0, promotionalPrice: Number(data.promotionalPrice) || 0,
-                        condoFee: Number(data.condoFee) || 0, iptuPrice: Number(data.iptuPrice) || 0,
-                        bedrooms: Number(data.bedrooms) || 0, suites: Number(data.suites) || 0,
-                        bathrooms: Number(data.bathrooms) || 0, garageSpots: Number(data.garageSpots) || 0,
-                        privateArea: Number(data.privateArea) || 0, totalArea: Number(data.totalArea) || 0,
-                        garageArea: Number(data.garageArea) || 0, landArea: Number(data.landArea) || 0,
-                        
-                        address: data.address || { zipCode: '', state: 'SC', city: '', neighborhood: '', street: '', number: '', complement: '' },
-                        images: data.images || [],
-                        deliveryDate: data.deliveryDate ? new Date(data.deliveryDate).toISOString().split('T')[0] : '',
-                        
-                        onus: data.onus || '', paymentDetails: data.paymentDetails || '', incorporation: data.incorporation || '',
-                        registrationNumber: data.registrationNumber || '', branch: data.branch || 'matriz', responsibleBroker: data.responsibleBroker || 'Danillo Bezerra',
-                        buildingName: data.buildingName || '', videoUrl: data.videoUrl || '', tourUrl: data.tourUrl || '',
-                        ownerName: data.ownerName || '', ownerPhone: data.ownerPhone || '', ownerEmail: data.ownerEmail || '',
-                        keysLocation: data.keysLocation || '', brokerNotes: data.brokerNotes || '',
-                        metaTitle: data.metaTitle || '', metaDescription: data.metaDescription || '',
-                        description: data.description || '', badgeText: data.badgeText || '', badgeColor: data.badgeColor || ''
-                    });
-                }
-            } catch (err) {
-                toast.error("Erro ao carregar dados.");
-            } finally { if (mounted) setIsLoading(false); }
-        }
-        loadData();
-        return () => { mounted = false; };
-    }, [id]);
-
     const onSubmit = async (values: any) => {
         setIsSaving(true);
         try {
             const payload = { ...values, deliveryDate: values.deliveryDate ? new Date(values.deliveryDate) : undefined };
-            await api.patch(`/properties/${id}`, payload);
-            toast.success("Imóvel atualizado com sucesso!");
+            await api.post(`/properties`, payload);
+            toast.success("Imóvel criado com sucesso!");
             router.push('/intranet');
         } catch (err) {
-            console.error(err);
-            toast.error("Erro ao salvar.");
+            toast.error("Erro ao criar imóvel.");
         } finally { setIsSaving(false); }
     };
 
-    // --- FUNÇÕES AUXILIARES ---
     const handleListToggle = (listName: 'roomFeatures'|'propertyFeatures'|'developmentFeatures', item: string) => {
         const current = form.getValues(listName) || [];
         const updated = current.includes(item) ? current.filter(i => i !== item) : [...current, item];
@@ -134,68 +84,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
         form.setValue('images', current.filter((_, i) => i !== idx));
     };
 
-    // --- LÓGICA DE UPLOAD DRAG & DROP ---
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-    };
-
-    const handleDrop = async (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const files = Array.from(e.dataTransfer.files);
-        await uploadFiles(files);
-    };
-
-    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            const files = Array.from(e.target.files);
-            await uploadFiles(files);
-        }
-    };
-
-    const uploadFiles = async (files: File[]) => {
-        if (files.length === 0) return;
-        setIsUploading(true);
-
-        const formData = new FormData();
-        files.forEach(file => {
-            if (file.type.startsWith('image/')) {
-                formData.append('files', file);
-            }
-        });
-
-        try {
-            const { data } = await api.post('/properties/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-
-            const newImages = data.map((img: { url: string }) => ({
-                url: img.url,
-                isCover: false
-            }));
-
-            const currentImages = form.getValues('images') || [];
-            if (currentImages.length === 0 && newImages.length > 0) {
-                newImages[0].isCover = true;
-            }
-
-            form.setValue('images', [...currentImages, ...newImages], { shouldDirty: true });
-            toast.success(`${newImages.length} imagens adicionadas!`);
-        } catch (error) {
-            console.error(error);
-            toast.error("Erro ao fazer upload das imagens.");
-        } finally {
-            setIsUploading(false);
-        }
-    };
-
-    // Styles helpers
     const sectionClass = "bg-[#1e1e1e] border-[#333] mb-6";
     const labelClass = "text-gray-400 text-xs uppercase tracking-wide font-bold mb-2 block";
     const inputClass = "bg-[#2b2b2b] border-[#444] text-white focus:border-primary h-10";
@@ -205,14 +93,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     const privateInputClass = "bg-[#1e1a15] border-[#5c4018] text-[#d4af37] focus:border-[#d4af37]";
     const captureSectionClass = "bg-[#25201b] border-[#5c4018] mb-6 border-l-4 border-l-[#d4af37]";
 
-    // --- RETURN CONDICIONAL (AGORA DEPOIS DE TODOS OS HOOKS) ---
-    if (isLoading) return <div className="h-screen flex items-center justify-center text-primary"><Loader2 className="animate-spin mr-2"/> Carregando...</div>;
-
     return (
         <div className="min-h-screen bg-[#121212] text-white p-6 pb-32 font-sans">
             <div className="max-w-[1200px] mx-auto">
                 <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#333]">
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2"><ArrowLeft className="cursor-pointer hover:text-primary" onClick={() => router.push('/intranet')} /> Editar Imóvel #{id}</h1>
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2"><ArrowLeft className="cursor-pointer hover:text-primary" onClick={() => router.push('/intranet')} /> Novo Imóvel</h1>
                     <div className="flex gap-3"><Button variant="outline" onClick={() => router.push('/intranet')} className="border-red-900/30 text-red-500 hover:bg-red-900/20">Cancelar</Button><Button onClick={form.handleSubmit(onSubmit)} disabled={isSaving} className="bg-primary text-black font-bold hover:bg-primary/90">{isSaving ? <Loader2 className="animate-spin mr-2" /> : <Save className="mr-2" />} Salvar</Button></div>
                 </div>
 
@@ -224,22 +109,25 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                                 <FormField control={form.control} name="oldRef" render={({ field }) => (<FormItem className="md:col-span-2"><FormLabel className={labelClass}>Ref. Antiga</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} />
                                 <FormField control={form.control} name="title" render={({ field }) => (<FormItem className="md:col-span-10"><FormLabel className={labelClass}>Título do Anúncio *</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} />
                             </div>
-                            
-                            {/* CONFIGURAÇÕES GERAIS */}
                             <div className="bg-[#252525] p-4 rounded border border-[#333] flex flex-wrap gap-6">
-                                <FormField control={form.control} name="showOnSite" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal cursor-pointer">Exibir no Site</FormLabel></FormItem>)} />
-                                <FormField control={form.control} name="isExclusive" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal cursor-pointer">Imóvel Exclusivo</FormLabel></FormItem>)} />
-                                <FormField control={form.control} name="hasSign" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal cursor-pointer">Placa em frente ao imóvel</FormLabel></FormItem>)} />
+                                {['showOnSite:Exibir no Site', 'isExclusive:Exclusivo', 'hasSign:Placa no Local'].map(item => { const [key, label] = item.split(':'); return ( <FormField key={key} control={form.control} name={key as any} render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel className="font-normal cursor-pointer">{label}</FormLabel></div></FormItem>)} /> )})}
                             </div>
 
                             {/* FINALIDADE */}
-                            <div className="grid grid-cols-1 gap-2">
+                            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 pt-2">
                                 <p className={labelClass}>Finalidade</p>
                                 <div className="flex gap-6 flex-wrap">
-                                    <FormField control={form.control} name="isSale" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-blue-600 border-gray-500" /></FormControl><FormLabel className="font-normal cursor-pointer text-sm text-gray-300">Venda</FormLabel></FormItem>)} />
-                                    <FormField control={form.control} name="isRentAnnual" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal cursor-pointer text-sm text-gray-300">Aluguel Anual</FormLabel></FormItem>)} />
-                                    <FormField control={form.control} name="isRentSeason" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal cursor-pointer text-sm text-gray-300">Aluguel Temporada</FormLabel></FormItem>)} />
-                                    <FormField control={form.control} name="isRentStudent" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal cursor-pointer text-sm text-gray-300">Aluguel Estudante</FormLabel></FormItem>)} />
+                                    {['isSale:Venda', 'isRentAnnual:Aluguel Anual', 'isRentSeason:Aluguel Temporada', 'isRentStudent:Aluguel Estudante'].map(item => {
+                                        const [key, label] = item.split(':');
+                                        return (
+                                            <FormField key={key} control={form.control} name={key as any} render={({ field }) => (
+                                                <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                                                    <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-blue-600 border-gray-500" /></FormControl>
+                                                    <FormLabel className="font-normal cursor-pointer text-sm text-gray-300">{label}</FormLabel>
+                                                </FormItem>
+                                            )} />
+                                        )
+                                    })}
                                 </div>
                             </div>
 
@@ -262,7 +150,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                                     </FormItem>
                                 )} />
                             </div>
-
                             <div className="border-t border-[#333] pt-4 mt-4"><p className={labelClass}>Características Importantes</p><div className="grid grid-cols-2 md:grid-cols-4 gap-4">{['isSeaFront:Frente Mar', 'isSeaQuadra:Quadra Mar', 'isFurnished:Mobiliado', 'isSemiFurnished:Semi-Mobiliado', 'isUnfurnished:Sem Mobília', 'isHighStandard:Alto Padrão', 'isDifferentiated:Diferenciado'].map(opt => { const [key, label] = opt.split(':'); return ( <FormField key={key} control={form.control} name={key as any} render={({ field }) => (<FormItem className="flex flex-row items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal cursor-pointer text-sm text-gray-300 hover:text-white">{label}</FormLabel></FormItem>)} /> )})}</div></div>
                             <div className="flex gap-4 items-end border-t border-[#333] pt-4"><FormField control={form.control} name="badgeText" render={({ field }) => (<FormItem className="flex-1"><FormLabel className={labelClass}>Texto da Tarja</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="badgeColor" render={({ field }) => (<FormItem className="w-40"><FormLabel className={labelClass}>Cor</FormLabel><Select onValueChange={field.onChange} value={field.value || ''}><FormControl><SelectTrigger className={inputClass}><SelectValue placeholder="Cor" /></SelectTrigger></FormControl><SelectContent className="bg-[#2b2b2b] border-[#444] text-white">{BADGE_COLORS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent></Select></FormItem>)} /></div>
                         </CardContent></Card>
@@ -289,51 +176,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                         {/* 5. LOCALIZAÇÃO */}
                         <Card className={sectionClass}><CardHeader className="border-b border-[#333] pb-3"><CardTitle className="text-primary flex items-center gap-2 text-base"><Home size={18}/> LOCALIZAÇÃO</CardTitle></CardHeader><CardContent className="pt-6 space-y-4"><div className="grid grid-cols-12 gap-4"><FormField control={form.control} name="address.zipCode" render={({ field }) => (<FormItem className="col-span-3"><FormLabel className={labelClass}>CEP</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="address.city" render={({ field }) => (<FormItem className="col-span-7"><FormLabel className={labelClass}>Cidade</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="address.state" render={({ field }) => (<FormItem className="col-span-2"><FormLabel className={labelClass}>UF</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /></div><div className="grid grid-cols-12 gap-4"><FormField control={form.control} name="address.neighborhood" render={({ field }) => (<FormItem className="col-span-4"><FormLabel className={labelClass}>Bairro</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="address.street" render={({ field }) => (<FormItem className="col-span-6"><FormLabel className={labelClass}>Logradouro</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="address.number" render={({ field }) => (<FormItem className="col-span-2"><FormLabel className={labelClass}>Número</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /></div><div className="flex gap-4 flex-col md:flex-row"><FormField control={form.control} name="buildingName" render={({ field }) => (<FormItem className="flex-1"><FormLabel className={labelClass}>Nome do Edifício</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="displayAddress" render={({ field }) => (<FormItem className="flex items-center pt-6 space-x-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal cursor-pointer">Exibir endereço no site</FormLabel></FormItem>)} /></div></CardContent></Card>
 
-                        {/* 6. MÍDIA E FOTOS (COM DRAG & DROP) */}
-                        <Card className={sectionClass}>
-                            <CardHeader className="border-b border-[#333] pb-3">
-                                <CardTitle className="text-primary flex items-center gap-2 text-base"><ImageIcon size={18}/> MULTIMÍDIA</CardTitle>
-                            </CardHeader>
-                            <CardContent className="pt-6 space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField control={form.control} name="videoUrl" render={({ field }) => (<FormItem><FormLabel className={labelClass}>Vídeo (YouTube)</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} />
-                                    <FormField control={form.control} name="tourUrl" render={({ field }) => (<FormItem><FormLabel className={labelClass}>Tour 360</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} />
-                                </div>
-
-                                <div className="space-y-4">
-                                    <p className={labelClass}>Galeria de Fotos</p>
-                                    <div 
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
-                                        className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center transition-all cursor-pointer ${isDragging ? 'border-primary bg-primary/10' : 'border-[#444] bg-[#252525] hover:border-primary/50'}`}
-                                    >
-                                        <input type="file" multiple accept="image/*" className="hidden" id="image-upload" onChange={handleFileSelect} />
-                                        <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center w-full h-full">
-                                            {isUploading ? (<><Loader2 className="w-10 h-10 text-primary animate-spin mb-4" /><p className="text-gray-300 font-medium">Enviando imagens...</p></>) : (<><UploadCloud className="w-10 h-10 text-gray-400 mb-4" /><p className="text-gray-200 font-medium text-lg">Arraste e solte imagens aqui</p><p className="text-gray-500 text-sm mt-2">ou clique para selecionar</p><Button type="button" variant="outline" className="mt-4 border-[#444] text-gray-300 hover:text-white hover:border-white">Selecionar Arquivos</Button></>)}
-                                        </label>
-                                    </div>
-
-                                    {/* Opção Manual */}
-                                    <div className="flex gap-2 items-center"><div className="h-[1px] bg-[#333] flex-1"></div><span className="text-xs text-gray-500 uppercase">Ou por Link</span><div className="h-[1px] bg-[#333] flex-1"></div></div>
-                                    <div className="flex gap-2"><Input placeholder="Cole o link da imagem..." value={tempImageUrl} onChange={e => setTempImageUrl(e.target.value)} className={inputClass} /><Button type="button" onClick={addImage} className="bg-[#333] text-white hover:bg-[#444]"><Plus size={16} /></Button></div>
-
-                                    {/* LISTA DE IMAGENS */}
-                                    {form.watch('images').length > 0 && (
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 mt-4 bg-[#151515] p-4 rounded border border-[#333]">
-                                            {form.watch('images').map((img, idx) => (
-                                                <div key={idx} className="relative aspect-square group">
-                                                    <img src={img.url} alt={`Foto ${idx}`} className={`w-full h-full object-cover rounded border transition-all ${img.isCover ? 'border-primary ring-2 ring-primary/30' : 'border-[#444]'}`} />
-                                                    <button type="button" onClick={() => removeImage(idx)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 z-10"><Trash size={12} /></button>
-                                                    {!img.isCover && (<div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Button type="button" variant="ghost" size="sm" className="text-white hover:text-primary hover:bg-transparent font-bold text-xs" onClick={() => { const imgs = form.getValues('images'); const updated = imgs.map((pic, i) => ({ ...pic, isCover: i === idx })); form.setValue('images', updated, { shouldDirty: true }); }}>Definir Capa</Button></div>)}
-                                                    {img.isCover && <Badge className="absolute bottom-1 right-1 text-[9px] px-1.5 py-0 bg-primary text-black font-bold shadow-sm">CAPA</Badge>}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
+                        {/* 6. MÍDIA */}
+                        <Card className={sectionClass}><CardHeader className="border-b border-[#333] pb-3"><CardTitle className="text-primary flex items-center gap-2 text-base"><ImageIcon size={18}/> MULTIMÍDIA</CardTitle></CardHeader><CardContent className="pt-6 space-y-6"><div className="grid grid-cols-2 gap-4"><FormField control={form.control} name="videoUrl" render={({ field }) => (<FormItem><FormLabel className={labelClass}>Vídeo (YouTube)</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="tourUrl" render={({ field }) => (<FormItem><FormLabel className={labelClass}>Tour 360</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /></div><div className="border border-[#333] p-4 rounded bg-[#252525]"><p className={labelClass}>Adicionar Fotos</p><div className="flex gap-2 mb-4"><Input placeholder="Cole o link da imagem..." value={tempImageUrl} onChange={e => setTempImageUrl(e.target.value)} className={inputClass} /><Button type="button" onClick={addImage} className="bg-white text-black hover:bg-gray-200">Adicionar</Button></div><div className="flex flex-wrap gap-3">{form.watch('images').map((img, idx) => (<div key={idx} className="relative w-24 h-20 group"><img src={img.url} className="w-full h-full object-cover rounded border border-[#555]" /><button type="button" onClick={() => removeImage(idx)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">×</button>{img.isCover && <Badge className="absolute bottom-0 right-0 text-[8px] px-1 py-0 bg-primary text-black">CAPA</Badge>}</div>))}</div></div></CardContent></Card>
 
                         {/* 7. DADOS INTERNOS */}
                         <Card className={privateSectionClass}>
@@ -365,7 +209,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                             </CardContent>
                         </Card>
 
-                        {/* 8. CAPTAÇÃO */}
+                        {/* 8. CAPTAÇÃO (NOVO) */}
                         <Card className={captureSectionClass}>
                             <CardHeader className="border-b border-[#5c4018] pb-3"><CardTitle className="text-[#d4af37] flex items-center gap-2 text-base"><Briefcase size={18}/> CAPTAÇÃO & CHAVES</CardTitle></CardHeader>
                             <CardContent className="pt-6 space-y-4">
