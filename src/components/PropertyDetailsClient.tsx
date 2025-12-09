@@ -6,14 +6,13 @@ import Image, { ImageLoaderProps } from 'next/image';
 import {
     Bed, Bath, Car, Ruler, MapPin,
     MessageCircle, Star, Share2,
-    ChevronLeft, ChevronRight, Send, Phone, ImageIcon
+    ChevronLeft, ChevronRight, Send, Phone, ImageIcon, Check
 } from 'lucide-react';
 import { toast } from "sonner";
 import { useFavorites } from '@/hooks/useFavorites';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { PropertyCard } from '@/components/PropertyCard';
 
-// UI Components
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +23,6 @@ import {
     Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 } from "@/components/ui/carousel";
 
-// --- IMPORTAÇÃO DINÂMICA DO MAPA ---
 const PropertyMap = dynamic(
     () => import('@/components/PropertyMap'),
     {
@@ -33,22 +31,15 @@ const PropertyMap = dynamic(
     }
 );
 
-// --- FUNÇÃO CORRETORA DE URL ---
 const fixImageSource = (url: string | undefined | null) => {
     if (!url || url === '') return '/placeholder.jpg';
-    
-    // Se for URL relativa local (ex: /uploads/...), mantemos
     if (url.startsWith('/')) return url;
-
-    // Em produção, se vier localhost, tentamos corrigir (opcional, depende do seu backend)
     if (process.env.NODE_ENV === 'production' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
         return url.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/g, 'https://98.93.10.61.nip.io');
     }
     return url;
 };
 
-// --- LOADER PERSONALIZADO (SOLUÇÃO 2) ---
-// Isso impede que o Next.js tente adicionar /_next/image?url=... na frente da URL
 const customLoader = ({ src }: ImageLoaderProps) => {
   return src;
 };
@@ -63,35 +54,25 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
     const [activeImgIndex, setActiveImgIndex] = useState(0);
     const [isLocalDev, setIsLocalDev] = useState(false);
 
-    // Detectar ambiente de desenvolvimento no cliente
     useEffect(() => {
         setIsLocalDev(window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1'));
     }, []);
 
-    // Formulário
     const [formName, setFormName] = useState('');
     const [formEmail, setFormEmail] = useState('');
     const [formPhone, setFormPhone] = useState('');
 
     if (!property) return <div className="text-center py-20 text-gray-400">Imóvel não encontrado.</div>;
 
-    // Criar array de imagens seguro
     const images = property.images && property.images.length > 0 
         ? property.images 
         : [{ url: '/placeholder.jpg' }];
     
-    // URL da imagem ativa
     const currentImage = fixImageSource(images[activeImgIndex]?.url);
-    
     const favorite = isFavorite(property.id);
 
-    const handleNextImg = () => {
-        setActiveImgIndex((prev) => (prev + 1) % images.length);
-    };
-
-    const handlePrevImg = () => {
-        setActiveImgIndex((prev) => (prev - 1 + images.length) % images.length);
-    };
+    const handleNextImg = () => setActiveImgIndex((prev) => (prev + 1) % images.length);
+    const handlePrevImg = () => setActiveImgIndex((prev) => (prev - 1 + images.length) % images.length);
 
     const handleWhatsApp = () => {
         const text = `Olá, tenho interesse no imóvel ${property.title} (Ref: ${property.id})`;
@@ -105,9 +86,9 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
     };
 
     const formatCurrency = (val?: number) => val ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val) : 'Consulte';
+    
+    // Helper para garantir que pegamos o nome da string ou do objeto
     const getFeatureName = (feat: any) => typeof feat === 'string' ? feat : feat.name;
-
-    const indoorFeatures = [...(property.roomFeatures || []), ...(property.propertyFeatures || [])];
 
     const breadcrumbItems = [
         { label: 'Vendas', path: '/vendas' },
@@ -118,7 +99,6 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
     return (
         <div className="min-h-screen bg-[#121212] text-[#e0e0e0] pb-20 font-sans">
 
-            {/* Breadcrumbs */}
             <div className="w-full border-b border-[#222]">
                 <div className="max-w-[1600px] mx-auto">
                     <Breadcrumb items={breadcrumbItems} className="bg-transparent border-none px-5 py-4 shadow-none" />
@@ -132,71 +112,39 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
 
                     {/* GALERIA */}
                     <div className="flex flex-col lg:flex-row gap-4 h-auto lg:h-[550px] mb-10 group">
-                        
-                        {/* --- IMAGEM PRINCIPAL --- */}
                         <div className="flex-1 bg-black relative rounded-md overflow-hidden border border-[#222] min-h-[300px] lg:min-h-full">
-                            
                             <Image 
-                                key={currentImage} // Importante: força o React a recriar o componente se a URL mudar
-                                loader={customLoader} // Solução 2: Garante que a URL não seja alterada
+                                key={currentImage} 
+                                loader={customLoader}
                                 src={currentImage} 
                                 alt={property.title} 
                                 fill
                                 className="object-contain z-10"
-                                // ORDEM DE CARREGAMENTO: Prioridade máxima para a imagem grande
                                 priority={true} 
-                                // SOLUÇÃO 1: Se for localhost, desliga otimização do servidor Next
                                 unoptimized={true} 
                                 sizes="(max-width: 1200px) 100vw, 800px"
-                                onError={(e) => {
-                                    // Fallback de emergência para <img> nativo se o Next/Image falhar catastroficamente
-                                    const target = e.target as HTMLImageElement;
-                                    target.onerror = null;
-                                    target.src = '/placeholder.jpg';
-                                }}
+                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.jpg'; }}
                             />
-
                             <div className="absolute inset-0 z-20 flex items-center justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button onClick={handlePrevImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full backdrop-blur-sm"><ChevronLeft /></button>
                                 <button onClick={handleNextImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full backdrop-blur-sm"><ChevronRight /></button>
                             </div>
-
                             <div className="absolute top-4 left-4 z-20">
                                 {property.badgeText && <Badge className="bg-primary text-black font-bold uppercase">{property.badgeText}</Badge>}
                             </div>
                         </div>
-
-                        {/* --- THUMBS (MINIATURAS) --- */}
                         {images.length > 1 && (
                             <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto w-full lg:w-[130px] h-[100px] lg:h-full scrollbar-hide">
-                                {images.map((img: any, idx: number) => {
-                                    const thumbUrl = fixImageSource(img.url);
-                                    return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setActiveImgIndex(idx)}
-                                            className={`relative aspect-[4/3] w-[120px] lg:w-full flex-shrink-0 rounded-md overflow-hidden border-2 ${idx === activeImgIndex ? 'border-primary' : 'border-transparent opacity-50'}`}
-                                        >
-                                            <Image 
-                                                loader={customLoader}
-                                                src={thumbUrl} 
-                                                alt="thumb" 
-                                                fill
-                                                className="object-cover"
-                                                // ORDEM DE CARREGAMENTO: Lazy para carregar depois da principal
-                                                loading="lazy"
-                                                // SOLUÇÃO 1: Desliga otimização
-                                                unoptimized={true}
-                                                sizes="150px"
-                                            />
-                                        </button>
-                                    );
-                                })}
+                                {images.map((img: any, idx: number) => (
+                                    <button key={idx} onClick={() => setActiveImgIndex(idx)} className={`relative aspect-[4/3] w-[120px] lg:w-full flex-shrink-0 rounded-md overflow-hidden border-2 ${idx === activeImgIndex ? 'border-primary' : 'border-transparent opacity-50'}`}>
+                                        <Image loader={customLoader} src={fixImageSource(img.url)} alt="thumb" fill className="object-cover" loading="lazy" unoptimized={true} sizes="150px" />
+                                    </button>
+                                ))}
                             </div>
                         )}
                     </div>
 
-                    {/* DADOS DO IMÓVEL */}
+                    {/* DADOS BÁSICOS */}
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xs uppercase tracking-widest">
                             <span>{property.category}</span><span>•</span><span>{property.address?.neighborhood}</span>
@@ -215,47 +163,76 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
                             { icon: Ruler, val: property.privateArea, label: "Privativos", unit: "m²" },
                         ].map((item, i) => (
                             <div key={i} className="flex flex-col items-center md:items-start p-2">
-                                <div className="flex items-center gap-2 text-white mb-1">
-                                    <item.icon className="h-5 w-5 text-primary" />
-                                    <span className="text-2xl font-light">{item.val} <span className="text-sm text-[#666]">{item.unit}</span></span>
-                                </div>
+                                <div className="flex items-center gap-2 text-white mb-1"><item.icon className="h-5 w-5 text-primary" /><span className="text-2xl font-light">{item.val} <span className="text-sm text-[#666]">{item.unit}</span></span></div>
                                 <span className="text-[10px] text-[#666] uppercase tracking-widest font-bold">{item.label}</span>
                             </div>
                         ))}
                     </div>
 
+                    {/* DESCRIÇÃO (Renderiza HTML) */}
                     <div className="mb-12">
                         <h3 className="text-xl font-medium text-white mb-4 border-l-4 border-primary pl-3">Sobre o Imóvel</h3>
-                        <p className="whitespace-pre-line text-[#ccc] leading-relaxed font-light text-justify">{property.description}</p>
+                        <div 
+                            className="text-[#ccc] leading-relaxed font-light text-justify space-y-4"
+                            dangerouslySetInnerHTML={{ __html: property.description || '' }} 
+                        />
                     </div>
 
-                    {/* CARACTERÍSTICAS */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        {indoorFeatures.length > 0 && (
+                    {/* --- CARACTERÍSTICAS (SEPARADAS EM 3 COLUNAS) --- */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-[#222] pt-8">
+                        
+                        {/* 1. AMBIENTES */}
+                        {property.roomFeatures?.length > 0 && (
                             <div>
-                                <h3 className="text-lg font-medium text-white mb-4">Características</h3>
+                                <h3 className="text-sm font-bold text-primary mb-4 uppercase tracking-wider flex items-center gap-2">
+                                    <Bed className="w-4 h-4"/> Ambientes
+                                </h3>
                                 <ul className="space-y-2">
-                                    {indoorFeatures.map((feat: any, i: number) => (
+                                    {property.roomFeatures.map((feat: any, i: number) => (
                                         <li key={i} className="flex items-start text-sm text-[#bbb]">
-                                            <span className="text-primary mr-2 font-bold">✓</span>{getFeatureName(feat)}
+                                            <Check className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />
+                                            {getFeatureName(feat)}
                                         </li>
                                     ))}
                                 </ul>
                             </div>
                         )}
+
+                        {/* 2. CARACTERÍSTICAS DO IMÓVEL */}
+                        {property.propertyFeatures?.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-bold text-primary mb-4 uppercase tracking-wider flex items-center gap-2">
+                                    <Star className="w-4 h-4"/> Do Imóvel
+                                </h3>
+                                <ul className="space-y-2">
+                                    {property.propertyFeatures.map((feat: any, i: number) => (
+                                        <li key={i} className="flex items-start text-sm text-[#bbb]">
+                                            <Check className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />
+                                            {getFeatureName(feat)}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* 3. EMPREENDIMENTO */}
                         {property.developmentFeatures?.length > 0 && (
                             <div>
-                                <h3 className="text-lg font-medium text-white mb-4">Empreendimento</h3>
+                                <h3 className="text-sm font-bold text-primary mb-4 uppercase tracking-wider flex items-center gap-2">
+                                    <ImageIcon className="w-4 h-4"/> Empreendimento
+                                </h3>
                                 <ul className="space-y-2">
                                     {property.developmentFeatures.map((feat: any, i: number) => (
                                         <li key={i} className="flex items-start text-sm text-[#bbb]">
-                                            <span className="text-primary mr-2 font-bold">✓</span>{getFeatureName(feat)}
+                                            <Check className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />
+                                            {getFeatureName(feat)}
                                         </li>
                                     ))}
                                 </ul>
                             </div>
                         )}
                     </div>
+
                 </div>
 
                 {/* COLUNA DIREITA (Sidebar) */}
@@ -296,19 +273,13 @@ export function PropertyDetailsClient({ property, similarProperties }: PropertyD
                             <a href="tel:+554796510619" className="text-[#666] hover:text-white"><Phone size={18} /></a>
                         </div>
                     </div>
-
                 </div>
-
             </div>
 
             {/* MAPA */}
             <div className="mt-10 mb-10 max-w-[1600px] mx-auto px-5">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><MapPin size={20} /> Localização</h3>
-                <PropertyMap
-                    address={`${property.address?.street}, ${property.address?.number} - ${property.address?.neighborhood}, ${property.address?.city}`}
-                    lat={0}
-                    lng={0}
-                />
+                <PropertyMap address={`${property.address?.street}, ${property.address?.number} - ${property.address?.neighborhood}, ${property.address?.city}`} lat={0} lng={0} />
             </div>
 
             {/* SEMELHANTES */}
