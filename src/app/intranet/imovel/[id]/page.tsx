@@ -48,8 +48,14 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
-
+const fixImageSource = (url: string | undefined | null) => {
+    if (!url || url === '') return '/placeholder.jpg';
+    if (url.startsWith('/')) return url;
+    if (process.env.NODE_ENV === 'production' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+        return url.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/g, 'https://98.93.10.61.nip.io');
+    }
+    return url;
+};
 // --- LISTAS DE OPÇÕES PADRÃO ---
 const ROOM_OPTS = [
   "Área de Serviço",
@@ -1395,14 +1401,7 @@ export default function EditPropertyPage({
                       {images.map((img: any, idx: number) => (
                         <div key={idx} className="relative aspect-square group">
                           <img
-                            src={
-                              img.url.includes("localhost")
-                                ? img.url.replace(
-                                    "http://localhost:3000",
-                                    "https://98.93.10.61.nip.io"
-                                  )
-                                : img.url
-                            }
+                            src={fixImageSource(img.url)}
                             alt={`Foto ${idx}`}
                             className={`w-full h-full object-cover rounded border transition-all ${
                               img.isCover
