@@ -48,6 +48,7 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
 const fixImageSource = (url: string | undefined | null) => {
     if (!url || url === '') return '/placeholder.jpg';
     if (url.startsWith('/')) return url;
@@ -56,6 +57,7 @@ const fixImageSource = (url: string | undefined | null) => {
     }
     return url;
 };
+
 // --- LISTAS DE OPÇÕES PADRÃO ---
 const ROOM_OPTS = [
   "Área de Serviço",
