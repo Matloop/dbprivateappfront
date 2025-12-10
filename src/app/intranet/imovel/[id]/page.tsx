@@ -50,12 +50,18 @@ import {
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 const fixImageSource = (url: string | undefined | null) => {
-    if (!url || url === '') return '/placeholder.jpg';
-    if (url.startsWith('/')) return url;
-    if (process.env.NODE_ENV === 'production' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
-        return url.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/g, 'https://98.93.10.61.nip.io');
-    }
-    return url;
+  if (!url || url === "") return "/placeholder.jpg";
+  if (url.startsWith("/")) return url;
+  if (
+    process.env.NODE_ENV === "production" &&
+    (url.includes("localhost") || url.includes("127.0.0.1"))
+  ) {
+    return url.replace(
+      /http:\/\/(localhost|127\.0\.0\.1):\d+/g,
+      "https://98.93.10.61.nip.io"
+    );
+  }
+  return url;
 };
 
 // --- LISTAS DE OPÇÕES PADRÃO ---
@@ -492,6 +498,7 @@ export default function EditPropertyPage({
       isExclusive: false,
       showOnSite: true,
       hasSign: false,
+      watermarkEnabled: false,
       displayAddress: true,
       isSeaFront: false,
       isSeaQuadra: false,
@@ -859,6 +866,23 @@ export default function EditPropertyPage({
                         </FormControl>
                         <FormLabel className="font-normal cursor-pointer">
                           Placa em frente ao imóvel
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="watermarkEnabled"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer text-blue-400 font-bold">
+                          Aplicar Marca D'água
                         </FormLabel>
                       </FormItem>
                     )}
