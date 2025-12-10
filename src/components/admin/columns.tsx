@@ -13,7 +13,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-
+const fixImageSource = (url: string | undefined | null) => {
+    if (!url || url === '') return '/placeholder.jpg';
+    if (url.startsWith('/')) return url;
+    if (process.env.NODE_ENV === 'production' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+        return url.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/g, 'https://98.93.10.61.nip.io');
+    }
+    return url;
+};
 // Tipo do dado
 export type Property = {
   id: number
@@ -34,7 +41,7 @@ export const columns: ColumnDef<Property>[] = [
       const img = row.original.images?.[0]?.url
       return (
         <div className="h-10 w-14 overflow-hidden rounded border border-[#333] bg-black">
-          {img && <img src={img} alt="Thumb" className="h-full w-full object-cover" />}
+          {img && <img src={fixImageSource(img)} alt="Thumb" className="h-full w-full object-cover" />}
         </div>
       )
     },
