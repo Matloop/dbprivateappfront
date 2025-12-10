@@ -32,8 +32,12 @@ const PropertyMap = dynamic(() => import("@/components/PropertyMap"), {
 const fixImageSource = (url: string | undefined | null) => {
   if (!url || url === "") return "/placeholder.jpg";
   if (url.startsWith("/")) return url;
-  // Ajuste para garantir carregamento em produção/desenvolvimento misto
-  if (url.includes("localhost") && typeof window !== 'undefined' && !window.location.hostname.includes("localhost")) {
+
+  // CORREÇÃO AQUI: Verificamos se tem localhost OU 127.0.0.1
+  // Antes ele só entrava no IF se tivesse escrito "localhost"
+  if (url.includes("localhost") || url.includes("127.0.0.1")) {
+    // Removemos a verificação de window para garantir que a troca aconteça sempre que detectar IP local
+    // já que sabemos que em produção (98.93...) não conseguimos ler localhost de qualquer forma.
     return url.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/g, "https://98.93.10.61.nip.io");
   }
   return url;
