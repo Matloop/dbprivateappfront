@@ -4,7 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
     ArrowLeft, Save, Loader2, FileText, DollarSign, Home, LayoutGrid, 
-    Image as ImageIcon, Lock, Search, Briefcase, Key, Plus, UploadCloud, Trash
+    Image as ImageIcon, Lock, Search, Briefcase, Key, Plus, UploadCloud, Trash, X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
@@ -19,24 +19,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Badge } from "@/components/ui/badge";
 
-// --- LISTAS DE OPÇÕES ---
+// --- LISTAS DE OPÇÕES PADRÃO (HARDCODED) ---
 const ROOM_OPTS = ["Área de Serviço", "Banheiro de Serviço", "Banheiro Social", "Biblioteca", "Closet", "Copa", "Copa/Cozinha", "Cozinha", "Cozinha Americana", "Demi-Suíte", "Dependência de Empregada", "Entrada de Serviço", "Espaço Gourmet", "Estar Íntimo", "Hidromassagem", "Home Office", "Jardim", "Lavabo", "Living", "Piscina Privativa", "Sacada / Varanda", "Sacada com Churrasqueira", "Sacada Integrada", "Sacada Técnica", "Sala", "Sala de Estar", "Sala de Estar Íntimo", "Sala de Jantar", "Sala de TV", "Sala para 2 Ambientes", "Sala para 3 Ambientes", "Suíte Master", "Suíte Standard", "Terraço"];
 const PROPERTY_OPTS = ["Acabamento em Gesso", "Aceita Pet", "Andar Alto", "Aquecimento de Água", "Ar Condicionado", "Calefação", "Carpete", "Churrasqueira", "Decorado", "Despensa", "Fechadura Eletrônica", "Infra para Ar Split", "Internet / WiFi", "Lareira", "Mezanino", "Móveis Planejados", "Piso Aquecido nos Banheiros", "Piso Cerâmico", "Piso de Madeira", "Piso Laminado", "Piso Porcelanato", "Piso Vinílico", "Sistema de Alarme", "TV a Cabo", "Ventilador de Teto", "Vista Livre", "Vista Mar", "Vista Panorâmica"];
 const DEVELOPMENT_OPTS = ["Acessibilidade para PNE", "Automação Predial", "Bar", "Bicicletário", "Boliche", "Box de Praia", "Brinquedoteca", "Câmeras de Segurança", "Captação de Água", "Cinema", "Coworking", "Deck Molhado", "Depósito", "Elevador", "Entrada para Banhistas", "Espaço Fitness", "Espaço Gourmet", "Espaço Zen", "Estar Social", "Gás Central", "Gerador", "Hall Decorado e Mobiliado", "Heliponto", "Hidromassagem", "Horta", "Infra para Veículos Elétricos", "Lavanderia Coletiva", "Lounge", "Medidores Individuais", "Mini Mercado", "Painéis de Energia Solar", "Pet Care", "Pet Place", "Piscina", "Piscina Infantil", "Piscina Térmica", "Playground", "Pomar", "Portão Eletrônico", "Portaria 24h", "Quadra de Padel", "Quadra de Tênis", "Quadra Esportiva", "Quiosque Externo", "RoofTop", "Sala de Jogos", "Sala de Reunião", "Salão de Festas", "Sauna", "Solarium", "Spa"];
 const BADGE_COLORS = [{ label: 'Azul (Padrão)', value: '#0d6efd' }, { label: 'Verde (Sucesso)', value: '#198754' }, { label: 'Vermelho (Destaque)', value: '#dc3545' }, { label: 'Dourado (Premium)', value: '#d4af37' }, { label: 'Preto', value: '#000000' }];
 
+type FeatureCategory = 'roomFeatures' | 'propertyFeatures' | 'developmentFeatures';
+
 export default function EditPropertyPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
     
-    // --- HOOKS DEVEM FICAR AQUI NO TOPO ---
+    // Estados Gerais
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [tempImageUrl, setTempImageUrl] = useState('');
     
-    // Estados do Upload (Movidos para cima do return condicional)
+    // Estados de Imagem
+    const [tempImageUrl, setTempImageUrl] = useState('');
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+
+    // Estado para input manual de características
+    const [newFeatureInput, setNewFeatureInput] = useState<{ [key in FeatureCategory]: string }>({ 
+        roomFeatures: '', 
+        propertyFeatures: '', 
+        developmentFeatures: '' 
+    });
 
     const form = useForm({
         defaultValues: {
@@ -71,9 +80,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                 if (mounted) {
                     form.reset({
                         ...data,
-                        roomFeatures: data.roomFeatures?.map((f:any) => f.name) || [],
-                        propertyFeatures: data.propertyFeatures?.map((f:any) => f.name) || [],
-                        developmentFeatures: data.developmentFeatures?.map((f:any) => f.name) || [],
+                        // Garante que features sejam arrays de strings
+                        roomFeatures: data.roomFeatures?.map((f:any) => typeof f === 'string' ? f : f.name) || [],
+                        propertyFeatures: data.propertyFeatures?.map((f:any) => typeof f === 'string' ? f : f.name) || [],
+                        developmentFeatures: data.developmentFeatures?.map((f:any) => typeof f === 'string' ? f : f.name) || [],
+                        
                         price: Number(data.price) || 0, promotionalPrice: Number(data.promotionalPrice) || 0,
                         condoFee: Number(data.condoFee) || 0, iptuPrice: Number(data.iptuPrice) || 0,
                         bedrooms: Number(data.bedrooms) || 0, suites: Number(data.suites) || 0,
@@ -85,13 +96,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                         images: data.images || [],
                         deliveryDate: data.deliveryDate ? new Date(data.deliveryDate).toISOString().split('T')[0] : '',
                         
-                        onus: data.onus || '', paymentDetails: data.paymentDetails || '', incorporation: data.incorporation || '',
-                        registrationNumber: data.registrationNumber || '', branch: data.branch || 'matriz', responsibleBroker: data.responsibleBroker || 'Danillo Bezerra',
-                        buildingName: data.buildingName || '', videoUrl: data.videoUrl || '', tourUrl: data.tourUrl || '',
-                        ownerName: data.ownerName || '', ownerPhone: data.ownerPhone || '', ownerEmail: data.ownerEmail || '',
-                        keysLocation: data.keysLocation || '', brokerNotes: data.brokerNotes || '',
-                        metaTitle: data.metaTitle || '', metaDescription: data.metaDescription || '',
-                        description: data.description || '', badgeText: data.badgeText || '', badgeColor: data.badgeColor || ''
+                        // Campos de texto e selects
+                        oldRef: data.oldRef || '',
+                        badgeText: data.badgeText || '', badgeColor: data.badgeColor || '',
+                        description: data.description || '',
+                        solarPosition: data.solarPosition || '', relativePosition: data.relativePosition || ''
                     });
                 }
             } catch (err) {
@@ -115,13 +124,40 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
         } finally { setIsSaving(false); }
     };
 
-    // --- FUNÇÕES AUXILIARES ---
-    const handleListToggle = (listName: 'roomFeatures'|'propertyFeatures'|'developmentFeatures', item: string) => {
+    // --- FUNÇÕES DE CHECKBOX LIST ---
+    const handleListToggle = (listName: FeatureCategory, item: string) => {
         const current = form.getValues(listName) || [];
         const updated = current.includes(item) ? current.filter(i => i !== item) : [...current, item];
         form.setValue(listName, updated, { shouldDirty: true });
     };
 
+    // --- FUNÇÕES DE FEATURES PERSONALIZADAS (IMPORTADAS) ---
+    const getCustomItems = (listName: FeatureCategory, standardList: string[]) => {
+        const current = form.watch(listName) || [];
+        // Retorna tudo que NÃO está na lista padrão
+        return current.filter(item => !standardList.includes(item));
+    };
+
+    const handleRemoveCustomFeature = (listName: FeatureCategory, item: string) => {
+        const current = form.getValues(listName) || [];
+        const updated = current.filter(i => i !== item);
+        form.setValue(listName, updated, { shouldDirty: true });
+        toast.success("Item removido!");
+    };
+
+    const handleAddCustomFeature = (listName: FeatureCategory) => {
+        const val = newFeatureInput[listName];
+        if (!val || val.trim() === '') return;
+        
+        const current = form.getValues(listName) || [];
+        if (!current.includes(val)) {
+            form.setValue(listName, [...current, val], { shouldDirty: true });
+            setNewFeatureInput(prev => ({ ...prev, [listName]: '' }));
+            toast.success("Característica adicionada!");
+        }
+    };
+
+    // --- FUNÇÕES DE UPLOAD E IMAGEM ---
     const addImage = () => {
         if(!tempImageUrl) return;
         const current = form.getValues('images');
@@ -134,7 +170,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
         form.setValue('images', current.filter((_, i) => i !== idx));
     };
 
-    // --- LÓGICA DE UPLOAD DRAG & DROP ---
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(true);
@@ -205,7 +240,6 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     const privateInputClass = "bg-[#1e1a15] border-[#5c4018] text-[#d4af37] focus:border-[#d4af37]";
     const captureSectionClass = "bg-[#25201b] border-[#5c4018] mb-6 border-l-4 border-l-[#d4af37]";
 
-    // --- RETURN CONDICIONAL (AGORA DEPOIS DE TODOS OS HOOKS) ---
     if (isLoading) return <div className="h-screen flex items-center justify-center text-primary"><Loader2 className="animate-spin mr-2"/> Carregando...</div>;
 
     return (
@@ -283,8 +317,73 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                             </div>
                         </CardContent></Card>
 
-                        {/* 4. CARACTERÍSTICAS */}
-                        <Card className={sectionClass}><CardHeader className="border-b border-[#333] pb-3"><CardTitle className="text-primary flex items-center gap-2 text-base"><Plus size={18}/> CARACTERÍSTICAS</CardTitle></CardHeader><CardContent className="pt-6 grid grid-cols-1 md:grid-cols-3 gap-6">{[{ title: 'Ambientes', list: ROOM_OPTS, key: 'roomFeatures' }, { title: 'Do Imóvel', list: PROPERTY_OPTS, key: 'propertyFeatures' }, { title: 'Empreendimento', list: DEVELOPMENT_OPTS, key: 'developmentFeatures' }].map(group => ( <div key={group.key} className="bg-[#252525] p-3 rounded border border-[#333]"><h4 className="text-gray-300 font-bold mb-3 uppercase text-xs border-b border-[#444] pb-2">{group.title}</h4><div className="h-60 overflow-y-auto space-y-1 pr-2 custom-scrollbar">{group.list.map(item => ( <div key={item} className={checkboxWrapper} onClick={() => handleListToggle(group.key as any, item)}><Checkbox checked={(form.watch(group.key as any) || []).includes(item)} /><span className="text-xs">{item}</span></div>))}</div></div>))}</CardContent></Card>
+                        {/* 4. CARACTERÍSTICAS (NOVA LÓGICA DE EXTRAS/IMPORTADOS) */}
+                        <Card className={sectionClass}>
+                            <CardHeader className="border-b border-[#333] pb-3">
+                                <CardTitle className="text-primary flex items-center gap-2 text-base"><Plus size={18}/> CARACTERÍSTICAS</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {[
+                                    { title: 'Ambientes', list: ROOM_OPTS, key: 'roomFeatures' as FeatureCategory }, 
+                                    { title: 'Do Imóvel', list: PROPERTY_OPTS, key: 'propertyFeatures' as FeatureCategory }, 
+                                    { title: 'Empreendimento', list: DEVELOPMENT_OPTS, key: 'developmentFeatures' as FeatureCategory }
+                                ].map((group) => {
+                                    const customItems = getCustomItems(group.key, group.list);
+                                    
+                                    return ( 
+                                        <div key={group.key} className="bg-[#252525] p-3 rounded border border-[#333] flex flex-col h-full">
+                                            <h4 className="text-gray-300 font-bold mb-3 uppercase text-xs border-b border-[#444] pb-2">{group.title}</h4>
+                                            
+                                            {/* LISTA PADRÃO (CHECKBOXES) */}
+                                            <div className="h-60 overflow-y-auto space-y-1 pr-2 custom-scrollbar mb-4">
+                                                {group.list.map((item: string) => ( 
+                                                    <div key={item} className={checkboxWrapper} onClick={() => handleListToggle(group.key, item)}>
+                                                        <Checkbox checked={(form.watch(group.key) || []).includes(item)} />
+                                                        <span className="text-xs">{item}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* ÁREA DE LIMPEZA E ITENS EXTRAS */}
+                                            <div className="mt-auto pt-3 border-t border-[#444] bg-[#1a1a1a] -mx-3 -mb-3 p-3 rounded-b">
+                                                <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">Importados / Extras</p>
+                                                
+                                                {customItems.length === 0 ? (
+                                                    <p className="text-xs text-gray-600 italic">Nenhum item extra.</p>
+                                                ) : (
+                                                    <div className="flex flex-wrap gap-2 mb-3">
+                                                        {customItems.map((item: string, i: number) => (
+                                                            <Badge key={i} variant="secondary" className="bg-red-900/30 text-red-200 hover:bg-red-900/50 border border-red-900 pr-1 flex items-center gap-1 max-w-full truncate">
+                                                                <span className="truncate max-w-[150px]" title={item}>{item}</span>
+                                                                <X 
+                                                                    size={14} 
+                                                                    className="cursor-pointer hover:text-white shrink-0" 
+                                                                    onClick={() => handleRemoveCustomFeature(group.key, item)}
+                                                                />
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {/* INPUT PARA ADICIONAR NOVO MANUALMENTE */}
+                                                <div className="flex gap-2 mt-2">
+                                                    <Input 
+                                                        placeholder="Add novo..." 
+                                                        className="h-7 text-xs bg-[#111] border-[#333]" 
+                                                        value={newFeatureInput[group.key]}
+                                                        onChange={(e) => setNewFeatureInput(prev => ({...prev, [group.key]: e.target.value}))}
+                                                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCustomFeature(group.key))}
+                                                    />
+                                                    <Button type="button" size="sm" variant="outline" className="h-7 w-7 p-0 border-[#333]" onClick={() => handleAddCustomFeature(group.key)}>
+                                                        <Plus size={14} />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </CardContent>
+                        </Card>
 
                         {/* 5. LOCALIZAÇÃO */}
                         <Card className={sectionClass}><CardHeader className="border-b border-[#333] pb-3"><CardTitle className="text-primary flex items-center gap-2 text-base"><Home size={18}/> LOCALIZAÇÃO</CardTitle></CardHeader><CardContent className="pt-6 space-y-4"><div className="grid grid-cols-12 gap-4"><FormField control={form.control} name="address.zipCode" render={({ field }) => (<FormItem className="col-span-3"><FormLabel className={labelClass}>CEP</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="address.city" render={({ field }) => (<FormItem className="col-span-7"><FormLabel className={labelClass}>Cidade</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="address.state" render={({ field }) => (<FormItem className="col-span-2"><FormLabel className={labelClass}>UF</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /></div><div className="grid grid-cols-12 gap-4"><FormField control={form.control} name="address.neighborhood" render={({ field }) => (<FormItem className="col-span-4"><FormLabel className={labelClass}>Bairro</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="address.street" render={({ field }) => (<FormItem className="col-span-6"><FormLabel className={labelClass}>Logradouro</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="address.number" render={({ field }) => (<FormItem className="col-span-2"><FormLabel className={labelClass}>Número</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /></div><div className="flex gap-4 flex-col md:flex-row"><FormField control={form.control} name="buildingName" render={({ field }) => (<FormItem className="flex-1"><FormLabel className={labelClass}>Nome do Edifício</FormLabel><FormControl><Input {...field} className={inputClass} /></FormControl></FormItem>)} /><FormField control={form.control} name="displayAddress" render={({ field }) => (<FormItem className="flex items-center pt-6 space-x-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal cursor-pointer">Exibir endereço no site</FormLabel></FormItem>)} /></div></CardContent></Card>
@@ -314,11 +413,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                                         </label>
                                     </div>
 
-                                    {/* Opção Manual */}
                                     <div className="flex gap-2 items-center"><div className="h-[1px] bg-[#333] flex-1"></div><span className="text-xs text-gray-500 uppercase">Ou por Link</span><div className="h-[1px] bg-[#333] flex-1"></div></div>
                                     <div className="flex gap-2"><Input placeholder="Cole o link da imagem..." value={tempImageUrl} onChange={e => setTempImageUrl(e.target.value)} className={inputClass} /><Button type="button" onClick={addImage} className="bg-[#333] text-white hover:bg-[#444]"><Plus size={16} /></Button></div>
 
-                                    {/* LISTA DE IMAGENS */}
                                     {form.watch('images').length > 0 && (
                                         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 mt-4 bg-[#151515] p-4 rounded border border-[#333]">
                                             {form.watch('images').map((img, idx) => (
@@ -371,7 +468,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                             <CardContent className="pt-6 space-y-4">
                                 <FormField control={form.control} name="registrationNumber" render={({ field }) => (<FormItem><FormLabel className={privateLabelClass}>Matrícula</FormLabel><FormControl><Input {...field} className={privateInputClass} /></FormControl></FormItem>)} />
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <FormField control={form.control} name="branch" render={({ field }) => (<FormItem><FormLabel className={privateLabelClass}>Filial</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={privateInputClass}><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-[#1e1a15] border-[#5c4018] text-[#d4af37]"><SelectItem value="matriz">Matriz</SelectItem></SelectContent></Select></FormItem>)} />
+                                    <FormField control={form.control} name="branch" render={({ field }) => (<FormItem><FormLabel className={privateLabelClass}>Filial</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={privateInputClass}><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-[#1e1a15] border-[#5c4018] text-[#d4af37]"><SelectItem value="matriz">Matriz</SelectItem><SelectItem value="filial">Filial</SelectItem></SelectContent></Select></FormItem>)} />
                                     <FormField control={form.control} name="responsibleBroker" render={({ field }) => (<FormItem><FormLabel className={privateLabelClass}>Corretor/Responsável</FormLabel><FormControl><Input {...field} className={privateInputClass} /></FormControl></FormItem>)} />
                                 </div>
                                 <div className="pt-4 border-t border-[#5c4018] mt-4">
