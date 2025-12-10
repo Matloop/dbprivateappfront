@@ -29,9 +29,19 @@ export type Property = {
   status: string
   category: string
   images: { url: string }[]
-  createdAt: string
+  createdAt: string; 
+  updatedAt: string;
 }
-
+const formatDate = (dateString: string) => {
+  if (!dateString) return "-";
+  return new Date(dateString).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 export const columns: ColumnDef<Property>[] = [
   // 1. FOTO
   {
@@ -64,8 +74,6 @@ export const columns: ColumnDef<Property>[] = [
     },
     cell: ({ row }) => <span className="font-mono text-xs text-gray-500">#{row.getValue("id")}</span>,
   },
-
-  // 3. TÍTULO
   {
     accessorKey: "title",
     header: "Imóvel",
@@ -76,6 +84,38 @@ export const columns: ColumnDef<Property>[] = [
       </div>
     ),
   },
+  // --- DATA DE CRIAÇÃO (NOVO) ---
+  {
+    accessorKey: "createdAt",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="hover:text-white text-xs"
+      >
+        Criado em <ArrowUpDown className="ml-2 h-3 w-3" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="text-xs text-gray-400 whitespace-nowrap">
+        {formatDate(row.getValue("createdAt"))}
+      </div>
+    ),
+  },
+
+  // --- DATA DE EDIÇÃO (NOVO) ---
+  {
+    accessorKey: "updatedAt",
+    header: "Editado em", // Geralmente não precisa ordenar por edição na visualização padrão
+    cell: ({ row }) => (
+      <div className="text-xs text-gray-500 whitespace-nowrap">
+        {formatDate(row.getValue("updatedAt"))}
+      </div>
+    ),
+  },
+
+  // 3. TÍTULO
+  
 
   // 4. PREÇO
   {
