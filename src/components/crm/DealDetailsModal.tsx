@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { 
   X, Send, User, MessageSquare, Flag, History,
   CheckSquare, Calendar as CalendarIcon, Clock, 
   Trash2, PlusCircle, CheckCircle2, Circle, Building2, MapPin, Search,
-  XCircle, ArrowRight
+  XCircle, ArrowRight, ChevronDown, Copy
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
-// --- ESTILO DE SCROLL DARK (NATIVO) ---
+// --- CONFIGURAÇÃO DOS TEMPLATES (PLAYBOOKS) ---
+const WHATSAPP_TEMPLATES = [
+  {
+    id: 1,
+    label: "👋 Boas Vindas",
+    text: "Olá {nome}, tudo bem? Sou o {corretor} da DB Private. Vi que você tem interesse em imóveis em Balneário Camboriú. Como posso te ajudar hoje?"
+  },
+  {
+    id: 2,
+    label: "📅 Agendar Visita",
+    text: "Oi {nome}! O que acha de agendarmos uma visita no imóvel {titulo}? Tenho horários disponíveis essa semana."
+  },
+  {
+    id: 3,
+    label: "🤔 Follow-up (Sumido)",
+    text: "Olá {nome}, conseguil dar uma olhada nas opções que te mandei? O imóvel {titulo} ainda está disponível."
+  },
+  {
+    id: 4,
+    label: "💰 Proposta",
+    text: "{nome}, consegui uma condição especial para o {titulo}. Podemos conversar rapidinho?"
+  }
+];
+
+// --- ESTILO DE SCROLL DARK ---
 const customScroll = "overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#1a1a1a] [&::-webkit-scrollbar-thumb]:bg-[#333] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#444]";
 
 // Helper para imagem
@@ -29,6 +53,7 @@ const fixImageSource = (url: string) => {
     return url;
 };
 
+// Gerador de Horários
 const TIME_OPTIONS = Array.from({ length: 24 * 4 }).map((_, i) => {
     const h = Math.floor(i / 4).toString().padStart(2, '0');
     const m = ((i % 4) * 15).toString().padStart(2, '0');
@@ -46,9 +71,11 @@ export function DealDetailsModal({ dealId, onClose, onUpdate }: DealDetailsModal
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'timeline' | 'tasks' | 'properties'>('timeline');
 
-  // Estados
+  // Estados de Negócio
   const [showLossReason, setShowLossReason] = useState(false);
   const [lossReason, setLossReason] = useState('');
+  
+  // Estados de Ações
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
@@ -60,6 +87,10 @@ export function DealDetailsModal({ dealId, onClose, onUpdate }: DealDetailsModal
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [linkingProp, setLinkingProp] = useState(false);
 
+  // Estado do Menu de WhatsApp
+  const [showTemplates, setShowTemplates] = useState(false);
+  const templatesRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (dealId) {
       fetchDealData();
@@ -69,6 +100,17 @@ export function DealDetailsModal({ dealId, onClose, onUpdate }: DealDetailsModal
     }
   }, [dealId]);
 
+  // Fecha o menu de templates se clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (templatesRef.current && !templatesRef.current.contains(event.target as Node)) {
+        setShowTemplates(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const fetchDealData = async () => {
     setLoading(true);
     try {
@@ -77,7 +119,7 @@ export function DealDetailsModal({ dealId, onClose, onUpdate }: DealDetailsModal
     } catch { toast.error("Erro ao carregar."); } finally { setLoading(false); }
   };
 
-  // Actions
+  // --- ACTIONS ---
   const handleSearchProperties = async () => {
     if (!searchProp) return;
     try {
@@ -96,11 +138,15 @@ export function DealDetailsModal({ dealId, onClose, onUpdate }: DealDetailsModal
   };
 
   const handleChangeStatus = async (status: 'WON' | 'LOST' | 'OPEN') => {
-    if (status === 'LOST' && !lossReason && !showLossReason) { setShowLossReason(true); return; }
+    if (status === 'LOST' && !lossReason && !showLossReason) {
+        setShowLossReason(true); return;
+    }
     try {
         await api.patch(`/crm/deals/${dealId}/status`, { status, lossReason: status === 'LOST' ? lossReason : undefined });
-        toast.success("Atualizado!"); setShowLossReason(false); setLossReason(''); fetchDealData(); if (onUpdate) onUpdate();
-    } catch { toast.error("Erro."); }
+        toast.success("Status atualizado.");
+        setShowLossReason(false); setLossReason(''); fetchDealData();
+        if (onUpdate) onUpdate();
+    } catch { toast.error("Erro ao atualizar."); }
   };
   
   const handleUnlinkProperty = async (propertyId: number) => {
@@ -142,9 +188,38 @@ export function DealDetailsModal({ dealId, onClose, onUpdate }: DealDetailsModal
     } catch { toast.error("Erro."); } finally { setSavingNote(false); }
   };
 
+  // --- NOVA FUNCIONALIDADE: WHATSAPP TEMPLATES ---
+  const handleSendWhatsApp = async (templateText?: string) => {
+    if (!deal.lead?.phone) return toast.error("Cliente sem telefone.");
+
+    let message = "";
+    
+    // Se escolheu um template, formata o texto
+    if (templateText) {
+        // Substitui variáveis
+        message = templateText
+            .replace(/{nome}/g, deal.lead.name.split(' ')[0]) // Primeiro nome
+            .replace(/{titulo}/g, deal.title)
+            .replace(/{corretor}/g, "Danillo"); // Idealmente pegar do user logado
+    }
+
+    // Salva no histórico automaticamente
+    try {
+        await api.post(`/crm/deals/${dealId}/notes`, { 
+            description: `📱 Enviou WhatsApp: "${message || 'Mensagem direta'}"` 
+        });
+        // Atualiza a lista para mostrar o log
+        fetchDealData(); 
+    } catch (e) { console.error("Erro ao salvar log de whats", e); }
+
+    // Abre o WhatsApp
+    const phone = deal.lead.phone.replace(/\D/g, '');
+    window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(message)}`, '_blank');
+    setShowTemplates(false);
+  };
+
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(val));
-
   const tabBtnClass = (tab: string) => `px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? 'border-primary text-white' : 'border-transparent text-gray-500 hover:text-gray-300'}`;
 
   return (
@@ -157,7 +232,7 @@ export function DealDetailsModal({ dealId, onClose, onUpdate }: DealDetailsModal
         ) : (
           <div className="flex flex-col md:flex-row flex-1 h-full overflow-hidden">
             
-            {/* ESQUERDA */}
+            {/* ESQUERDA: DADOS */}
             <div className={`w-full md:w-1/3 border-r border-[#333] p-6 flex flex-col gap-6 bg-[#1a1a1a] ${customScroll}`}>
               <div>
                 <div className="flex gap-2 mb-4">
@@ -196,22 +271,66 @@ export function DealDetailsModal({ dealId, onClose, onUpdate }: DealDetailsModal
 
               <div className="flex items-start gap-3 text-sm text-gray-300">
                   <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-gray-500 flex-shrink-0"><User size={16} /></div>
-                  <div className="flex flex-col min-w-0">
+                  <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-[10px] text-gray-500 font-bold uppercase">Contato</span>
                     <span className="font-medium truncate">{deal.lead?.name || deal.contactName}</span>
-                    {deal.lead?.phone && <button onClick={() => window.open(`https://wa.me/55${deal.lead!.phone.replace(/\D/g, '')}`, '_blank')} className="flex items-center gap-1 text-green-500 hover:text-green-400 text-xs mt-1"><MessageSquare size={12}/> WhatsApp</button>}
+                    
+                    {/* BOTÃO WHATSAPP COM MENU DE TEMPLATES */}
+                    {deal.lead?.phone && (
+                        <div className="relative mt-2" ref={templatesRef}>
+                            <Button 
+                                variant="outline" 
+                                className="w-full border-green-900/40 text-green-500 hover:bg-green-900/20 h-9 justify-between"
+                                onClick={() => setShowTemplates(!showTemplates)}
+                            >
+                                <span className="flex items-center gap-2"><MessageSquare size={14} /> WhatsApp</span>
+                                <ChevronDown size={14} className={`transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
+                            </Button>
+
+                            {/* POPUP DE TEMPLATES */}
+                            {showTemplates && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="p-2 bg-[#222] border-b border-[#333] text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                        Selecione uma mensagem
+                                    </div>
+                                     <div className={`max-h-60 ${customScroll}`}>
+                                        {WHATSAPP_TEMPLATES.map((tmpl) => (
+                                            <button
+                                                key={tmpl.id}
+                                                onClick={() => handleSendWhatsApp(tmpl.text)}
+                                                className="w-full text-left p-3 hover:bg-[#252525] border-b border-[#222] last:border-0 transition-colors group"
+                                            >
+                                                <div className="font-bold text-sm text-gray-200 group-hover:text-green-400">{tmpl.label}</div>
+                                                <div className="text-xs text-gray-500 line-clamp-2 mt-1">{tmpl.text}</div>
+                                            </button>
+                                        ))}
+                                        <button 
+                                            onClick={() => handleSendWhatsApp()} // Envia vazio (só abre)
+                                            className="w-full text-center p-2 text-xs text-gray-400 hover:text-white hover:bg-[#252525]"
+                                        >
+                                            Abrir sem mensagem
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                   </div>
               </div>
               
+              {/* IMÓVEIS LATERAL */}
               {deal.properties?.length > 0 && (
                   <div className="border-t border-[#333] pt-4">
                       <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">Imóveis ({deal.properties.length})</p>
                       <div className="flex -space-x-2 overflow-hidden">
-                          {deal.properties.map((p: any) => (
-                              <div key={p.id} className="w-8 h-8 rounded-full border-2 border-[#1a1a1a] bg-[#333] overflow-hidden flex items-center justify-center">
-                                  {fixImageSource(p.images?.[0]?.url) ? <img src={fixImageSource(p.images[0].url)!} className="w-full h-full object-cover"/> : <Building2 size={12} className="text-gray-500"/>}
-                              </div>
-                          ))}
+                          {deal.properties.map((p: any) => {
+                              const img = fixImageSource(p.images?.[0]?.url);
+                              return (
+                                  <div key={p.id} className="w-8 h-8 rounded-full border-2 border-[#1a1a1a] bg-[#333] overflow-hidden flex items-center justify-center">
+                                      {img ? <img src={img} className="w-full h-full object-cover"/> : <Building2 size={12} className="text-gray-500"/>}
+                                  </div>
+                              )
+                          })}
                       </div>
                   </div>
               )}
@@ -243,7 +362,10 @@ export function DealDetailsModal({ dealId, onClose, onUpdate }: DealDetailsModal
                                 {deal.history.map((item: any) => (
                                     <div key={item.id} className="relative z-10 flex gap-4">
                                         <div className="w-10 h-10 rounded-full bg-[#1a1a1a] border border-[#333] flex items-center justify-center flex-shrink-0 shadow-sm z-10">
-                                            {item.type === 'CREATED' ? <Flag size={14} className="text-green-500"/> : item.type === 'NOTE' ? <MessageSquare size={14} className="text-yellow-500"/> : <History size={14} className="text-gray-500"/>}
+                                            {item.type === 'CREATED' ? <Flag size={14} className="text-green-500"/> : 
+                                             item.type === 'NOTE' && item.description.includes('WhatsApp') ? <MessageSquare size={14} className="text-green-500"/> : // Ícone verde para logs de Whats
+                                             item.type === 'NOTE' ? <MessageSquare size={14} className="text-yellow-500"/> : 
+                                             <History size={14} className="text-gray-500"/>}
                                         </div>
                                         <div className="flex-1 pt-1">
                                             <div className="flex justify-between mb-1">
