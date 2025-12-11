@@ -11,7 +11,7 @@ import {
   DraggableStateSnapshot,
   DroppableStateSnapshot
 } from '@hello-pangea/dnd';
-import { MoreHorizontal, Plus, User, DollarSign } from 'lucide-react';
+import { MoreHorizontal, Plus, User, DollarSign, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,12 +19,20 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api';
 
 // --- TIPAGEM ---
+interface Lead {
+    id: number;
+    name: string;
+    phone: string;
+    email: string;
+}
+
 interface Deal {
     id: number;
     title: string;
     value: number;
     contactName?: string;
     stageId: number;
+    lead?: Lead; // Adicionei a tipagem do lead aqui
 }
 
 interface Stage {
@@ -102,7 +110,10 @@ export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
         const dealId = Number(draggableId);
 
         // Copia profunda para não mutar estado diretamente
-        const newStages = [...stages];
+        const newStages = stages.map(stage => ({
+            ...stage,
+            deals: [...stage.deals]
+        }));
         
         const sourceStageIndex = newStages.findIndex(s => s.id === sourceStageId);
         const destStageIndex = newStages.findIndex(s => s.id === destStageId);
@@ -132,9 +143,6 @@ export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
                 // Aqui o ideal seria reverter o state, mas para simplificar vamos deixar assim
             }
         }
-        
-        // TODO: Se quiser salvar a ORDEM (index) dentro da coluna, precisaria de um endpoint de reorder
-        // await api.patch('/crm/deals/reorder', { ... })
     };
 
     if (!enabled) {
@@ -191,7 +199,7 @@ export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
                                                     >
                                                         <Card 
                                                             className={`
-                                                                border-0 shadow-sm group
+                                                                border-0 shadow-sm group cursor-grab active:cursor-grabbing
                                                                 ${snapshot.isDragging ? 'bg-[#333] shadow-xl rotate-2 scale-105 ring-2 ring-primary' : 'bg-[#222] ring-1 ring-[#333] hover:ring-primary/40'}
                                                             `}
                                                         >
@@ -205,13 +213,29 @@ export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
                                                                 
                                                                 <div className="flex justify-between items-center pt-2 border-t border-[#333]">
                                                                     <div className="flex items-center gap-1 text-[10px] text-gray-400 truncate max-w-[100px]">
-                                                                        <User size={10} /> {deal.contactName || 'S/ Contato'}
+                                                                        <User size={10} /> 
+                                                                        {/* MOSTRA NOME DO LEAD SE TIVER */}
+                                                                        {deal.lead ? deal.lead.name : (deal.contactName || 'S/ Contato')}
                                                                     </div>
-                                                                    {Number(deal.value) > 0 && (
-                                                                        <Badge variant="outline" className="text-[9px] border-[#444] text-green-400 px-1 py-0 h-4">
-                                                                            {formatCurrency(deal.value)}
-                                                                        </Badge>
-                                                                    )}
+                                                                    
+                                                                    <div className="flex items-center gap-2">
+                                                                        {/* BOTÃO WHATSAPP (Se tiver lead vinculado) */}
+                                                                        {deal.lead?.phone && (
+                                                                            <button 
+                                                                                onClick={() => window.open(`https://wa.me/55${deal.lead!.phone.replace(/\D/g, '')}`, '_blank')}
+                                                                                className="hover:text-green-500 transition-colors"
+                                                                                title="Chamar no WhatsApp"
+                                                                            >
+                                                                                <MessageSquare size={12} />
+                                                                            </button>
+                                                                        )}
+
+                                                                        {Number(deal.value) > 0 && (
+                                                                            <Badge variant="outline" className="text-[9px] border-[#444] text-green-400 px-1 py-0 h-4">
+                                                                                {formatCurrency(deal.value)}
+                                                                            </Badge>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </CardContent>
                                                         </Card>

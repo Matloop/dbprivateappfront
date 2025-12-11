@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { 
   Plus, Search, Filter, Phone, Mail, Calendar, MessageSquare, 
-  MoreHorizontal, Trash2, Pencil, Loader2 
-} from 'lucide-react';
+  MoreHorizontal, Trash2, Pencil, Loader2, ArrowRightCircle 
+} from 'lucide-react'; // Adicionei ArrowRightCircle
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,13 +14,14 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu"; // Adicionei DropdownMenuSeparator
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Lead, LeadStatus } from '@/types/lead';
+import { Lead } from '@/types/lead';
 import { LeadModal } from './LeadModal';
+import { SendToCrmModal } from './SendToCrmModal'; // <--- IMPORTANTE
 
 export function LeadsView() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -28,14 +29,17 @@ export function LeadsView() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   
-  // Controle do Modal
+  // Controle do Modal de Lead
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+
+  // Controle do Modal de CRM
+  const [isCrmModalOpen, setIsCrmModalOpen] = useState(false);
+  const [leadToConvert, setLeadToConvert] = useState<Lead | null>(null);
 
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      // Passa os filtros na URL
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (statusFilter !== 'ALL') params.append('status', statusFilter);
@@ -51,7 +55,6 @@ export function LeadsView() {
   };
 
   useEffect(() => {
-    // Debounce simples para a busca
     const timer = setTimeout(() => {
         fetchLeads();
     }, 500);
@@ -79,6 +82,12 @@ export function LeadsView() {
     setIsModalOpen(true);
   }
 
+  // --- FUNÇÃO PARA ABRIR O MODAL DO CRM ---
+  const handleSendToCrm = (lead: Lead) => {
+    setLeadToConvert(lead);
+    setIsCrmModalOpen(true);
+  };
+
   // Helper para formatar data
   const formatDate = (isoString: string) => {
     return new Date(isoString).toLocaleString('pt-BR', {
@@ -86,7 +95,6 @@ export function LeadsView() {
     });
   };
 
-  // Helper para cor do status
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'NOVO': return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
@@ -174,8 +182,8 @@ export function LeadsView() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col max-w-[250px]">
-                                            <span className="text-sm text-gray-200 truncate" title={lead.subject}>{lead.subject || 'Sem assunto'}</span>
-                                            <span className="text-xs text-gray-500 truncate" title={lead.context}>{lead.context || 'Origem desconhecida'}</span>
+                                            <span className="text-sm text-gray-200 truncate" title={lead.subject || ''}>{lead.subject || 'Sem assunto'}</span>
+                                            <span className="text-xs text-gray-500 truncate" title={lead.context || ''}>{lead.context || 'Origem desconhecida'}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -196,7 +204,17 @@ export function LeadsView() {
                                                     <MoreHorizontal size={16} />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-[#333] text-gray-200">
+                                            <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-[#333] text-gray-200 w-48">
+                                                {/* OPÇÃO DE ENVIAR PARA CRM */}
+                                                <DropdownMenuItem 
+                                                    onClick={() => handleSendToCrm(lead)} 
+                                                    className="cursor-pointer hover:bg-[#333] text-primary font-bold focus:text-primary"
+                                                >
+                                                    <ArrowRightCircle className="mr-2 h-4 w-4" /> Enviar p/ CRM
+                                                </DropdownMenuItem>
+                                                
+                                                <DropdownMenuSeparator className="bg-[#333]" />
+
                                                 <DropdownMenuItem onClick={() => handleEdit(lead)} className="cursor-pointer hover:bg-[#333]">
                                                     <Pencil className="mr-2 h-4 w-4" /> Editar / Ver
                                                 </DropdownMenuItem>
@@ -206,6 +224,8 @@ export function LeadsView() {
                                                         <MessageSquare className="mr-2 h-4 w-4" /> Chamar WhatsApp
                                                     </DropdownMenuItem>
                                                 )}
+
+                                                <DropdownMenuSeparator className="bg-[#333]" />
 
                                                 <DropdownMenuItem onClick={() => handleDelete(lead.id)} className="cursor-pointer hover:bg-[#333] text-red-500 focus:text-red-500">
                                                     <Trash2 className="mr-2 h-4 w-4" /> Excluir
@@ -222,12 +242,22 @@ export function LeadsView() {
         )}
       </div>
 
-      {/* MODAL (FORMULÁRIO) */}
+      {/* MODAL (FORMULÁRIO DE LEAD) */}
       <LeadModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSuccess={fetchLeads} 
         leadToEdit={selectedLead}
+      />
+
+      {/* MODAL (ENVIAR PARA CRM) - NOVO */}
+      <SendToCrmModal 
+        isOpen={isCrmModalOpen}
+        onClose={() => {
+            setIsCrmModalOpen(false);
+            fetchLeads(); // Atualiza a lista (caso o status tenha mudado para CONVERTIDO)
+        }}
+        lead={leadToConvert}
       />
 
     </div>
