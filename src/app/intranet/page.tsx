@@ -9,6 +9,7 @@ import {
   Megaphone,
   Home as HomeIcon,
   Loader2,
+  LucideFactory,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,6 +17,8 @@ import { Label } from "@/components/ui/label";
 import { PropertiesList } from "@/components/admin/PropertiesList";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { CrmView } from "@/components/crm/CrmView";
+import { LeadsView } from "@/components/leads/LeadsView";
 
 export default function IntranetPage() {
   const router = useRouter();
@@ -173,6 +176,7 @@ export default function IntranetPage() {
         {[
           { id: "leads", label: "Leads", icon: Megaphone },
           { id: "clientes", label: "Clientes", icon: Users },
+          {id: "crm", label: "CRM", icon: LucideFactory},
           { id: "imoveis", label: "Imóveis", icon: HomeIcon },
           { id: "destaques", label: "Destaques", icon: LayoutDashboard },
         ].map((tab) => {
@@ -217,6 +221,16 @@ export default function IntranetPage() {
                 <PropertiesList />
              </div>
           </div>
+        )}
+         {activeTab === "crm" && (
+           <div className="h-full w-full animate-in fade-in duration-300">
+              <CrmView />
+           </div>
+        )}
+        {activeTab === "leads" && (
+           <div className="h-full w-full animate-in fade-in duration-300">
+              <LeadsView />
+           </div>
         )}
 
         {activeTab === "leads" && (
