@@ -2,10 +2,10 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useProperties } from '@/hooks/useProperties';
-import { PropertyCard } from '@/components/PropertyCard';
-import { SidebarFilter } from '@/components/SidebarFilter';
+import { PropertyCard } from '@/components/property/PropertyCard';
+import { SidebarFilter } from '@/components/sales/SidebarFilter';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Breadcrumb } from '@/components/Breadcrumb';
+import { Breadcrumb } from '@/components/sales/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 

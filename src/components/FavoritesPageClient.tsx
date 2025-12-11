@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { HeartOff, ArrowLeft } from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useProperties } from '@/hooks/useProperties';
-import { PropertyCard } from '@/components/PropertyCard';
-import { Breadcrumb } from '@/components/Breadcrumb';
+import { PropertyCard } from '@/components/property/PropertyCard';
+import { Breadcrumb } from '@/components/sales/Breadcrumb';
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 

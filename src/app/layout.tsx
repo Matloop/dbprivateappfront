@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsapp";
+import { FloatingWhatsApp } from "@/components/ui/FloatingWhatsapp";
 import { Toaster } from "sonner";
 import Providers from "@/components/Providers";
 

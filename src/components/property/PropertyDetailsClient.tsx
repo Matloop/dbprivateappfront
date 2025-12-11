@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
-import { Breadcrumb } from "@/components/Breadcrumb";
-import { PropertyCard } from "@/components/PropertyCard";
+import { Breadcrumb } from "@/components/sales/Breadcrumb";
+import { PropertyCard } from "@/components/property/PropertyCard";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,7 @@ import {
   Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious,
 } from "@/components/ui/carousel";
 
-const PropertyMap = dynamic(() => import("@/components/PropertyMap"), {
+const PropertyMap = dynamic(() => import("@/components/property/PropertyMap"), {
   ssr: false,
   loading: () => (
     <Skeleton className="h-[400px] w-full rounded-xl bg-[#1a1a1a] border border-[#333]" />

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react'; // <--- 1. Importar Suspense
-import { SalesPageClient } from '@/components/SalesPageClient';
+import { SalesPageClient } from '@/components/sales/SalesPageClient';
 import { Loader2 } from 'lucide-react';
 
 export const metadata: Metadata = {

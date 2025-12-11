@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Plus,
-  Save,
   Trash2,
   GripVertical,
   Pencil,
@@ -25,6 +24,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// --- HELLO PANGEA DND ---
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+
+// --- TIPOS ---
 interface Stage {
   id: number;
   name: string;
@@ -38,13 +41,112 @@ interface Pipeline {
   stages: Stage[];
 }
 
+// --- SUB-COMPONENTE: ITEM DA LISTA (CORREÇÃO DO BUG DE DIGITAÇÃO) ---
+// Criamos um componente isolado para gerenciar o estado do input localmente
+const StageItem = ({ 
+  stage, 
+  index, 
+  onUpdate, 
+  onRemove 
+}: { 
+  stage: Stage; 
+  index: number; 
+  onUpdate: (id: number, field: keyof Stage, value: any) => void;
+  onRemove: (id: number) => void;
+}) => {
+  // Estado local para permitir digitação fluida
+  const [localName, setLocalName] = useState(stage.name);
+  const [localColor, setLocalColor] = useState(stage.color ?? "#888888");
+
+  // Sincroniza se o pai mudar (ex: reordenação)
+  useEffect(() => {
+    setLocalName(stage.name);
+    setLocalColor(stage.color ?? "#888888");
+  }, [stage.name, stage.color]);
+
+  // Salva apenas quando o usuário sai do campo (Blur)
+  const handleBlurName = () => {
+    if (localName !== stage.name) {
+      onUpdate(stage.id, "name", localName);
+    }
+  };
+
+  // Salva cor imediatamente ao fechar o picker (Blur/Change)
+  const handleChangeColor = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalColor(e.target.value);
+    onUpdate(stage.id, "color", e.target.value);
+  };
+
+  return (
+    <Draggable draggableId={String(stage.id)} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          className={`flex items-center gap-3 p-3 border border-[#333] rounded-md group transition-colors ${
+            snapshot.isDragging ? "bg-[#2a2a2a] shadow-lg border-primary/50" : "bg-[#121212] hover:border-gray-600"
+          }`}
+          style={{ ...provided.draggableProps.style }}
+        >
+          {/* Handle de arrastar (Aplicado APENAS aqui para não travar o input de texto) */}
+          <div
+            {...provided.dragHandleProps}
+            className="text-gray-600 cursor-grab active:cursor-grabbing hover:text-white p-1"
+          >
+            <GripVertical size={20} />
+          </div>
+
+          {/* Color Picker */}
+          <div className="h-8 w-8 rounded flex-shrink-0 overflow-hidden relative border border-[#333] cursor-pointer hover:scale-105 transition-transform">
+            <input
+              type="color"
+              value={localColor}
+              onChange={handleChangeColor}
+              className="absolute -top-1 -left-1 w-[200%] h-[200%] cursor-pointer border-none p-0 bg-transparent"
+            />
+          </div>
+
+          {/* Input de Nome (CONTROLADO + ONBLUR) */}
+          <div className="flex-1">
+            <Label className="sr-only">Nome</Label>
+            <Input
+              value={localName} // Componente Controlado
+              onChange={(e) => setLocalName(e.target.value)} // Atualiza localmente instantâneo
+              onBlur={handleBlurName} // Salva no banco ao sair
+              className="bg-transparent border-transparent hover:border-[#333] focus:border-primary h-9 text-sm text-white font-medium"
+            />
+          </div>
+
+          {/* Botão Excluir */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onRemove(stage.id)}
+            className="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <Trash2 size={16} />
+          </Button>
+        </div>
+      )}
+    </Draggable>
+  );
+};
+
+// --- PÁGINA PRINCIPAL ---
 export default function CrmConfigPage() {
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [activePipelineId, setActivePipelineId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [enabled, setEnabled] = useState(false);
 
-  // 1. CARREGAR DADOS
+  useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true));
+    return () => {
+      cancelAnimationFrame(animation);
+      setEnabled(false);
+    };
+  }, []);
+
   useEffect(() => {
     fetchPipelines();
   }, []);
@@ -52,10 +154,13 @@ export default function CrmConfigPage() {
   const fetchPipelines = async () => {
     try {
       const { data } = await api.get("/crm/pipelines");
-      setPipelines(data);
-
-      if (data.length > 0 && !activePipelineId) {
-        setActivePipelineId(data[0].id);
+      const sortedData = data.map((p: Pipeline) => ({
+        ...p,
+        stages: (p.stages || []).sort((a, b) => a.order - b.order),
+      }));
+      setPipelines(sortedData);
+      if (sortedData.length > 0 && !activePipelineId) {
+        setActivePipelineId(sortedData[0].id);
       }
     } catch (error) {
       console.error(error);
@@ -66,277 +171,165 @@ export default function CrmConfigPage() {
   };
 
   const activePipeline = pipelines.find((p) => p.id === activePipelineId);
+  const safeStages = activePipeline?.stages || [];
 
-  // --- AÇÕES DE FUNIL ---
+  // --- AÇÕES ---
 
-  const handleCreatePipeline = async () => {
-    const name = window.prompt("Nome do novo funil:");
-    if (!name) return;
-
-    try {
-      const { data: newPipeline } = await api.post("/crm/pipelines", { name });
-
-      // CORREÇÃO CRÍTICA: Garante que 'stages' exista como array vazio
-      const safePipeline = { ...newPipeline, stages: newPipeline.stages || [] };
-
-      setPipelines((prev) => [...prev, safePipeline]);
-      setActivePipelineId(safePipeline.id);
-      toast.success("Funil criado!");
-    } catch (error) {
-      toast.error("Erro ao criar funil.");
-    }
-  };
-
-  const handleRenamePipeline = async (pipelineId: string) => {
-    const currentName = pipelines.find((p) => p.id === pipelineId)?.name;
-    const newName = window.prompt("Novo nome do funil:", currentName);
-    if (!newName || newName === currentName) return;
-
+  const handleUpdateStage = async (stageId: number, field: keyof Stage, value: any) => {
+    // 1. Atualiza estado global (sem re-renderizar input local do StageItem pois ele gerencia seu próprio value)
     setPipelines((prev) =>
-      prev.map((p) => (p.id === pipelineId ? { ...p, name: newName } : p))
-    );
-  };
-
-  const handleDeletePipeline = async (pipelineId: string) => {
-    if (pipelines.length <= 1) {
-      toast.error("Você precisa ter pelo menos um funil.");
-      return;
-    }
-    if (
-      !confirm("Tem certeza? Todas as negociações deste funil serão perdidas.")
-    )
-      return;
-
-    const newPipelines = pipelines.filter((p) => p.id !== pipelineId);
-    setPipelines(newPipelines);
-    if (activePipelineId === pipelineId)
-      setActivePipelineId(newPipelines[0].id);
-  };
-
-  // --- AÇÕES DE ETAPAS (STAGES) ---
-
-  const handleStageChange = (
-    stageId: number,
-    field: keyof Stage,
-    value: string
-  ) => {
-    setPipelines((prevPipelines) => {
-      return prevPipelines.map((pipeline) => {
-        if (pipeline.id === activePipelineId) {
+      prev.map((p) => {
+        if (p.id === activePipelineId) {
           return {
-            ...pipeline,
-            stages: pipeline.stages.map((stage) =>
-              stage.id === stageId ? { ...stage, [field]: value } : stage
-            ),
+            ...p,
+            stages: p.stages.map((s) => s.id === stageId ? { ...s, [field]: value } : s),
           };
         }
-        return pipeline;
-      });
-    });
+        return p;
+      })
+    );
+
+    // 2. Salva no banco
+    try {
+      await api.patch(`/crm/stages/${stageId}`, { [field]: value });
+    } catch (error) {
+      toast.error("Erro ao salvar.");
+    }
   };
 
   const handleAddStage = async () => {
     if (!activePipelineId) return;
-
     try {
+      const lastOrder = safeStages.length > 0 ? Math.max(...safeStages.map(s => s.order)) : 0;
+      
       const { data: newStage } = await api.post("/crm/stages", {
         name: "Nova Etapa",
         color: "#888888",
         pipelineId: activePipelineId,
+        order: lastOrder + 1
       });
 
       setPipelines((prev) =>
-        prev.map((p) => {
-          if (p.id === activePipelineId) {
-            // Garante que stages é um array antes de espalhar
-            const currentStages = p.stages || [];
-            return { ...p, stages: [...currentStages, newStage] };
-          }
-          return p;
-        })
+        prev.map((p) => p.id === activePipelineId ? { ...p, stages: [...(p.stages || []), newStage] } : p)
       );
+      toast.success("Etapa criada!");
     } catch (error) {
       toast.error("Erro ao adicionar etapa.");
     }
   };
 
   const handleRemoveStage = async (stageId: number) => {
-    if (!confirm("Tem certeza? Os negócios nesta etapa ficarão órfãos."))
-      return;
-
+    if (!confirm("Tem certeza? Negócios nesta etapa serão excluídos.")) return;
     setPipelines((prev) =>
-      prev.map((p) => {
-        if (p.id === activePipelineId) {
-          return { ...p, stages: p.stages.filter((s) => s.id !== stageId) };
-        }
-        return p;
-      })
+      prev.map((p) => p.id === activePipelineId ? { ...p, stages: p.stages.filter((s) => s.id !== stageId) } : p)
     );
-  };
-
-  const handleSave = async () => {
-    if (!activePipeline) return;
-    setSaving(true);
-
     try {
-      const updates = (activePipeline.stages || []).map((stage) =>
-        api.patch(`/crm/stages/${stage.id}`, {
-          name: stage.name,
-          color: stage.color,
-          order: stage.order,
-        })
-      );
-
-      await Promise.all(updates);
-      toast.success("Funil salvo com sucesso!");
+      await api.delete(`/crm/stages/${stageId}`);
+      toast.success("Removido com sucesso.");
     } catch (error) {
-      console.error(error);
-      toast.error("Erro ao salvar alterações.");
-    } finally {
-      setSaving(false);
+      toast.error("Erro ao remover.");
+      fetchPipelines();
     }
   };
 
-  if (loading)
-    return (
-      <div className="h-screen flex items-center justify-center text-primary bg-[#121212]">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
+  const onDragEnd = async (result: DropResult) => {
+    if (!result.destination || !activePipelineId) return;
 
-  if (!activePipeline && pipelines.length === 0) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center bg-[#121212] text-white gap-4">
-        <p>Nenhum funil encontrado.</p>
-        <Button
-          onClick={handleCreatePipeline}
-          className="bg-primary text-black font-bold"
-        >
-          Criar Primeiro Funil
-        </Button>
-      </div>
-    );
-  }
+    const items = Array.from(safeStages);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
 
-  if (!activePipeline && pipelines.length > 0) {
-    setActivePipelineId(pipelines[0].id);
-    return (
-      <div className="h-screen flex items-center justify-center text-primary bg-[#121212]">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
-  }
+    const updatedStages = items.map((item, index) => ({ ...item, order: index }));
 
-  // --- RENDERIZAÇÃO ---
-  // A partir daqui activePipeline é garantido (mas suas stages podem ser undefined se vier bugado do back)
+    setPipelines(prev => prev.map(p => 
+      p.id === activePipelineId ? { ...p, stages: updatedStages } : p
+    ));
 
-  // Array seguro de stages
-  const safeStages = activePipeline?.stages || [];
+    try {
+      await Promise.all(updatedStages.map(s => 
+        api.patch(`/crm/stages/${s.id}`, { order: s.order })
+      ));
+    } catch (error) {
+      toast.error("Erro ao salvar ordem.");
+    }
+  };
+
+  // --- FUNIS ---
+  const handleCreatePipeline = async () => {
+    const name = window.prompt("Nome do novo funil:");
+    if (!name) return;
+    try {
+      const { data: newPipeline } = await api.post("/crm/pipelines", { name });
+      const safePipeline = { ...newPipeline, stages: newPipeline.stages || [] };
+      setPipelines((prev) => [...prev, safePipeline]);
+      setActivePipelineId(safePipeline.id);
+      toast.success("Funil criado!");
+    } catch (error) { toast.error("Erro ao criar funil."); }
+  };
+
+  const handleRenamePipeline = async (id: string) => {
+    const curr = pipelines.find(p => p.id === id);
+    const newName = window.prompt("Novo nome:", curr?.name);
+    if (!newName) return;
+    setPipelines(prev => prev.map(p => p.id === id ? { ...p, name: newName } : p));
+    api.patch(`/crm/pipelines/${id}`, { name: newName });
+  };
+
+  const handleDeletePipeline = async (id: string) => {
+    if (!confirm("Excluir funil e todos os dados?")) return;
+    try {
+      await api.delete(`/crm/pipelines/${id}`);
+      const filtered = pipelines.filter(p => p.id !== id);
+      setPipelines(filtered);
+      if (activePipelineId === id && filtered.length > 0) setActivePipelineId(filtered[0].id);
+      toast.success("Funil excluído.");
+    } catch { toast.error("Erro ao excluir."); }
+  };
+
+  if (loading) return <div className="h-screen flex items-center justify-center bg-[#121212] text-white"><Loader2 className="animate-spin"/></div>;
 
   return (
     <div className="min-h-screen bg-[#121212] text-white p-6 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
+        
         {/* HEADER */}
         <div className="flex items-center justify-between pb-6 border-b border-[#333]">
           <div className="flex items-center gap-4">
             <Link href="/intranet?tab=crm">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-[#222] text-gray-400 hover:text-white"
-              >
+              <Button variant="ghost" size="icon" className="hover:bg-[#222] text-gray-400">
                 <ArrowLeft size={24} />
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-white">
-                Configurações de CRM
-              </h1>
-              <p className="text-gray-400 text-sm">
-                Gerencie seus funis e etapas.
-              </p>
+              <h1 className="text-2xl font-bold">Configurações de CRM</h1>
+              <p className="text-gray-400 text-sm">Gerencie seus funis e etapas.</p>
             </div>
           </div>
-
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-primary text-black hover:bg-primary/90 font-bold min-w-[140px]"
-          >
-            {saving ? (
-              <Loader2 className="animate-spin mr-2 h-4 w-4" />
-            ) : (
-              <Save size={16} className="mr-2" />
-            )}
-            {saving ? "Salvando..." : "Salvar Funil"}
-          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
           {/* SIDEBAR */}
           <div className="lg:col-span-3 space-y-4">
             <div className="flex items-center justify-between px-1">
-              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Seus Funis
-              </h3>
-              <Button
-                onClick={handleCreatePipeline}
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-primary hover:bg-primary/10"
-                title="Criar novo funil"
-              >
-                <Plus size={16} />
-              </Button>
+              <h3 className="text-xs font-bold text-gray-500 uppercase">Seus Funis</h3>
+              <Button onClick={handleCreatePipeline} variant="ghost" size="icon" className="h-6 w-6 text-primary"><Plus size={16} /></Button>
             </div>
-
             <div className="space-y-1">
               {pipelines.map((pipeline) => (
                 <div
                   key={pipeline.id}
                   className={`group flex items-center justify-between w-full px-3 py-2 rounded-md transition-all border cursor-pointer ${
-                    activePipelineId === pipeline.id
-                      ? "bg-[#252525] border-[#444] text-white"
-                      : "border-transparent text-gray-400 hover:text-white hover:bg-[#1a1a1a]"
+                    activePipelineId === pipeline.id ? "bg-[#252525] border-[#444]" : "border-transparent text-gray-400 hover:bg-[#1a1a1a]"
                   }`}
                   onClick={() => setActivePipelineId(pipeline.id)}
                 >
-                  <span className="flex-1 text-sm font-medium truncate select-none">
-                    {pipeline.name}
-                  </span>
-
+                  <span className="flex-1 text-sm font-medium truncate">{pipeline.name}</span>
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MoreVertical size={14} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="bg-[#1a1a1a] border-[#333] text-gray-200"
-                    >
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRenamePipeline(pipeline.id);
-                        }}
-                        className="cursor-pointer hover:bg-[#333]"
-                      >
-                        <Pencil className="mr-2 h-4 w-4" /> Renomear
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeletePipeline(pipeline.id);
-                        }}
-                        className="cursor-pointer hover:bg-[#333] text-red-500 focus:text-red-500"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                      </DropdownMenuItem>
+                    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100"><MoreVertical size={14} /></Button></DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-[#333] text-gray-200">
+                      <DropdownMenuItem onClick={() => handleRenamePipeline(pipeline.id)}><Pencil className="mr-2 h-4 w-4" /> Renomear</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeletePipeline(pipeline.id)} className="text-red-500"><Trash2 className="mr-2 h-4 w-4" /> Excluir</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -344,70 +337,42 @@ export default function CrmConfigPage() {
             </div>
           </div>
 
-          {/* CONTEÚDO */}
+          {/* CONTEÚDO PRINCIPAL */}
           <div className="lg:col-span-9">
             <Card className="bg-[#1a1a1a] border-[#333]">
               <CardHeader className="border-b border-[#333] pb-4">
                 <div className="space-y-1">
-                  <CardTitle className="text-lg text-white">
-                    Etapas do Funil:{" "}
-                    <span className="text-primary">{activePipeline!.name}</span>
-                  </CardTitle>
-                  <p className="text-xs text-gray-500">
-                    Arraste para reordenar ou edite os nomes.
-                  </p>
+                  <CardTitle className="text-lg">Etapas do Funil: <span className="text-primary">{activePipeline?.name}</span></CardTitle>
+                  <p className="text-xs text-gray-500">Arraste para reordenar. Edite para salvar.</p>
                 </div>
               </CardHeader>
 
               <CardContent className="space-y-3 pt-6">
-                {/* CORREÇÃO CRÍTICA: Usa safeStages para evitar crash se stages for null */}
-                {safeStages.map((stage) => (
-                  <div
-                    key={stage.id}
-                    className="flex items-center gap-3 p-3 bg-[#121212] border border-[#333] rounded-md group hover:border-gray-600 transition-colors"
-                  >
-                    <div className="text-gray-600 cursor-move hover:text-white">
-                      <GripVertical size={20} />
-                    </div>
+                {enabled ? (
+                  <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="stages-list">
+                      {(provided) => (
+                        <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
+                          {safeStages.map((stage, index) => (
+                            // AQUI USAMOS O COMPONENTE SEPARADO
+                            <StageItem 
+                              key={stage.id} 
+                              stage={stage} 
+                              index={index} 
+                              onUpdate={handleUpdateStage}
+                              onRemove={handleRemoveStage}
+                            />
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">Carregando editor...</div>
+                )}
 
-                    <div className="h-8 w-8 rounded flex-shrink-0 overflow-hidden relative border border-[#333] cursor-pointer hover:scale-105 transition-transform">
-                      <input
-                        type="color"
-                        value={stage.color ?? "#888888"}
-                        onChange={(e) =>
-                          handleStageChange(stage.id, "color", e.target.value)
-                        }
-                        className="absolute -top-1 -left-1 w-[200%] h-[200%] cursor-pointer border-none p-0 bg-transparent"
-                      />
-                    </div>
-
-                    <div className="flex-1">
-                      <Label className="sr-only">Nome da etapa</Label>
-                      <Input
-                        value={stage.name ?? ""}
-                        onChange={(e) =>
-                          handleStageChange(stage.id, "name", e.target.value)
-                        }
-                        className="bg-transparent border-transparent hover:border-[#333] focus:border-primary h-9 text-sm text-white font-medium"
-                      />
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveStage(stage.id)}
-                      className="text-gray-600 hover:text-red-500 hover:bg-red-900/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
-                ))}
-
-                <Button
-                  onClick={handleAddStage}
-                  variant="outline"
-                  className="w-full mt-4 border-dashed border-[#333] text-gray-400 hover:text-primary hover:border-primary hover:bg-[#121212] h-12"
-                >
+                <Button onClick={handleAddStage} variant="outline" className="w-full mt-4 border-dashed border-[#333] text-gray-400 hover:text-primary hover:bg-[#121212] h-12">
                   <Plus size={16} className="mr-2" /> Adicionar Nova Etapa
                 </Button>
               </CardContent>
