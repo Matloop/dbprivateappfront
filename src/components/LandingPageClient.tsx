@@ -215,29 +215,7 @@ export function LandingPageClient() {
       </section>
 
       {/* SEÇÃO EXTRA */}
-      <section className="bg-[#0f0f0f] py-16 px-[5%] border-t border-white/5">
-        <div className="max-w-[1600px] mx-auto w-full">
-          <div className="flex items-center gap-4 mb-8">
-             <div className="h-8 w-1 bg-[#d4af37]"></div>
-             <h2 className="text-2xl md:text-3xl font-light text-foreground">
-               Lançamentos & <span className="font-bold text-white">Na Planta</span>
-             </h2>
-          </div>
-          
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8 bg-card border border-white/10 p-8 rounded-lg bg-[#1a1a1a]">
-             <div className="space-y-4 max-w-2xl">
-                <h3 className="text-xl text-[#d4af37] font-bold">Invista com Alta Rentabilidade</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Temos acesso exclusivo aos pré-lançamentos das maiores construtoras de Balneário Camboriú e Praia Brava. 
-                </p>
-             </div>
-             <Button className="bg-green-600 hover:bg-green-700 text-white font-bold h-12 px-8 flex items-center gap-2">
-                <DollarSign size={18} />
-                Falar com Especialista
-             </Button>
-          </div>
-        </div>
-      </section>
+      
     </div>
   );
 }

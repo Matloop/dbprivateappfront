@@ -76,6 +76,7 @@ export const PropertyCard = ({ property }: { property: Property }) => {
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-black group/image">
           
           <Image
+            loader={customLoader}
             src={currentImageUrl}
             alt={property.title}
             fill
