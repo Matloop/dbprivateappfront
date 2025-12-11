@@ -49,6 +49,7 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
+import LocationPicker from "@/components/forms/LocationPicker";
 const fixImageSource = (url: string | undefined | null) => {
   if (!url || url === "") return "/placeholder.jpg";
   if (url.startsWith("/")) return url;
@@ -63,7 +64,6 @@ const fixImageSource = (url: string | undefined | null) => {
   }
   return url;
 };
-
 // --- LISTAS DE OPÇÕES PADRÃO ---
 const ROOM_OPTS = [
   "Área de Serviço",
@@ -538,6 +538,8 @@ export default function EditPropertyPage({
         street: "",
         number: "",
         complement: "",
+        latitude: "",  
+        longitude: "",
       },
       buildingName: "",
       condoManager: "",
@@ -609,7 +611,9 @@ export default function EditPropertyPage({
               neighborhood: "",
               street: "",
               number: "",
-              complement: "",
+              complement: data.address?.complement ?? "",
+              latitude: data.address?.latitude ?? "",
+              longitude: data.address?.longitude ?? "",
             },
             images: data.images || [],
             deliveryDate: data.deliveryDate
@@ -1309,6 +1313,52 @@ export default function EditPropertyPage({
                       </FormItem>
                     )}
                   />
+                </div>
+                <div className="border-t border-[#333] pt-4 mt-4">
+                  <p className={`${labelClass} mb-4`}>Coordenadas Geográficas</p>
+
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <FormField
+                      control={form.control}
+                      name="address.latitude"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-gray-500">
+                            Latitude
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              className={inputClass}
+                              placeholder="-26.99..."
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="address.longitude"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-gray-500">
+                            Longitude
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              className={inputClass}
+                              placeholder="-48.63..."
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Componente do Mapa */}
+                  <LocationPicker />
                 </div>
               </CardContent>
             </Card>
