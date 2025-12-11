@@ -22,3 +22,27 @@ export interface CrmPipelineDTO {
   name: string;
   stages: CrmStageDTO[];
 }
+
+export interface CrmHistory {
+  id: number;
+  type: 'CREATED' | 'STAGE_CHANGE' | 'NOTE' | 'UPDATE';
+  description: string;
+  metadata?: any;
+  createdAt: string;
+  user?: {
+    name: string;
+    email: string;
+  };
+}
+
+export interface CrmDealDetails {
+  tasks: any;
+  id: number;
+  title: string;
+  value: number;
+  priority: string;
+  contactName?: string;
+  stage: { name: string; color: string };
+  lead?: { id: number; name: string; phone: string; email: string };
+  history: CrmHistory[];
+}

@@ -11,12 +11,13 @@ import {
   DraggableStateSnapshot,
   DroppableStateSnapshot
 } from '@hello-pangea/dnd';
-import { MoreHorizontal, Plus, User, DollarSign, MessageSquare } from 'lucide-react';
+import { MoreHorizontal, Plus, User, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { DealDetailsModal } from './DealDetailsModal'; // <--- Import do Modal
 
 // --- TIPAGEM ---
 interface Lead {
@@ -32,7 +33,7 @@ interface Deal {
     value: number;
     contactName?: string;
     stageId: number;
-    lead?: Lead; // Adicionei a tipagem do lead aqui
+    lead?: Lead;
 }
 
 interface Stage {
@@ -44,8 +45,10 @@ interface Stage {
 
 export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
     const [stages, setStages] = useState<Stage[]>([]);
-    // Hack para @hello-pangea/dnd funcionar no Next.js (evita erro de Hydration)
     const [enabled, setEnabled] = useState(false);
+    
+    // ESTADO PARA CONTROLAR O MODAL DE DETALHES
+    const [selectedDealId, setSelectedDealId] = useState<number | null>(null);
 
     useEffect(() => {
         const animation = requestAnimationFrame(() => setEnabled(true));
@@ -56,7 +59,6 @@ export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
     }, []);
 
     useEffect(() => {
-        // Ordena os deals por segurança (se tiver campo order no futuro)
         const sortedStages = initialStages.map(s => ({
             ...s,
             deals: s.deals || []
@@ -80,7 +82,6 @@ export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
                 stageId
             });
 
-            // Atualiza localmente
             setStages(prev => prev.map(s => 
                 s.id === stageId ? { ...s, deals: [newDeal, ...s.deals] } : s
             ));
@@ -90,26 +91,17 @@ export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
         }
     };
 
-    // --- LÓGICA DO DRAG AND DROP ---
+    // --- DRAG AND DROP ---
     const onDragEnd = async (result: DropResult) => {
         const { source, destination, draggableId } = result;
 
-        // Soltou fora de qualquer lista?
         if (!destination) return;
-
-        // Soltou na mesma posição?
-        if (
-            source.droppableId === destination.droppableId &&
-            source.index === destination.index
-        ) {
-            return;
-        }
+        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
         const sourceStageId = Number(source.droppableId);
         const destStageId = Number(destination.droppableId);
         const dealId = Number(draggableId);
 
-        // Copia profunda para não mutar estado diretamente
         const newStages = stages.map(stage => ({
             ...stage,
             deals: [...stage.deals]
@@ -121,26 +113,18 @@ export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
         const sourceStage = newStages[sourceStageIndex];
         const destStage = newStages[destStageIndex];
 
-        // Remove do array de origem
         const [movedDeal] = sourceStage.deals.splice(source.index, 1);
-        
-        // Atualiza o ID do stage no objeto movido
         movedDeal.stageId = destStageId;
-
-        // Adiciona no array de destino (na posição correta)
         destStage.deals.splice(destination.index, 0, movedDeal);
 
-        // Atualiza Visual (Optimistic UI)
         setStages(newStages);
 
-        // Atualiza Backend (Se mudou de coluna)
         if (sourceStageId !== destStageId) {
             try {
                 await api.patch(`/crm/deals/${dealId}`, { stageId: destStageId });
             } catch (error) {
                 console.error("Erro ao salvar movimento", error);
                 toast.error("Erro ao salvar mudança.");
-                // Aqui o ideal seria reverter o state, mas para simplificar vamos deixar assim
             }
         }
     };
@@ -150,125 +134,139 @@ export function KanbanBoard({ stages: initialStages }: { stages: any[] }) {
     }
 
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
-            <div className="h-full overflow-x-auto overflow-y-hidden p-6 bg-[#0f0f0f]">
-                <div className="flex h-full gap-4 w-max">
-                    {stages.map((stage) => (
-                        <div key={stage.id} className="flex flex-col w-[280px] h-full rounded-lg bg-[#1a1a1a] border border-[#333] shadow-sm flex-shrink-0">
-                            
-                            {/* HEADER DA COLUNA */}
-                            <div className="p-3 border-b border-[#333] flex justify-between items-center bg-[#1a1a1a] rounded-t-lg sticky top-0 z-10">
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: stage.color || '#888' }} />
-                                    <span className="font-semibold text-sm text-gray-200 truncate uppercase w-[150px]" title={stage.name}>
-                                        {stage.name}
-                                    </span>
-                                    <span className="text-[10px] text-gray-500 font-mono">
-                                        ({stage.deals.length})
-                                    </span>
+        <>
+            <DragDropContext onDragEnd={onDragEnd}>
+                <div className="h-full overflow-x-auto overflow-y-hidden p-6 bg-[#0f0f0f]">
+                    <div className="flex h-full gap-4 w-max">
+                        {stages.map((stage) => (
+                            <div key={stage.id} className="flex flex-col w-[280px] h-full rounded-lg bg-[#1a1a1a] border border-[#333] shadow-sm flex-shrink-0">
+                                
+                                {/* HEADER DA COLUNA */}
+                                <div className="p-3 border-b border-[#333] flex justify-between items-center bg-[#1a1a1a] rounded-t-lg sticky top-0 z-10">
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: stage.color || '#888' }} />
+                                        <span className="font-semibold text-sm text-gray-200 truncate uppercase w-[150px]" title={stage.name}>
+                                            {stage.name}
+                                        </span>
+                                        <span className="text-[10px] text-gray-500 font-mono">
+                                            ({stage.deals.length})
+                                        </span>
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-500 hover:text-white" onClick={() => handleCreateDeal(stage.id)}>
+                                        <Plus size={14} />
+                                    </Button>
                                 </div>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-500 hover:text-white" onClick={() => handleCreateDeal(stage.id)}>
-                                    <Plus size={14} />
-                                </Button>
-                            </div>
 
-                            {/* ÁREA DE CARDS (DROPPABLE) */}
-                            <Droppable droppableId={String(stage.id)}>
-                                {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
-                                    <div
-                                        {...provided.droppableProps}
-                                        ref={provided.innerRef}
-                                        className={`
-                                            flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar min-h-[150px] transition-colors
-                                            ${snapshot.isDraggingOver ? 'bg-[#222]' : 'bg-[#121212]/50'}
-                                        `}
-                                    >
-                                        {stage.deals.map((deal, index) => (
-                                            <Draggable 
-                                                key={deal.id} 
-                                                draggableId={String(deal.id)} 
-                                                index={index}
-                                            >
-                                                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        style={{ ...provided.draggableProps.style }}
-                                                        className="mb-2"
-                                                    >
-                                                        <Card 
-                                                            className={`
-                                                                border-0 shadow-sm group cursor-grab active:cursor-grabbing
-                                                                ${snapshot.isDragging ? 'bg-[#333] shadow-xl rotate-2 scale-105 ring-2 ring-primary' : 'bg-[#222] ring-1 ring-[#333] hover:ring-primary/40'}
-                                                            `}
+                                {/* ÁREA DE CARDS */}
+                                <Droppable droppableId={String(stage.id)}>
+                                    {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
+                                        <div
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                            className={`
+                                                flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar min-h-[150px] transition-colors
+                                                ${snapshot.isDraggingOver ? 'bg-[#222]' : 'bg-[#121212]/50'}
+                                            `}
+                                        >
+                                            {stage.deals.map((deal, index) => (
+                                                <Draggable 
+                                                    key={deal.id} 
+                                                    draggableId={String(deal.id)} 
+                                                    index={index}
+                                                >
+                                                    {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
+                                                            style={{ ...provided.draggableProps.style }}
+                                                            className="mb-2"
+                                                            // --- AQUI ESTÁ O ONCLICK PARA ABRIR O MODAL ---
+                                                            onClick={() => setSelectedDealId(deal.id)}
                                                         >
-                                                            <CardContent className="p-3 space-y-2">
-                                                                <div className="flex justify-between items-start">
-                                                                    <span className="text-sm font-medium text-gray-100 line-clamp-2 leading-tight">
-                                                                        {deal.title}
-                                                                    </span>
-                                                                    <MoreHorizontal size={14} className="text-gray-600 opacity-0 group-hover:opacity-100 cursor-pointer" />
-                                                                </div>
-                                                                
-                                                                <div className="flex justify-between items-center pt-2 border-t border-[#333]">
-                                                                    <div className="flex items-center gap-1 text-[10px] text-gray-400 truncate max-w-[100px]">
-                                                                        <User size={10} /> 
-                                                                        {/* MOSTRA NOME DO LEAD SE TIVER */}
-                                                                        {deal.lead ? deal.lead.name : (deal.contactName || 'S/ Contato')}
+                                                            <Card 
+                                                                className={`
+                                                                    border-0 shadow-sm group cursor-grab active:cursor-grabbing hover:bg-[#2a2a2a] transition-colors
+                                                                    ${snapshot.isDragging ? 'bg-[#333] shadow-xl rotate-2 scale-105 ring-2 ring-primary' : 'bg-[#222] ring-1 ring-[#333] hover:ring-primary/40'}
+                                                                `}
+                                                            >
+                                                                <CardContent className="p-3 space-y-2">
+                                                                    <div className="flex justify-between items-start">
+                                                                        <span className="text-sm font-medium text-gray-100 line-clamp-2 leading-tight">
+                                                                            {deal.title}
+                                                                        </span>
+                                                                        <MoreHorizontal size={14} className="text-gray-600 opacity-0 group-hover:opacity-100 cursor-pointer" />
                                                                     </div>
                                                                     
-                                                                    <div className="flex items-center gap-2">
-                                                                        {/* BOTÃO WHATSAPP (Se tiver lead vinculado) */}
-                                                                        {deal.lead?.phone && (
-                                                                            <button 
-                                                                                onClick={() => window.open(`https://wa.me/55${deal.lead!.phone.replace(/\D/g, '')}`, '_blank')}
-                                                                                className="hover:text-green-500 transition-colors"
-                                                                                title="Chamar no WhatsApp"
-                                                                            >
-                                                                                <MessageSquare size={12} />
-                                                                            </button>
-                                                                        )}
+                                                                    <div className="flex justify-between items-center pt-2 border-t border-[#333]">
+                                                                        <div className="flex items-center gap-1 text-[10px] text-gray-400 truncate max-w-[100px]">
+                                                                            <User size={10} /> 
+                                                                            {deal.lead ? deal.lead.name : (deal.contactName || 'S/ Contato')}
+                                                                        </div>
+                                                                        
+                                                                        <div className="flex items-center gap-2">
+                                                                            {deal.lead?.phone && (
+                                                                                <button 
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation(); // Evita abrir o modal ao clicar no Whats
+                                                                                        window.open(`https://wa.me/55${deal.lead!.phone.replace(/\D/g, '')}`, '_blank');
+                                                                                    }}
+                                                                                    className="hover:text-green-500 transition-colors"
+                                                                                    title="Chamar no WhatsApp"
+                                                                                >
+                                                                                    <MessageSquare size={12} />
+                                                                                </button>
+                                                                            )}
 
-                                                                        {Number(deal.value) > 0 && (
-                                                                            <Badge variant="outline" className="text-[9px] border-[#444] text-green-400 px-1 py-0 h-4">
-                                                                                {formatCurrency(deal.value)}
-                                                                            </Badge>
-                                                                        )}
+                                                                            {Number(deal.value) > 0 && (
+                                                                                <Badge variant="outline" className="text-[9px] border-[#444] text-green-400 px-1 py-0 h-4">
+                                                                                    {formatCurrency(deal.value)}
+                                                                                </Badge>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </CardContent>
-                                                        </Card>
-                                                    </div>
-                                                )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
+                                                                </CardContent>
+                                                            </Card>
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
 
-                                        {stage.deals.length === 0 && !snapshot.isDraggingOver && (
-                                            <div 
-                                                onClick={() => handleCreateDeal(stage.id)}
-                                                className="h-24 border-2 border-dashed border-[#333] rounded-lg flex flex-col items-center justify-center text-gray-600 hover:text-gray-400 hover:border-[#444] hover:bg-[#1a1a1a] transition-all cursor-pointer opacity-70 hover:opacity-100"
-                                            >
-                                                <Plus size={16} className="mb-1" />
-                                                <span className="text-xs">Vazio</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </Droppable>
+                                            {stage.deals.length === 0 && !snapshot.isDraggingOver && (
+                                                <div 
+                                                    onClick={() => handleCreateDeal(stage.id)}
+                                                    className="h-24 border-2 border-dashed border-[#333] rounded-lg flex flex-col items-center justify-center text-gray-600 hover:text-gray-400 hover:border-[#444] hover:bg-[#1a1a1a] transition-all cursor-pointer opacity-70 hover:opacity-100"
+                                                >
+                                                    <Plus size={16} className="mb-1" />
+                                                    <span className="text-xs">Vazio</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </Droppable>
 
-                            {/* FOOTER */}
-                            <div className="p-2 border-t border-[#333] bg-[#1a1a1a] rounded-b-lg flex justify-between items-center text-[10px] text-gray-500 font-mono">
-                                <span>TOTAL</span>
-                                <span>
-                                    {formatCurrency(stage.deals.reduce((acc, curr) => acc + Number(curr.value || 0), 0))}
-                                </span>
+                                {/* FOOTER */}
+                                <div className="p-2 border-t border-[#333] bg-[#1a1a1a] rounded-b-lg flex justify-between items-center text-[10px] text-gray-500 font-mono">
+                                    <span>TOTAL</span>
+                                    <span>
+                                        {formatCurrency(stage.deals.reduce((acc, curr) => acc + Number(curr.value || 0), 0))}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
-        </DragDropContext>
+            </DragDropContext>
+
+            {/* --- MODAL DE DETALHES DO NEGÓCIO --- */}
+            <DealDetailsModal 
+                dealId={selectedDealId} 
+                onClose={() => setSelectedDealId(null)}
+                onUpdate={() => {
+                    // Opcional: Se quiser recarregar dados ao fechar
+                }}
+            />
+        </>
     );
 }
