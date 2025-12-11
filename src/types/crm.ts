@@ -23,9 +23,10 @@ export interface CrmPipelineDTO {
   stages: CrmStageDTO[];
 }
 
+
 export interface CrmHistory {
   id: number;
-  type: 'CREATED' | 'STAGE_CHANGE' | 'NOTE' | 'UPDATE';
+  type: 'CREATED' | 'STAGE_CHANGE' | 'NOTE' | 'UPDATE' | 'STATUS_CHANGE'; // Adicionei STATUS_CHANGE
   description: string;
   metadata?: any;
   createdAt: string;
@@ -35,14 +36,35 @@ export interface CrmHistory {
   };
 }
 
+export interface CrmTask {
+  id: number;
+  title: string;
+  type: string;
+  dueDate: string;
+  isCompleted: boolean;
+}
+
+export interface CrmProperty {
+  id: number;
+  title: string;
+  price: number;
+  address?: {
+    city: string;
+    neighborhood: string;
+  };
+  images: { url: string; isCover: boolean }[];
+}
+
 export interface CrmDealDetails {
-  tasks: any;
   id: number;
   title: string;
   value: number;
   priority: string;
+  status: 'OPEN' | 'WON' | 'LOST'; // Adicionei status
   contactName?: string;
   stage: { name: string; color: string };
   lead?: { id: number; name: string; phone: string; email: string };
   history: CrmHistory[];
+  tasks: CrmTask[];
+  properties: CrmProperty[]; // Adicionei properties
 }
