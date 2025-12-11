@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   LogOut,
   LayoutDashboard,
@@ -22,7 +22,7 @@ import { LeadsView } from "@/components/leads/LeadsView";
 
 export default function IntranetPage() {
   const router = useRouter();
-
+  const searchParams = useSearchParams();
   // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState("imoveis");
   const [authLoading, setAuthLoading] = useState(true);
@@ -42,7 +42,14 @@ export default function IntranetPage() {
       }
 
       setAuthLoading(false);
+      const tabParam = searchParams.get("tab");
 
+      if (
+        tabParam &&
+        ["imoveis", "crm", "leads", "clientes", "destaques"].includes(tabParam)
+      ) {
+        setActiveTab(tabParam);
+      }
       try {
         const { data } = await api.get("/properties/bulk/watermark-status");
         setWatermarkEnabled(!!data.isEnabled);
@@ -54,7 +61,7 @@ export default function IntranetPage() {
     };
 
     initPage();
-  }, [router]);
+  }, [router, searchParams]);
 
   const handleLogout = () => {
     localStorage.removeItem("db_token");
@@ -81,10 +88,11 @@ export default function IntranetPage() {
 
       await api.patch("/properties/bulk/watermark", { enable: newValue });
 
-      toast.success(`Marca d'água global: ${newValue ? "LIGADA" : "DESLIGADA"}`);
-      
-      setTimeout(() => window.location.reload(), 1000);
+      toast.success(
+        `Marca d'água global: ${newValue ? "LIGADA" : "DESLIGADA"}`
+      );
 
+      setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
       console.error(error);
       toast.error("Erro ao aplicar alteração.");
@@ -104,48 +112,51 @@ export default function IntranetPage() {
 
   return (
     <div className="min-h-screen bg-[#121212] text-white flex flex-col font-sans">
-      
       {/* HEADER (Sem bg-black, agora blendando com o fundo) */}
       <header className="bg-[#121212] border-b border-[#222] h-16 flex items-center justify-between px-6 sticky top-0 z-50">
         <div className="flex items-center gap-2">
           {/* Logo Menor e sem bordas */}
-          <img 
-            src="/logo2025.png" 
-            alt="DB Private" 
-            className="h-8 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" 
+          <img
+            src="/logo2025.png"
+            alt="DB Private"
+            className="h-8 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity"
           />
         </div>
 
         <div className="flex items-center gap-4">
-          
           {/* --- SWITCH MENOR E MAIS DISCRETO --- */}
-          <div 
+          <div
             className={`
               flex items-center space-x-2 px-3 py-1 rounded border transition-all duration-300
-              ${watermarkEnabled 
-                ? "border-primary/50 bg-primary/5" 
-                : "border-[#333] bg-transparent hover:border-[#444]"
+              ${
+                watermarkEnabled
+                  ? "border-primary/50 bg-primary/5"
+                  : "border-[#333] bg-transparent hover:border-[#444]"
               }
             `}
           >
             {watermarkLoading || bulkProcessing ? (
-               <Loader2 className="h-3 w-3 animate-spin text-primary" />
+              <Loader2 className="h-3 w-3 animate-spin text-primary" />
             ) : (
-               <Checkbox 
-                 id="bulk-watermark" 
-                 checked={watermarkEnabled}
-                 onCheckedChange={(val) => toggleWatermark(val === true)}
-                 className={`
+              <Checkbox
+                id="bulk-watermark"
+                checked={watermarkEnabled}
+                onCheckedChange={(val) => toggleWatermark(val === true)}
+                className={`
                    data-[state=checked]:bg-primary data-[state=checked]:text-black border-[#555]
                    w-3.5 h-3.5 rounded-sm
                  `}
-               />
+              />
             )}
-            <Label 
-              htmlFor="bulk-watermark" 
+            <Label
+              htmlFor="bulk-watermark"
               className={`
                 text-xs cursor-pointer font-medium select-none tracking-wide
-                ${watermarkEnabled ? "text-primary" : "text-gray-400 hover:text-white"}
+                ${
+                  watermarkEnabled
+                    ? "text-primary"
+                    : "text-gray-400 hover:text-white"
+                }
               `}
             >
               Marca D'água Global
@@ -176,7 +187,7 @@ export default function IntranetPage() {
         {[
           { id: "leads", label: "Leads", icon: Megaphone },
           { id: "clientes", label: "Clientes", icon: Users },
-          {id: "crm", label: "CRM", icon: LucideFactory},
+          { id: "crm", label: "CRM", icon: LucideFactory },
           { id: "imoveis", label: "Imóveis", icon: HomeIcon },
           { id: "destaques", label: "Destaques", icon: LayoutDashboard },
         ].map((tab) => {
@@ -210,33 +221,33 @@ export default function IntranetPage() {
       <main className="flex-1 p-6 overflow-hidden relative bg-[#121212]">
         {activeTab === "imoveis" && (
           <div className="h-full w-full flex flex-col animate-in fade-in duration-500">
-             <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-white">Catálogo</h2>
-                  <p className="text-xs text-gray-500">Gestão de portfólio</p>
-                </div>
-             </div>
-             
-             <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar">
-                <PropertiesList />
-             </div>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">Catálogo</h2>
+                <p className="text-xs text-gray-500">Gestão de portfólio</p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar">
+              <PropertiesList />
+            </div>
           </div>
         )}
-         {activeTab === "crm" && (
-           <div className="h-full w-full animate-in fade-in duration-300">
-              <CrmView />
-           </div>
+        {activeTab === "crm" && (
+          <div className="h-full w-full animate-in fade-in duration-300">
+            <CrmView />
+          </div>
         )}
         {activeTab === "leads" && (
-           <div className="h-full w-full animate-in fade-in duration-300">
-              <LeadsView />
-           </div>
+          <div className="h-full w-full animate-in fade-in duration-300">
+            <LeadsView />
+          </div>
         )}
 
         {activeTab === "leads" && (
           <div className="flex flex-col items-center justify-center h-full text-gray-600">
             <div className="bg-[#1a1a1a] p-6 rounded-full mb-4 border border-[#222]">
-               <Megaphone size={32} className="text-gray-700" />
+              <Megaphone size={32} className="text-gray-700" />
             </div>
             <h2 className="text-lg font-medium mb-1">Módulo de CRM</h2>
             <p className="text-xs">Em desenvolvimento...</p>

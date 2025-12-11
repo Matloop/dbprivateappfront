@@ -206,7 +206,7 @@ export default function CrmConfigPage() {
         {/* HEADER */}
         <div className="flex items-center justify-between pb-6 border-b border-[#333]">
             <div className="flex items-center gap-4">
-                <Link href="/intranet"> {/* Volta para a Home da Intranet onde tem a aba CRM */}
+                <Link href="/intranet?tab=crm">
                     <Button variant="ghost" size="icon" className="hover:bg-[#222] text-gray-400 hover:text-white">
                         <ArrowLeft size={24} />
                     </Button>
