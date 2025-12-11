@@ -538,8 +538,9 @@ export default function EditPropertyPage({
         street: "",
         number: "",
         complement: "",
-        latitude: "",  
+        latitude: "",
         longitude: "",
+        radius: 100,
       },
       buildingName: "",
       condoManager: "",
@@ -614,6 +615,7 @@ export default function EditPropertyPage({
               complement: data.address?.complement ?? "",
               latitude: data.address?.latitude ?? "",
               longitude: data.address?.longitude ?? "",
+              radius: data.address?.radius ?? 100,
             },
             images: data.images || [],
             deliveryDate: data.deliveryDate
@@ -1315,8 +1317,9 @@ export default function EditPropertyPage({
                   />
                 </div>
                 <div className="border-t border-[#333] pt-4 mt-4">
-                  <p className={`${labelClass} mb-4`}>Coordenadas Geográficas</p>
-
+                  <p className={`${labelClass} mb-4`}>
+                    Coordenadas Geográficas
+                  </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <FormField
