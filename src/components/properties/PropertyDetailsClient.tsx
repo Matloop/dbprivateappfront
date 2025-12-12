@@ -7,7 +7,7 @@ import {
   Bed, Bath, Car, Ruler, MapPin, MessageCircle, Star, Share2,
   ChevronLeft, ChevronRight, Send, Phone, ImageIcon, Check, Facebook
 } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa"; // Usando react-icons para whats se preferir, ou lucide
+import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Breadcrumb } from "@/components/sales/Breadcrumb";
@@ -57,7 +57,7 @@ export function PropertyDetailsClient({
 }: PropertyDetailsClientProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
   
-  // --- CONFIGURAÇÃO DO CARROSSEL ---
+  // --- CONFIGURAÇÃO DO CARROSSEL EMBLA ---
   const OPTIONS: EmblaOptionsType = { loop: true, align: "center", containScroll: false };
   const [emblaRef, emblaApi] = useEmblaCarousel(OPTIONS);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -131,13 +131,14 @@ export function PropertyDetailsClient({
       </div>
 
       {/* ===================================================================================== */}
-      {/* AREA DE DESTAQUE (FOTOS + BARRA ESCURA + PREÇO) */}
+      {/* AREA DE DESTAQUE (CARROSSEL CINEMATOGRÁFICO) */}
       {/* ===================================================================================== */}
       <div className="relative w-full">
         
-        {/* 1. CARROSSEL (Altura Reduzida) */}
-        <div className="w-full bg-[#050505] relative overflow-hidden py-4"> 
+        {/* 1. CARROSSEL */}
+        <div className="w-full bg-[#050505] relative overflow-hidden py-6"> 
             <div className="w-full mx-auto relative group">
+                
                 {/* Viewport do Embla */}
                 <div className="overflow-hidden" ref={emblaRef}>
                     <div className="flex touch-pan-y">
@@ -146,26 +147,33 @@ export function PropertyDetailsClient({
                             return (
                                 <div 
                                     key={idx} 
-                                    // Ajuste de largura para mostrar pedaços das laterais
-                                    className="flex-[0_0_85%] md:flex-[0_0_60%] lg:flex-[0_0_50%] min-w-0 relative pl-2 transition-all duration-700 ease-in-out"
+                                    // Largura: Central ocupa 50-60%, laterais aparecem parcialmente
+                                    className="flex-[0_0_85%] md:flex-[0_0_60%] lg:flex-[0_0_55%] min-w-0 relative px-2 transition-all duration-700 ease-out"
                                 >
-                                    {/* Altura fixa controlada para desktop (550px) e mobile (300px) */}
-                                    <div className={`relative h-[300px] md:h-[550px] w-full overflow-hidden transition-all duration-700 ${isActive ? 'scale-100 opacity-100 z-10' : 'scale-95 opacity-40 grayscale-[50%] z-0'}`}>
+                                    {/* Container da Imagem Individual */}
+                                    <div className={`relative h-[300px] md:h-[500px] lg:h-[600px] w-full overflow-hidden bg-black rounded-sm transition-all duration-700 ${isActive ? 'scale-100 opacity-100 z-10 shadow-2xl shadow-black/80 ring-1 ring-white/10' : 'scale-90 opacity-40 grayscale-[80%] z-0'}`}>
                                         
+                                        {/* IMAGEM PRINCIPAL */}
                                         <Image
                                             loader={customLoader}
                                             src={fixImageSource(img.url)}
                                             alt={`Foto ${idx}`}
                                             fill
-                                            className="object-cover"
+                                            // IMPORTANTE: object-contain mostra a foto inteira sem cortar
+                                            className="object-contain"
+                                            quality={100}
                                             priority={idx === 0}
                                             unoptimized={true}
                                         />
 
-                                        {/* LOGO WATERMARK (Centralizada e sutil) */}
+                                        {/* GRADIENTE (Vignette) para suavizar o fundo preto */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40 pointer-events-none opacity-60" />
+
+                                        {/* LOGO WATERMARK (Centralizada EM BAIXO) */}
                                         {isActive && property.watermarkEnabled && (
-                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 animate-in fade-in duration-1000 delay-300">
-                                                <div className="relative w-32 h-32 md:w-48 md:h-48 opacity-30 invert brightness-0 filter drop-shadow-lg"> 
+                                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none z-30 w-full flex justify-center">
+                                                {/* Logo branca e transparente */}
+                                                <div className="relative w-28 h-16 md:w-40 md:h-20 opacity-50 drop-shadow-lg filter brightness-0 invert"> 
                                                     <Image 
                                                         src="/logo2025.png" 
                                                         alt="Watermark"
@@ -195,20 +203,20 @@ export function PropertyDetailsClient({
                 {/* BOTÕES DE NAVEGAÇÃO */}
                 <button 
                     onClick={scrollPrev} 
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/70 text-white p-3 transition-all opacity-0 group-hover:opacity-100 border border-white/10"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-black/20 hover:bg-black/80 text-white p-3 transition-all opacity-0 group-hover:opacity-100 border border-white/10 backdrop-blur-md rounded-full"
                 >
-                    <ChevronLeft size={30} strokeWidth={1} />
+                    <ChevronLeft size={32} strokeWidth={1.5} />
                 </button>
                 <button 
                     onClick={scrollNext} 
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/70 text-white p-3 transition-all opacity-0 group-hover:opacity-100 border border-white/10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-black/20 hover:bg-black/80 text-white p-3 transition-all opacity-0 group-hover:opacity-100 border border-white/10 backdrop-blur-md rounded-full"
                 >
-                    <ChevronRight size={30} strokeWidth={1} />
+                    <ChevronRight size={32} strokeWidth={1.5} />
                 </button>
                 
                 {/* Contador */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-xs tracking-widest font-light pointer-events-none drop-shadow-md">
-                    {String(selectedIndex + 1).padStart(2, '0')} <span className="mx-2">|</span> {String(images.length).padStart(2, '0')}
+                <div className="absolute bottom-6 right-1/2 translate-x-[150px] md:translate-x-[250px] lg:translate-x-[350px] text-white/40 text-[10px] tracking-widest font-mono pointer-events-none z-40">
+                    {String(selectedIndex + 1).padStart(2, '0')} / {String(images.length).padStart(2, '0')}
                 </div>
             </div>
         </div>
@@ -236,28 +244,24 @@ export function PropertyDetailsClient({
 
                     {/* Ícones / Specs */}
                     <div className="flex flex-wrap gap-8 pt-2">
-                        {/* Localização */}
                         <div className="flex flex-col">
                             <span className="text-[10px] uppercase text-gray-500 font-bold mb-1 tracking-wider">Localização</span>
                             <div className="flex items-center gap-2 text-sm text-gray-300">
                                 <MapPin size={16} /> <span>{property.address?.neighborhood}, {property.address?.city}</span>
                             </div>
                         </div>
-                        {/* Dormitórios */}
                         <div className="flex flex-col">
                             <span className="text-[10px] uppercase text-gray-500 font-bold mb-1 tracking-wider">Dormitórios</span>
                             <div className="flex items-center gap-2 text-sm text-gray-300">
                                 <Bed size={16} /> <span>{property.bedrooms} Quartos ({property.suites} Suítes)</span>
                             </div>
                         </div>
-                        {/* Área */}
                         <div className="flex flex-col">
                             <span className="text-[10px] uppercase text-gray-500 font-bold mb-1 tracking-wider">Área Privativa</span>
                             <div className="flex items-center gap-2 text-sm text-gray-300">
                                 <Ruler size={16} /> <span>{property.privateArea} m²</span>
                             </div>
                         </div>
-                        {/* Garagem */}
                         <div className="flex flex-col">
                             <span className="text-[10px] uppercase text-gray-500 font-bold mb-1 tracking-wider">Garagem</span>
                             <div className="flex items-center gap-2 text-sm text-gray-300">
@@ -269,7 +273,6 @@ export function PropertyDetailsClient({
 
                 {/* 3. CARD FLUTUANTE DE PREÇO (DIREITA) */}
                 <div className="w-full md:w-[400px] md:absolute md:right-5 md:bottom-0 z-20 mt-8 md:mt-0 shadow-2xl">
-                    {/* Caixa Preço */}
                     <div className="bg-[#2a2a2a] p-8 text-center border-t-4 border-primary">
                         <span className="block text-[10px] uppercase tracking-widest text-gray-400 mb-2 font-bold">Valor do Imóvel</span>
                         <div className="text-4xl text-white font-light mb-4">
@@ -283,7 +286,6 @@ export function PropertyDetailsClient({
                         </div>
                     </div>
 
-                    {/* Caixa Contato */}
                     <div className="bg-[#1f1f1f] p-6 text-center border-t border-white/5">
                         <p className="text-sm text-gray-300 mb-1">Interessado neste imóvel?</p>
                         <p className="text-lg font-bold text-white mb-4">Fale conosco!</p>
