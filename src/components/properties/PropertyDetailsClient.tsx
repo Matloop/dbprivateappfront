@@ -22,10 +22,12 @@ import {
   Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious,
 } from "@/components/ui/carousel";
 
+// ANTES: bg-[#1a1a1a] border-[#333]
+// DEPOIS: bg-card border-border
 const PropertyMap = dynamic(() => import("@/components/properties/PropertyMap"), {
   ssr: false,
   loading: () => (
-    <Skeleton className="h-[400px] w-full rounded-xl bg-[#1a1a1a] border border-[#333]" />
+    <Skeleton className="h-[400px] w-full rounded-xl bg-card border border-border" />
   ),
 });
 
@@ -54,7 +56,6 @@ export function PropertyDetailsClient({
   const { isFavorite, toggleFavorite } = useFavorites();
   const [activeImgIndex, setActiveImgIndex] = useState(0);
   
-  // Debug para ver se o dado está chegando (abra o console do navegador F12)
   useEffect(() => {
     console.log("Marca d'água ativada?", property.watermarkEnabled);
   }, [property]);
@@ -63,7 +64,7 @@ export function PropertyDetailsClient({
   const [formEmail, setFormEmail] = useState("");
   const [formPhone, setFormPhone] = useState("");
 
-  if (!property) return <div className="text-center py-20 text-gray-400">Imóvel não encontrado.</div>;
+  if (!property) return <div className="text-center py-20 text-muted-foreground">Imóvel não encontrado.</div>;
 
   const images = property.images && property.images.length > 0 ? property.images : [{ url: "/placeholder.jpg" }];
   const currentImage = fixImageSource(images[activeImgIndex]?.url);
@@ -93,8 +94,10 @@ export function PropertyDetailsClient({
   ];
 
   return (
-    <div className="min-h-screen bg-[#121212] text-[#e0e0e0] pb-20 font-sans">
-      <div className="w-full border-b border-[#222]">
+    // ANTES: bg-[#121212] text-[#e0e0e0] border-[#222]
+    // DEPOIS: bg-background text-foreground border-border
+    <div className="min-h-screen bg-background text-foreground pb-20 font-sans">
+      <div className="w-full border-b border-border">
         <div className="max-w-[1600px] mx-auto">
           <Breadcrumb items={breadcrumbItems} className="bg-transparent border-none px-5 py-4 shadow-none" />
         </div>
@@ -106,7 +109,9 @@ export function PropertyDetailsClient({
           
           {/* GALERIA */}
           <div className="flex flex-col lg:flex-row gap-4 h-auto lg:h-[550px] mb-10 group">
-            <div className="flex-1 bg-black relative rounded-md overflow-hidden border border-[#222] min-h-[300px] lg:min-h-full">
+            {/* ANTES: border-[#222] */}
+            {/* DEPOIS: border-border */}
+            <div className="flex-1 bg-black relative rounded-md overflow-hidden border border-border min-h-[300px] lg:min-h-full">
               
               <Image
                 key={currentImage}
@@ -121,22 +126,14 @@ export function PropertyDetailsClient({
                 onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.jpg"; }}
               />
 
-              {/* --- LÓGICA DA MARCA D'ÁGUA CORRIGIDA --- */}
-              {/* Removemos o mix-blend-overlay que faz a logo sumir dependendo da cor de fundo */}
               {property.watermarkEnabled && (
                 <div className="absolute top-4 right-4 z-20 pointer-events-none select-none">
-                    {/* 
-                       Ajuste de tamanho:
-                       w-24 (mobile) = 96px
-                       md:w-32 (desktop) = 128px
-                       h-12 / h-16 = define a altura do container da logo
-                    */}
                     <div className="relative w-18 h-12 md:w-32 md:h-16 opacity-90">
                         <Image 
                             src="/logo2025.png" 
                             alt="Watermark"
                             fill
-                            className="object-contain drop-shadow-md" // drop-shadow ajuda a ver a logo se o fundo for branco
+                            className="object-contain drop-shadow-md"
                             unoptimized={true}
                         />
                     </div>
@@ -148,7 +145,7 @@ export function PropertyDetailsClient({
                 <button onClick={handleNextImg} className="bg-black/40 hover:bg-primary text-white p-2 rounded-full backdrop-blur-sm"><ChevronRight /></button>
               </div>
               <div className="absolute top-4 left-4 z-20">
-                {property.badgeText && <Badge className="bg-primary text-black font-bold uppercase">{property.badgeText}</Badge>}
+                {property.badgeText && <Badge className="bg-primary text-primary-foreground font-bold uppercase">{property.badgeText}</Badge>}
               </div>
             </div>
             
@@ -172,13 +169,19 @@ export function PropertyDetailsClient({
             <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xs uppercase tracking-widest">
               <span>{property.category}</span><span>•</span><span>{property.address?.neighborhood}</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-light text-white leading-tight mb-2">{property.title}</h1>
-            <div className="flex items-center text-[#888] gap-2 text-sm">
+            {/* ANTES: text-white */}
+            {/* DEPOIS: text-foreground */}
+            <h1 className="text-3xl md:text-4xl font-light text-foreground leading-tight mb-2">{property.title}</h1>
+            {/* ANTES: text-[#888] */}
+            {/* DEPOIS: text-muted-foreground */}
+            <div className="flex items-center text-muted-foreground gap-2 text-sm">
               <MapPin className="h-4 w-4 text-primary" /> <span>{property.address?.city}, {property.address?.state}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8 border-y border-[#222] mb-8">
+          {/* ANTES: border-[#222] */}
+          {/* DEPOIS: border-border */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8 border-y border-border mb-8">
             {[
               { icon: Bed, val: property.bedrooms, label: "Quartos" },
               { icon: Bath, val: property.bathrooms, label: "Banheiros" },
@@ -186,23 +189,26 @@ export function PropertyDetailsClient({
               { icon: Ruler, val: property.privateArea, label: "Privativos", unit: "m²" },
             ].map((item, i) => (
               <div key={i} className="flex flex-col items-center md:items-start p-2">
-                <div className="flex items-center gap-2 text-white mb-1"><item.icon className="h-5 w-5 text-primary" /><span className="text-2xl font-light">{item.val} <span className="text-sm text-[#666]">{item.unit}</span></span></div>
-                <span className="text-[10px] text-[#666] uppercase tracking-widest font-bold">{item.label}</span>
+                {/* ANTES: text-white text-[#666] */}
+                {/* DEPOIS: text-foreground text-muted-foreground */}
+                <div className="flex items-center gap-2 text-foreground mb-1"><item.icon className="h-5 w-5 text-primary" /><span className="text-2xl font-light">{item.val} <span className="text-sm text-muted-foreground">{item.unit}</span></span></div>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{item.label}</span>
               </div>
             ))}
           </div>
 
           {/* DESCRIÇÃO */}
           <div className="mb-12">
-                        <h3 className="text-xl font-medium text-white mb-6 border-l-4 border-primary pl-3">
+                        {/* ANTES: text-white */}
+                        {/* DEPOIS: text-foreground */}
+                        <h3 className="text-xl font-medium text-foreground mb-6 border-l-4 border-primary pl-3">
                             Sobre o Imóvel
                         </h3>
                         
-                        <div className="text-[#e0e0e0] font-light text-justify leading-relaxed text-base">
+                        {/* ANTES: text-[#e0e0e0] */}
+                        {/* DEPOIS: text-muted-foreground (ou foreground se quiser mais contraste) */}
+                        <div className="text-muted-foreground font-light text-justify leading-relaxed text-base">
                             {property.description ? (
-                                // A Lógica:
-                                // Se o texto contém tags HTML (<p>, <br>, <div>), usamos dangerouslySetInnerHTML.
-                                // As classes [&>p]:mb-4 forçam espaçamento entre parágrafos.
                                 property.description.match(/<[a-z][\s\S]*>/i) ? (
                                     <div 
                                         className="
@@ -212,12 +218,11 @@ export function PropertyDetailsClient({
                                             [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4
                                             [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-4
                                             [&>li]:mb-1
-                                            [&>strong]:font-bold [&>strong]:text-white
+                                            [&>strong]:font-bold [&>strong]:text-foreground
                                         "
                                         dangerouslySetInnerHTML={{ __html: property.description }} 
                                     />
                                 ) : (
-                                    // Se for Texto Puro (sem tags), quebramos nos "Enters" (\n)
                                     property.description.split('\n').map((paragraph: string, index: number) => (
                                         paragraph.trim() !== "" ? (
                                             <p key={index} className="mb-4">
@@ -227,29 +232,33 @@ export function PropertyDetailsClient({
                                     ))
                                 )
                             ) : (
-                                <p className="italic text-gray-500">Sem descrição disponível.</p>
+                                <p className="italic text-muted-foreground">Sem descrição disponível.</p>
                             )}
                         </div>
                     </div>
 
           {/* CARACTERÍSTICAS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-[#222] pt-8">
+          {/* ANTES: border-[#222] */}
+          {/* DEPOIS: border-border */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-border pt-8">
             {property.roomFeatures?.length > 0 && (
               <div>
                 <h3 className="text-sm font-bold text-primary mb-4 uppercase tracking-wider flex items-center gap-2"><Bed className="w-4 h-4" /> Ambientes</h3>
-                <ul className="space-y-2">{property.roomFeatures.map((feat: any, i: number) => (<li key={i} className="flex items-start text-sm text-[#bbb]"><Check className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />{getFeatureName(feat)}</li>))}</ul>
+                {/* ANTES: text-[#bbb] */}
+                {/* DEPOIS: text-muted-foreground */}
+                <ul className="space-y-2">{property.roomFeatures.map((feat: any, i: number) => (<li key={i} className="flex items-start text-sm text-muted-foreground"><Check className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />{getFeatureName(feat)}</li>))}</ul>
               </div>
             )}
             {property.propertyFeatures?.length > 0 && (
               <div>
                 <h3 className="text-sm font-bold text-primary mb-4 uppercase tracking-wider flex items-center gap-2"><Star className="w-4 h-4" /> Do Imóvel</h3>
-                <ul className="space-y-2">{property.propertyFeatures.map((feat: any, i: number) => (<li key={i} className="flex items-start text-sm text-[#bbb]"><Check className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />{getFeatureName(feat)}</li>))}</ul>
+                <ul className="space-y-2">{property.propertyFeatures.map((feat: any, i: number) => (<li key={i} className="flex items-start text-sm text-muted-foreground"><Check className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />{getFeatureName(feat)}</li>))}</ul>
               </div>
             )}
             {property.developmentFeatures?.length > 0 && (
               <div>
                 <h3 className="text-sm font-bold text-primary mb-4 uppercase tracking-wider flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Empreendimento</h3>
-                <ul className="space-y-2">{property.developmentFeatures.map((feat: any, i: number) => (<li key={i} className="flex items-start text-sm text-[#bbb]"><Check className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />{getFeatureName(feat)}</li>))}</ul>
+                <ul className="space-y-2">{property.developmentFeatures.map((feat: any, i: number) => (<li key={i} className="flex items-start text-sm text-muted-foreground"><Check className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5" />{getFeatureName(feat)}</li>))}</ul>
               </div>
             )}
           </div>
@@ -258,42 +267,61 @@ export function PropertyDetailsClient({
         {/* SIDEBAR */}
         <div className="lg:col-span-4 w-full relative">
           <div className="lg:sticky lg:top-6 space-y-6">
-            <Card className="border border-[#222] bg-[#1a1a1a] shadow-xl">
+            {/* ANTES: border-[#222] bg-[#1a1a1a] */}
+            {/* DEPOIS: border-border bg-card */}
+            <Card className="border border-border bg-card shadow-xl">
               <CardContent className="p-6 space-y-6">
-                <div><p className="text-xs text-[#666] uppercase tracking-widest font-bold mb-1">Valor de Venda</p><div className="text-3xl font-bold text-white tracking-tight">{formatCurrency(Number(property.price))}</div></div>
+                {/* ANTES: text-[#666] text-white */}
+                {/* DEPOIS: text-muted-foreground text-foreground */}
+                <div><p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">Valor de Venda</p><div className="text-3xl font-bold text-foreground tracking-tight">{formatCurrency(Number(property.price))}</div></div>
+                
                 <Button className="w-full h-12 bg-[#25D366] hover:bg-[#1da851] text-white font-bold uppercase gap-2" onClick={handleWhatsApp}><MessageCircle size={18} /> Chamar no WhatsApp</Button>
+                
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => toggleFavorite(property.id)} className={`flex-1 border-[#333] bg-transparent hover:bg-[#333] ${favorite ? "text-primary border-primary/50" : "text-[#888]"}`}><Star className={`mr-2 h-4 w-4 ${favorite ? "fill-primary" : ""}`} /> Favorito</Button>
-                  <Button variant="outline" className="flex-1 border-[#333] bg-transparent hover:bg-[#333] text-[#888]"><Share2 className="mr-2 h-4 w-4" /> Compartilhar</Button>
+                  {/* ANTES: border-[#333] hover:bg-[#333] text-[#888] */}
+                  {/* DEPOIS: border-input hover:bg-muted text-muted-foreground */}
+                  <Button variant="outline" onClick={() => toggleFavorite(property.id)} className={`flex-1 border-input bg-transparent hover:bg-muted ${favorite ? "text-primary border-primary/50" : "text-muted-foreground"}`}><Star className={`mr-2 h-4 w-4 ${favorite ? "fill-primary" : ""}`} /> Favorito</Button>
+                  <Button variant="outline" className="flex-1 border-input bg-transparent hover:bg-muted text-muted-foreground"><Share2 className="mr-2 h-4 w-4" /> Compartilhar</Button>
                 </div>
-                <Separator className="bg-[#333]" />
+                
+                <Separator className="bg-border" />
+                
                 <form onSubmit={handleLeadSubmit} className="space-y-4">
                   <div className="space-y-3">
-                    <Input placeholder="Nome completo" className="bg-[#121212] border-[#333] text-white" value={formName} onChange={(e) => setFormName(e.target.value)} />
-                    <Input placeholder="Telefone" className="bg-[#121212] border-[#333] text-white" value={formPhone} onChange={(e) => setFormPhone(e.target.value)} />
-                    <Input placeholder="E-mail" className="bg-[#121212] border-[#333] text-white" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} />
+                    {/* ANTES: bg-[#121212] border-[#333] text-white */}
+                    {/* DEPOIS: bg-background border-input text-foreground */}
+                    <Input placeholder="Nome completo" className="bg-background border-input text-foreground" value={formName} onChange={(e) => setFormName(e.target.value)} />
+                    <Input placeholder="Telefone" className="bg-background border-input text-foreground" value={formPhone} onChange={(e) => setFormPhone(e.target.value)} />
+                    <Input placeholder="E-mail" className="bg-background border-input text-foreground" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} />
                   </div>
-                  <Button type="submit" variant="ghost" className="w-full text-primary border border-primary/20">Enviar Solicitação <Send className="ml-2 h-3 w-3" /></Button>
+                  <Button type="submit" variant="ghost" className="w-full text-primary border border-primary/20 hover:bg-primary/10">Enviar Solicitação <Send className="ml-2 h-3 w-3" /></Button>
                 </form>
               </CardContent>
             </Card>
-            <div className="flex items-center gap-4 px-4 py-2 border border-[#222] rounded-lg bg-[#1a1a1a]">
-              <div className="h-10 w-10 rounded-full bg-[#121212] border border-[#333] flex items-center justify-center text-primary font-bold">DB</div>
-              <div className="flex-1"><p className="text-sm font-bold text-white">Danillo Bezerra</p><p className="text-xs text-[#666]">CRECI 4.109-J</p></div>
-              <a href="tel:+554796510619" className="text-[#666] hover:text-white"><Phone size={18} /></a>
+            
+            {/* ANTES: border-[#222] bg-[#1a1a1a] */}
+            {/* DEPOIS: border-border bg-card */}
+            <div className="flex items-center gap-4 px-4 py-2 border border-border rounded-lg bg-card">
+              {/* ANTES: bg-[#121212] border-[#333] */}
+              {/* DEPOIS: bg-background border-border */}
+              <div className="h-10 w-10 rounded-full bg-background border border-border flex items-center justify-center text-primary font-bold">DB</div>
+              <div className="flex-1"><p className="text-sm font-bold text-foreground">Danillo Bezerra</p><p className="text-xs text-muted-foreground">CRECI 4.109-J</p></div>
+              <a href="tel:+554796510619" className="text-muted-foreground hover:text-foreground"><Phone size={18} /></a>
             </div>
           </div>
         </div>
       </div>
 
       <div className="mt-10 mb-10 max-w-[1600px] mx-auto px-5">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><MapPin size={20} /> Localização</h3>
+        {/* ANTES: text-white */}
+        {/* DEPOIS: text-foreground */}
+        <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2"><MapPin size={20} /> Localização</h3>
         <PropertyMap address={`${property.address?.street}, ${property.address?.number} - ${property.address?.neighborhood}, ${property.address?.city}`} lat={0} lng={0} />
       </div>
 
       {similarProperties.length > 0 && (
-        <div className="max-w-[1600px] mx-auto px-5 mt-20 pt-10 border-t border-[#222]">
-          <h2 className="text-2xl font-light text-white mb-8 border-l-4 border-primary pl-4">Imóveis <span className="font-bold">Semelhantes</span></h2>
+        <div className="max-w-[1600px] mx-auto px-5 mt-20 pt-10 border-t border-border">
+          <h2 className="text-2xl font-light text-foreground mb-8 border-l-4 border-primary pl-4">Imóveis <span className="font-bold">Semelhantes</span></h2>
           <div className="px-1">
             <Carousel opts={{ align: "start", loop: true }} className="w-full">
               <CarouselContent className="-ml-4">{similarProperties.map((simProp) => (<CarouselItem key={simProp.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"><PropertyCard property={simProp} /></CarouselItem>))}</CarouselContent>

@@ -34,7 +34,6 @@ export function SalesPageClient() {
     status 
   } = useProperties(filters);
 
-  // Achata as páginas em um único array de imóveis
   const allProperties = data?.pages.flatMap((page) => page.data) || [];
   const totalItems = data?.pages[0]?.meta.total || 0;
 
@@ -44,9 +43,11 @@ export function SalesPageClient() {
   ];
 
   return (
+    // ANTES: bg-background (Já estava correto, mantido)
     <div className="min-h-screen bg-background pb-20">
       
       {/* Header */}
+      {/* ANTES: bg-card/50 */}
       <div className="border-b border-border bg-card/50">
          <div className="container mx-auto px-4 py-4">
              <Breadcrumb items={breadcrumbItems} className="bg-transparent border-none p-0 shadow-none" />
@@ -65,7 +66,6 @@ export function SalesPageClient() {
         {/* Lista de Imóveis */}
         <div className="flex-1">
           
-          {/* Skeleton Inicial (apenas no primeiro load) */}
           {isLoading && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -79,12 +79,11 @@ export function SalesPageClient() {
           )}
 
           {isError && (
-             <div className="w-full py-20 text-center border border-destructive/20 bg-destructive/10 rounded-lg text-red-400">
+             <div className="w-full py-20 text-center border border-destructive/20 bg-destructive/10 rounded-lg text-destructive">
                 Erro ao carregar imóveis. Verifique sua conexão.
              </div>
           )}
 
-          {/* Estado Vazio */}
           {!isLoading && allProperties.length === 0 && (
              <div className="w-full py-20 text-center border border-border bg-card rounded-lg">
                 <p className="text-lg text-muted-foreground">Nenhum imóvel encontrado.</p>
@@ -92,7 +91,6 @@ export function SalesPageClient() {
              </div>
           )}
 
-          {/* Grid de Imóveis */}
           {allProperties.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-in fade-in duration-500">
               {allProperties.map((prop: any) => (
@@ -101,13 +99,14 @@ export function SalesPageClient() {
             </div>
           )}
 
-          {/* Botão Carregar Mais */}
           {hasNextPage && (
             <div className="mt-10 flex justify-center">
+              {/* ANTES: bg-[#1a1a1a] border-[#333] text-white */}
+              {/* DEPOIS: bg-card border-input text-foreground hover:bg-muted */}
               <Button 
                 onClick={() => fetchNextPage()} 
                 disabled={isFetchingNextPage}
-                className="bg-[#1a1a1a] border border-[#333] hover:bg-[#333] text-white min-w-[200px]"
+                className="bg-card border border-input hover:bg-muted text-foreground min-w-[200px]"
               >
                 {isFetchingNextPage ? (
                   <>

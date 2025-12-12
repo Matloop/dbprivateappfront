@@ -5,7 +5,7 @@ import { DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { MoneyInput } from "@/components/ui/money-input"; // <--- Importe aqui
+import { MoneyInput } from "@/components/ui/money-input"; 
 import { styles } from "./constants";
 
 export function FinancialStep() {
@@ -14,7 +14,7 @@ export function FinancialStep() {
 
   return (
     <Card className={styles.sectionClass}>
-      <CardHeader className="border-b border-[#333] pb-3">
+      <CardHeader className="border-b border-border pb-3">
         <CardTitle className="text-primary flex items-center gap-2 text-base">
           <DollarSign size={18} /> VALORES
         </CardTitle>
@@ -29,10 +29,12 @@ export function FinancialStep() {
                 <FormLabel className={styles.labelClass}>Valor de Venda</FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
+                    {/* ANTES: text-green-400 */}
+                    {/* DEPOIS: text-green-600 dark:text-green-400 */}
                     <MoneyInput
                       value={field.value}
                       onChange={field.onChange}
-                      className={`${styles.inputClass} text-lg font-bold text-green-400`}
+                      className={`${styles.inputClass} text-lg font-bold text-green-600 dark:text-green-400`}
                     />
                   </FormControl>
                   <FormField
@@ -43,7 +45,9 @@ export function FinancialStep() {
                         <FormControl>
                           <Checkbox checked={f2.value} onCheckedChange={f2.onChange} />
                         </FormControl>
-                        <FormLabel className="font-normal text-xs text-white">Desconto</FormLabel>
+                        {/* ANTES: text-white */}
+                        {/* DEPOIS: text-foreground */}
+                        <FormLabel className="font-normal text-xs text-foreground">Desconto</FormLabel>
                       </FormItem>
                     )}
                   />
@@ -99,7 +103,9 @@ export function FinancialStep() {
           />
         </div>
 
-        <div className="bg-[#252525] p-4 rounded border border-[#333] flex flex-wrap gap-6">
+        {/* ANTES: bg-[#252525] border-[#333] */}
+        {/* DEPOIS: bg-muted/20 border-border */}
+        <div className="bg-muted/20 p-4 rounded border border-border flex flex-wrap gap-6">
           {[
             "acceptsFinancing:Aceita Financiamento",
             "acceptsConstructionFinancing:Financ. Construtora",
@@ -118,7 +124,9 @@ export function FinancialStep() {
                     <FormControl>
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
-                    <FormLabel className="font-normal cursor-pointer text-sm text-gray-300 hover:text-white">
+                    {/* ANTES: text-gray-300 hover:text-white */}
+                    {/* DEPOIS: text-muted-foreground hover:text-foreground */}
+                    <FormLabel className="font-normal cursor-pointer text-sm text-muted-foreground hover:text-foreground">
                       {label}
                     </FormLabel>
                   </FormItem>

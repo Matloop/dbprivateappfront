@@ -7,7 +7,9 @@ import { MapPin } from "lucide-react";
 
 export function AddressForm({ form }: { form: any }) {
   return (
-    <Card className="bg-card border-muted">
+    // ANTES: border-muted (ou sem classe específica)
+    // DEPOIS: bg-card border-border
+    <Card className="bg-card border-border">
       <CardHeader>
         <CardTitle className="text-xl text-primary flex items-center gap-2">
           <MapPin /> Localização
@@ -22,7 +24,7 @@ export function AddressForm({ form }: { form: any }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>CEP</FormLabel>
-                <FormControl><Input placeholder="00000-000" {...field} /></FormControl>
+                <FormControl><Input placeholder="00000-000" {...field} className="bg-background" /></FormControl>
               </FormItem>
             )}
           />
@@ -32,7 +34,7 @@ export function AddressForm({ form }: { form: any }) {
             render={({ field }) => (
               <FormItem className="col-span-2">
                 <FormLabel>Cidade</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input {...field} className="bg-background" /></FormControl>
               </FormItem>
             )}
           />
@@ -42,7 +44,7 @@ export function AddressForm({ form }: { form: any }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>UF</FormLabel>
-                <FormControl><Input {...field} maxLength={2} /></FormControl>
+                <FormControl><Input {...field} maxLength={2} className="bg-background" /></FormControl>
               </FormItem>
             )}
           />
@@ -55,7 +57,7 @@ export function AddressForm({ form }: { form: any }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Bairro</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input {...field} className="bg-background" /></FormControl>
               </FormItem>
             )}
           />
@@ -65,7 +67,7 @@ export function AddressForm({ form }: { form: any }) {
             render={({ field }) => (
               <FormItem className="col-span-2">
                 <FormLabel>Logradouro</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input {...field} className="bg-background" /></FormControl>
               </FormItem>
             )}
           />
@@ -78,7 +80,7 @@ export function AddressForm({ form }: { form: any }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Número</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input {...field} className="bg-background" /></FormControl>
               </FormItem>
             )}
           />
@@ -88,7 +90,7 @@ export function AddressForm({ form }: { form: any }) {
             render={({ field }) => (
               <FormItem className="col-span-2">
                 <FormLabel>Nome do Edifício</FormLabel>
-                <FormControl><Input placeholder="Ex: Edifício Aurora" {...field} /></FormControl>
+                <FormControl><Input placeholder="Ex: Edifício Aurora" {...field} className="bg-background" /></FormControl>
               </FormItem>
             )}
           />

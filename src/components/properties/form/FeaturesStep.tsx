@@ -8,7 +8,7 @@ import { ROOM_OPTS, PROPERTY_OPTS, DEVELOPMENT_OPTS, styles } from "./constants"
 export function FeaturesStep() {
   return (
     <Card className={styles.sectionClass}>
-      <CardHeader className="border-b border-[#333] pb-3">
+      <CardHeader className="border-b border-border pb-3">
         <CardTitle className="text-primary flex items-center gap-2 text-base">
           <Plus size={18} /> CARACTERÍSTICAS
         </CardTitle>

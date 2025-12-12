@@ -23,8 +23,12 @@ export function FeatureListGroup({ title, name, options }: FeatureListGroupProps
   const [newItem, setNewItem] = useState("");
 
   return (
-    <div className="bg-[#252525] p-3 rounded border border-[#333] flex flex-col h-full">
-      <h4 className="text-gray-300 font-bold mb-3 uppercase text-xs border-b border-[#444] pb-2">
+    // ANTES: bg-[#252525] border-[#333]
+    // DEPOIS: bg-muted/20 border-border
+    <div className="bg-muted/20 p-3 rounded border border-border flex flex-col h-full">
+      {/* ANTES: text-gray-300 border-[#444] */}
+      {/* DEPOIS: text-muted-foreground border-border */}
+      <h4 className="text-muted-foreground font-bold mb-3 uppercase text-xs border-b border-border pb-2">
         {title}
       </h4>
 
@@ -32,7 +36,6 @@ export function FeatureListGroup({ title, name, options }: FeatureListGroupProps
         control={control}
         name={name}
         render={({ field }) => {
-          // Garante array
           const currentValues = Array.isArray(field.value) ? field.value : [];
           
           const toggleItem = (item: string) => {
@@ -62,7 +65,6 @@ export function FeatureListGroup({ title, name, options }: FeatureListGroupProps
           return (
             <FormItem className="flex flex-col h-full">
               <FormControl>
-                {/* DIV normal, sem Fragment */}
                 <div className="flex flex-col h-full">
                   
                   {/* LISTA PADRÃO */}
@@ -72,16 +74,17 @@ export function FeatureListGroup({ title, name, options }: FeatureListGroupProps
                         return (
                           <div
                             key={item}
-                            className="flex items-center space-x-2 text-sm text-gray-300 hover:text-white cursor-pointer select-none p-1 rounded hover:bg-white/5"
+                            // ANTES: text-gray-300 hover:text-white hover:bg-white/5
+                            // DEPOIS: text-muted-foreground hover:text-foreground hover:bg-muted
+                            className="flex items-center space-x-2 text-sm text-muted-foreground hover:text-foreground cursor-pointer select-none p-1 rounded hover:bg-muted"
                             onClick={() => toggleItem(item)}
                           >
                             <div className={`
                                 h-4 w-4 rounded border flex items-center justify-center transition-colors
-                                ${isChecked ? 'bg-primary border-primary' : 'border-gray-500 bg-transparent'}
+                                ${isChecked ? 'bg-primary border-primary' : 'border-muted-foreground bg-transparent'}
                             `}>
-                                {isChecked && <span className="text-black text-[10px] font-bold">✓</span>}
+                                {isChecked && <span className="text-primary-foreground text-[10px] font-bold">✓</span>}
                             </div>
-                            {/* Usamos div customizada ao inves de Checkbox do Shadcn para evitar conflito de eventos e "Maximum update depth" */}
                             <span className="text-xs">{item}</span>
                           </div>
                         )
@@ -89,14 +92,17 @@ export function FeatureListGroup({ title, name, options }: FeatureListGroupProps
                   </div>
 
                   {/* CUSTOMIZADOS */}
-                  <div className="mt-auto pt-3 border-t border-[#444] bg-[#1a1a1a] -mx-3 -mb-3 p-3 rounded-b">
-                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">Importados / Extras</p>
+                  {/* ANTES: border-[#444] bg-[#1a1a1a] */}
+                  {/* DEPOIS: border-border bg-card */}
+                  <div className="mt-auto pt-3 border-t border-border bg-card -mx-3 -mb-3 p-3 rounded-b">
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold mb-2">Importados / Extras</p>
                     
                     <div className="flex flex-wrap gap-2 mb-3">
                         {customItems.map((item: string) => (
-                          <Badge key={item} variant="secondary" className="bg-red-900/30 text-red-200 border-red-900 pr-1">
+                          // Ajuste de cores do badge para ficar legível
+                          <Badge key={item} variant="secondary" className="bg-destructive/10 text-destructive border-destructive/50 pr-1">
                             {item}
-                            <X size={14} className="ml-1 cursor-pointer hover:text-white" onClick={() => removeCustom(item)} />
+                            <X size={14} className="ml-1 cursor-pointer hover:text-destructive-foreground" onClick={() => removeCustom(item)} />
                           </Badge>
                         ))}
                     </div>
@@ -104,7 +110,9 @@ export function FeatureListGroup({ title, name, options }: FeatureListGroupProps
                     <div className="flex gap-2">
                       <Input
                         placeholder="Add novo..."
-                        className="h-7 text-xs bg-[#111] border-[#333]"
+                        // ANTES: bg-[#111] border-[#333]
+                        // DEPOIS: bg-background border-input
+                        className="h-7 text-xs bg-background border-input"
                         value={newItem}
                         onChange={(e) => setNewItem(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustom())}

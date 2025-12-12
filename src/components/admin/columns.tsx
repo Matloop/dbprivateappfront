@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+
 const fixImageSource = (url: string | undefined | null) => {
     if (!url || url === '') return '/placeholder.jpg';
     if (url.startsWith('/')) return url;
@@ -21,7 +22,7 @@ const fixImageSource = (url: string | undefined | null) => {
     }
     return url;
 };
-// Tipo do dado
+
 export type Property = {
   id: number
   title: string
@@ -32,6 +33,7 @@ export type Property = {
   createdAt: string; 
   updatedAt: string;
 }
+
 const formatDate = (dateString: string) => {
   if (!dateString) return "-";
   return new Date(dateString).toLocaleDateString("pt-BR", {
@@ -42,6 +44,7 @@ const formatDate = (dateString: string) => {
     minute: "2-digit",
   });
 };
+
 export const columns: ColumnDef<Property>[] = [
   // 1. FOTO
   {
@@ -50,7 +53,7 @@ export const columns: ColumnDef<Property>[] = [
     cell: ({ row }) => {
       const img = row.original.images?.[0]?.url
       return (
-        <div className="h-10 w-14 overflow-hidden rounded border border-[#333] bg-black">
+        <div className="h-10 w-14 overflow-hidden rounded border border-border bg-muted">
           {img && <img src={fixImageSource(img)} alt="Thumb" className="h-full w-full object-cover" />}
         </div>
       )
@@ -65,68 +68,67 @@ export const columns: ColumnDef<Property>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-[#333] hover:text-white"
+          className="hover:bg-muted hover:text-foreground"
         >
           Ref
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
-    cell: ({ row }) => <span className="font-mono text-xs text-gray-500">#{row.getValue("id")}</span>,
+    cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">#{row.getValue("id")}</span>,
   },
+  
+  // 3. IMÓVEL (TÍTULO)
   {
     accessorKey: "title",
     header: "Imóvel",
     cell: ({ row }) => (
       <div className="flex flex-col max-w-[250px]">
-        <span className="truncate font-medium text-white">{row.getValue("title")}</span>
-        <span className="text-xs text-gray-500">{row.original.category}</span>
+        <span className="truncate font-medium text-foreground">{row.getValue("title")}</span>
+        <span className="text-xs text-muted-foreground">{row.original.category}</span>
       </div>
     ),
   },
-  // --- DATA DE CRIAÇÃO (NOVO) ---
+
+  // 4. DATA CRIAÇÃO
   {
     accessorKey: "createdAt",
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:text-white text-xs"
+        className="hover:text-foreground text-xs"
       >
         Criado em <ArrowUpDown className="ml-2 h-3 w-3" />
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="text-xs text-gray-400 whitespace-nowrap">
+      <div className="text-xs text-muted-foreground whitespace-nowrap">
         {formatDate(row.getValue("createdAt"))}
       </div>
     ),
   },
 
-  // --- DATA DE EDIÇÃO (NOVO) ---
+  // 5. DATA EDIÇÃO
   {
     accessorKey: "updatedAt",
     header: ({ column }) => (
       <Button
         variant="ghost"
-        // Esta linha faz a mágica de ordenar ao clicar
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:text-white text-xs px-0"
+        className="hover:text-foreground text-xs px-0"
       >
         Editado em <ArrowUpDown className="ml-2 h-3 w-3" />
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="text-xs text-[#d4af37] whitespace-nowrap font-medium">
+      <div className="text-xs text-primary whitespace-nowrap font-medium">
         {formatDate(row.getValue("updatedAt"))}
       </div>
     ),
   },
 
-  // 3. TÍTULO
-  
-
-  // 4. PREÇO
+  // 6. VALOR
   {
     accessorKey: "price",
     header: () => <div className="text-right">Valor</div>,
@@ -141,22 +143,23 @@ export const columns: ColumnDef<Property>[] = [
     },
   },
 
-  // 5. STATUS
+  // 7. STATUS
   {
     accessorKey: "status",
     header: "Situação",
     cell: ({ row }) => {
       const status = row.getValue("status") as string
-      let colorClass = "bg-slate-500 text-white"
-      if (status === "DISPONIVEL") colorClass = "bg-green-600/20 text-green-500 border-green-600/50"
-      if (status === "VENDIDO") colorClass = "bg-red-600/20 text-red-500 border-red-600/50"
-      if (status === "RESERVADO") colorClass = "bg-yellow-600/20 text-yellow-500 border-yellow-600/50"
+      let colorClass = "bg-muted text-foreground"
+      // Mantendo cores semânticas de status conforme solicitado, mas adaptando o fallback
+      if (status === "DISPONIVEL") colorClass = "bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/50"
+      if (status === "VENDIDO") colorClass = "bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/50"
+      if (status === "RESERVADO") colorClass = "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/50"
 
-      return <Badge className={`border ${colorClass} hover:${colorClass}`}>{status}</Badge>
+      return <Badge className={`border ${colorClass} hover:${colorClass} whitespace-nowrap`}>{status}</Badge>
     },
   },
 
-  // 6. AÇÕES
+  // 8. AÇÕES
   {
     id: "actions",
     cell: ({ row }) => {
@@ -164,31 +167,31 @@ export const columns: ColumnDef<Property>[] = [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-[#333] hover:text-white">
+            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted hover:text-foreground">
               <span className="sr-only">Menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-[#1e1e1e] border-[#333] text-gray-200">
+          <DropdownMenuContent align="end" className="bg-popover border-border text-popover-foreground">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(property.id.toString())} className="hover:bg-[#333] cursor-pointer">
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(property.id.toString())} className="cursor-pointer focus:bg-muted">
               Copiar ID
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-[#333]" />
+            <DropdownMenuSeparator className="bg-border" />
             
             <Link href={`/imovel/${property.id}`} target="_blank">
-                <DropdownMenuItem className="hover:bg-[#333] cursor-pointer">
+                <DropdownMenuItem className="cursor-pointer focus:bg-muted">
                 <Eye className="mr-2 h-4 w-4" /> Ver no Site
                 </DropdownMenuItem>
             </Link>
             
             <Link href={`/intranet/imovel/${property.id}`}>
-                <DropdownMenuItem className="hover:bg-[#333] cursor-pointer">
+                <DropdownMenuItem className="cursor-pointer focus:bg-muted">
                 <Pencil className="mr-2 h-4 w-4" /> Editar
                 </DropdownMenuItem>
             </Link>
             
-            <DropdownMenuItem className="text-red-500 hover:bg-red-900/20 cursor-pointer focus:text-red-500">
+            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer">
               <Trash className="mr-2 h-4 w-4" /> Excluir
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -16,12 +16,10 @@ export function FavoritesPageClient() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Usa o mesmo hook, mas trata o dado depois
   const { data, isLoading } = useProperties(
     favorites.length > 0 ? { ids: favorites.join(',') } : undefined
   );
 
-  // Achatamos as páginas para pegar os imóveis, caso existam
   const properties = data?.pages.flatMap(page => page.data) || [];
 
   const breadcrumbItems = [
@@ -46,6 +44,8 @@ export function FavoritesPageClient() {
       <div className="container mx-auto px-4 py-10">
         
         {favorites.length === 0 && (
+          // ANTES: border-border bg-card/30
+          // MANTIDO (Já está com variáveis)
           <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-xl bg-card/30">
             <div className="bg-muted/20 p-6 rounded-full mb-4">
               <HeartOff className="h-12 w-12 text-muted-foreground" />
@@ -56,7 +56,7 @@ export function FavoritesPageClient() {
             </p>
             <Button 
               onClick={() => router.push('/vendas')} 
-              className="font-bold bg-primary text-black hover:bg-primary/90"
+              className="font-bold bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <ArrowLeft className="mr-2 h-4 w-4" /> Ir para Vendas
             </Button>

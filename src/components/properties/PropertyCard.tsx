@@ -9,11 +9,9 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-// Função auxiliar para URLs
 const fixImageSource = (url: string | undefined | null) => {
   if (!url || url === '') return '/placeholder.jpg';
   if (url.startsWith('/')) return url;
-  // Se for produção, força HTTPS do CDN/Backend
   if (process.env.NODE_ENV === 'production' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
       return url.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/g, 'https://98.93.10.61.nip.io');
   }
@@ -35,7 +33,6 @@ export interface Property {
   privateArea: number;
 }
 
-// Adicionei a prop 'index' para saber se é o primeiro card da lista
 export const PropertyCard = ({ property, index = 0 }: { property: Property, index?: number }) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
@@ -70,19 +67,18 @@ export const PropertyCard = ({ property, index = 0 }: { property: Property, inde
 
   return (
     <Link href={`/imovel/${property.id}`} className="block group">
-      <Card className="relative flex flex-col overflow-hidden border-border bg-[#1a1a1a] transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/50">
+      {/* ANTES: bg-[#1a1a1a] */}
+      {/* DEPOIS: bg-card */}
+      <Card className="relative flex flex-col overflow-hidden border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/20 dark:hover:shadow-black/50">
         
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-black group/image">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted group/image">
           
           <Image
-            // REMOVI O loader={customLoader} -> Agora o Next.js otimiza sozinho!
             src={currentImageUrl}
             alt={property.title}
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
-            // Tamanhos responsivos corretos para otimização
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            // Se for um dos 4 primeiros cards, carrega com prioridade máxima
             priority={index < 4}
             unoptimized={false} 
             quality={40}
@@ -92,10 +88,10 @@ export const PropertyCard = ({ property, index = 0 }: { property: Property, inde
 
           {images.length > 1 && (
             <>
-              <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-primary hover:text-black z-20 transition-colors opacity-0 group-hover/image:opacity-100">
+              <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-primary hover:text-primary-foreground z-20 transition-colors opacity-0 group-hover/image:opacity-100">
                 <ChevronLeft size={16} />
               </button>
-              <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-primary hover:text-black z-20 transition-colors opacity-0 group-hover/image:opacity-100">
+              <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-primary hover:text-primary-foreground z-20 transition-colors opacity-0 group-hover/image:opacity-100">
                 <ChevronRight size={16} />
               </button>
             </>
@@ -103,7 +99,7 @@ export const PropertyCard = ({ property, index = 0 }: { property: Property, inde
 
           <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
             {property.badgeText && (
-              <Badge className="w-fit border-0 bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black shadow-lg">
+              <Badge className="w-fit border-0 bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-lg">
                 {property.badgeText}
               </Badge>
             )}
@@ -120,21 +116,29 @@ export const PropertyCard = ({ property, index = 0 }: { property: Property, inde
               <MapPin className="h-3 w-3 text-primary" />
               <span className="truncate">{property.address?.neighborhood} - {property.address?.city}</span>
             </div>
-            <h3 className="mt-1 truncate text-base font-semibold text-white">
+            {/* ANTES: text-white */}
+            {/* DEPOIS: text-foreground */}
+            <h3 className="mt-1 truncate text-base font-semibold text-foreground">
               {property.buildingName || property.title}
             </h3>
           </div>
 
-          <div className="flex items-center justify-between border-t border-white/5 pt-3 text-xs text-gray-400">
+          {/* ANTES: border-white/5 text-gray-400 */}
+          {/* DEPOIS: border-border text-muted-foreground */}
+          <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-1"><Bed className="h-4 w-4" /> <b>{property.bedrooms}</b></div>
             <div className="flex items-center gap-1"><Car className="h-4 w-4" /> <b>{property.garageSpots}</b></div>
             <div className="flex items-center gap-1"><Ruler className="h-4 w-4" /> <b>{property.privateArea}</b> m²</div>
           </div>
         </CardContent>
 
-        <CardFooter className="mt-auto border-t border-white/5 p-4 py-3">
+        {/* ANTES: border-white/5 */}
+        {/* DEPOIS: border-border */}
+        <CardFooter className="mt-auto border-t border-border p-4 py-3">
           <div className="flex w-full items-center justify-between">
-            <span className="text-lg font-light text-white">
+            {/* ANTES: text-white */}
+            {/* DEPOIS: text-foreground */}
+            <span className="text-lg font-light text-foreground">
               {formatCurrency(Number(property.price))}
             </span>
             <span className="text-[10px] text-muted-foreground uppercase">Ref: {property.id}</span>

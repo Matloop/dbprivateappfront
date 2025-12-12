@@ -24,10 +24,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// --- HELLO PANGEA DND ---
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
-// --- TIPOS ---
 interface Stage {
   id: number;
   name: string;
@@ -41,8 +39,6 @@ interface Pipeline {
   stages: Stage[];
 }
 
-// --- SUB-COMPONENTE: ITEM DA LISTA (CORREÇÃO DO BUG DE DIGITAÇÃO) ---
-// Criamos um componente isolado para gerenciar o estado do input localmente
 const StageItem = ({ 
   stage, 
   index, 
@@ -54,24 +50,20 @@ const StageItem = ({
   onUpdate: (id: number, field: keyof Stage, value: any) => void;
   onRemove: (id: number) => void;
 }) => {
-  // Estado local para permitir digitação fluida
   const [localName, setLocalName] = useState(stage.name);
   const [localColor, setLocalColor] = useState(stage.color ?? "#888888");
 
-  // Sincroniza se o pai mudar (ex: reordenação)
   useEffect(() => {
     setLocalName(stage.name);
     setLocalColor(stage.color ?? "#888888");
   }, [stage.name, stage.color]);
 
-  // Salva apenas quando o usuário sai do campo (Blur)
   const handleBlurName = () => {
     if (localName !== stage.name) {
       onUpdate(stage.id, "name", localName);
     }
   };
 
-  // Salva cor imediatamente ao fechar o picker (Blur/Change)
   const handleChangeColor = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalColor(e.target.value);
     onUpdate(stage.id, "color", e.target.value);
@@ -83,21 +75,19 @@ const StageItem = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`flex items-center gap-3 p-3 border border-[#333] rounded-md group transition-colors ${
-            snapshot.isDragging ? "bg-[#2a2a2a] shadow-lg border-primary/50" : "bg-[#121212] hover:border-gray-600"
+          className={`flex items-center gap-3 p-3 border border-border rounded-md group transition-colors ${
+            snapshot.isDragging ? "bg-muted shadow-lg border-primary/50" : "bg-background hover:border-muted-foreground/50"
           }`}
           style={{ ...provided.draggableProps.style }}
         >
-          {/* Handle de arrastar (Aplicado APENAS aqui para não travar o input de texto) */}
           <div
             {...provided.dragHandleProps}
-            className="text-gray-600 cursor-grab active:cursor-grabbing hover:text-white p-1"
+            className="text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground p-1"
           >
             <GripVertical size={20} />
           </div>
 
-          {/* Color Picker */}
-          <div className="h-8 w-8 rounded flex-shrink-0 overflow-hidden relative border border-[#333] cursor-pointer hover:scale-105 transition-transform">
+          <div className="h-8 w-8 rounded flex-shrink-0 overflow-hidden relative border border-border cursor-pointer hover:scale-105 transition-transform">
             <input
               type="color"
               value={localColor}
@@ -106,23 +96,21 @@ const StageItem = ({
             />
           </div>
 
-          {/* Input de Nome (CONTROLADO + ONBLUR) */}
           <div className="flex-1">
             <Label className="sr-only">Nome</Label>
             <Input
-              value={localName} // Componente Controlado
-              onChange={(e) => setLocalName(e.target.value)} // Atualiza localmente instantâneo
-              onBlur={handleBlurName} // Salva no banco ao sair
-              className="bg-transparent border-transparent hover:border-[#333] focus:border-primary h-9 text-sm text-white font-medium"
+              value={localName}
+              onChange={(e) => setLocalName(e.target.value)}
+              onBlur={handleBlurName}
+              className="bg-transparent border-transparent hover:border-border focus:border-primary h-9 text-sm text-foreground font-medium"
             />
           </div>
 
-          {/* Botão Excluir */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onRemove(stage.id)}
-            className="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Trash2 size={16} />
           </Button>
@@ -132,7 +120,6 @@ const StageItem = ({
   );
 };
 
-// --- PÁGINA PRINCIPAL ---
 export default function CrmConfigPage() {
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [activePipelineId, setActivePipelineId] = useState<string | null>(null);
@@ -173,10 +160,7 @@ export default function CrmConfigPage() {
   const activePipeline = pipelines.find((p) => p.id === activePipelineId);
   const safeStages = activePipeline?.stages || [];
 
-  // --- AÇÕES ---
-
   const handleUpdateStage = async (stageId: number, field: keyof Stage, value: any) => {
-    // 1. Atualiza estado global (sem re-renderizar input local do StageItem pois ele gerencia seu próprio value)
     setPipelines((prev) =>
       prev.map((p) => {
         if (p.id === activePipelineId) {
@@ -188,8 +172,6 @@ export default function CrmConfigPage() {
         return p;
       })
     );
-
-    // 2. Salva no banco
     try {
       await api.patch(`/crm/stages/${stageId}`, { [field]: value });
     } catch (error) {
@@ -201,14 +183,12 @@ export default function CrmConfigPage() {
     if (!activePipelineId) return;
     try {
       const lastOrder = safeStages.length > 0 ? Math.max(...safeStages.map(s => s.order)) : 0;
-      
       const { data: newStage } = await api.post("/crm/stages", {
         name: "Nova Etapa",
         color: "#888888",
         pipelineId: activePipelineId,
         order: lastOrder + 1
       });
-
       setPipelines((prev) =>
         prev.map((p) => p.id === activePipelineId ? { ...p, stages: [...(p.stages || []), newStage] } : p)
       );
@@ -234,11 +214,9 @@ export default function CrmConfigPage() {
 
   const onDragEnd = async (result: DropResult) => {
     if (!result.destination || !activePipelineId) return;
-
     const items = Array.from(safeStages);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-
     const updatedStages = items.map((item, index) => ({ ...item, order: index }));
 
     setPipelines(prev => prev.map(p => 
@@ -254,7 +232,6 @@ export default function CrmConfigPage() {
     }
   };
 
-  // --- FUNIS ---
   const handleCreatePipeline = async () => {
     const name = window.prompt("Nome do novo funil:");
     if (!name) return;
@@ -286,23 +263,23 @@ export default function CrmConfigPage() {
     } catch { toast.error("Erro ao excluir."); }
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-[#121212] text-white"><Loader2 className="animate-spin"/></div>;
+  if (loading) return <div className="h-screen flex items-center justify-center bg-background text-foreground"><Loader2 className="animate-spin"/></div>;
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white p-6 font-sans">
+    <div className="min-h-screen bg-background text-foreground p-6 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* HEADER */}
-        <div className="flex items-center justify-between pb-6 border-b border-[#333]">
+        <div className="flex items-center justify-between pb-6 border-b border-border">
           <div className="flex items-center gap-4">
             <Link href="/intranet?tab=crm">
-              <Button variant="ghost" size="icon" className="hover:bg-[#222] text-gray-400">
+              <Button variant="ghost" size="icon" className="hover:bg-muted text-muted-foreground">
                 <ArrowLeft size={24} />
               </Button>
             </Link>
             <div>
               <h1 className="text-2xl font-bold">Configurações de CRM</h1>
-              <p className="text-gray-400 text-sm">Gerencie seus funis e etapas.</p>
+              <p className="text-muted-foreground text-sm">Gerencie seus funis e etapas.</p>
             </div>
           </div>
         </div>
@@ -312,7 +289,7 @@ export default function CrmConfigPage() {
           {/* SIDEBAR */}
           <div className="lg:col-span-3 space-y-4">
             <div className="flex items-center justify-between px-1">
-              <h3 className="text-xs font-bold text-gray-500 uppercase">Seus Funis</h3>
+              <h3 className="text-xs font-bold text-muted-foreground uppercase">Seus Funis</h3>
               <Button onClick={handleCreatePipeline} variant="ghost" size="icon" className="h-6 w-6 text-primary"><Plus size={16} /></Button>
             </div>
             <div className="space-y-1">
@@ -320,16 +297,18 @@ export default function CrmConfigPage() {
                 <div
                   key={pipeline.id}
                   className={`group flex items-center justify-between w-full px-3 py-2 rounded-md transition-all border cursor-pointer ${
-                    activePipelineId === pipeline.id ? "bg-[#252525] border-[#444]" : "border-transparent text-gray-400 hover:bg-[#1a1a1a]"
+                    activePipelineId === pipeline.id 
+                      ? "bg-muted border-border font-medium text-foreground" 
+                      : "border-transparent text-muted-foreground hover:bg-card"
                   }`}
                   onClick={() => setActivePipelineId(pipeline.id)}
                 >
-                  <span className="flex-1 text-sm font-medium truncate">{pipeline.name}</span>
+                  <span className="flex-1 text-sm truncate">{pipeline.name}</span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100"><MoreVertical size={14} /></Button></DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-[#333] text-gray-200">
+                    <DropdownMenuContent align="end" className="bg-popover border-border text-popover-foreground">
                       <DropdownMenuItem onClick={() => handleRenamePipeline(pipeline.id)}><Pencil className="mr-2 h-4 w-4" /> Renomear</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeletePipeline(pipeline.id)} className="text-red-500"><Trash2 className="mr-2 h-4 w-4" /> Excluir</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeletePipeline(pipeline.id)} className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Excluir</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -339,11 +318,11 @@ export default function CrmConfigPage() {
 
           {/* CONTEÚDO PRINCIPAL */}
           <div className="lg:col-span-9">
-            <Card className="bg-[#1a1a1a] border-[#333]">
-              <CardHeader className="border-b border-[#333] pb-4">
+            <Card className="bg-card border-border">
+              <CardHeader className="border-b border-border pb-4">
                 <div className="space-y-1">
                   <CardTitle className="text-lg">Etapas do Funil: <span className="text-primary">{activePipeline?.name}</span></CardTitle>
-                  <p className="text-xs text-gray-500">Arraste para reordenar. Edite para salvar.</p>
+                  <p className="text-xs text-muted-foreground">Arraste para reordenar. Edite para salvar.</p>
                 </div>
               </CardHeader>
 
@@ -354,7 +333,6 @@ export default function CrmConfigPage() {
                       {(provided) => (
                         <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
                           {safeStages.map((stage, index) => (
-                            // AQUI USAMOS O COMPONENTE SEPARADO
                             <StageItem 
                               key={stage.id} 
                               stage={stage} 
@@ -369,10 +347,10 @@ export default function CrmConfigPage() {
                     </Droppable>
                   </DragDropContext>
                 ) : (
-                  <div className="text-center py-4 text-gray-500">Carregando editor...</div>
+                  <div className="text-center py-4 text-muted-foreground">Carregando editor...</div>
                 )}
 
-                <Button onClick={handleAddStage} variant="outline" className="w-full mt-4 border-dashed border-[#333] text-gray-400 hover:text-primary hover:bg-[#121212] h-12">
+                <Button onClick={handleAddStage} variant="outline" className="w-full mt-4 border-dashed border-border text-muted-foreground hover:text-primary hover:bg-background h-12">
                   <Plus size={16} className="mr-2" /> Adicionar Nova Etapa
                 </Button>
               </CardContent>

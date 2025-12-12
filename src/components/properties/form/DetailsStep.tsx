@@ -12,7 +12,7 @@ export function DetailsStep() {
 
   return (
     <Card className={styles.sectionClass}>
-      <CardHeader className="border-b border-[#333] pb-3">
+      <CardHeader className="border-b border-border pb-3">
         <CardTitle className="text-primary flex items-center gap-2 text-base">
           <LayoutGrid size={18} /> DETALHES
         </CardTitle>
@@ -50,7 +50,7 @@ export function DetailsStep() {
         </div>
 
         {/* Garagem e Posições */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-[#333]">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-border">
           <FormField
             control={control}
             name="garageSpots"

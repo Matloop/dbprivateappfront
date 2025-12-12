@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import LocationPicker from "@/components/forms/LocationPicker";
 import { toast } from "sonner";
-import { locationService } from "@/services/location"; // Importe o serviço criado
+import { locationService } from "@/services/location"; 
 import { styles } from "./constants";
 
 export function LocationStep() {
@@ -34,7 +34,6 @@ export function LocationStep() {
       
       toast.success("Endereço encontrado!");
       
-      // Tenta focar no número após preencher
       const numberInput = document.querySelector('input[name="address.number"]') as HTMLInputElement;
       if (numberInput) numberInput.focus();
 
@@ -49,20 +48,17 @@ export function LocationStep() {
   const handleAutoCoords = async () => {
     const address = getValues("address");
     
-    // Validação básica
     if (!address.street || !address.city || !address.state) {
       toast.warning("Preencha Rua, Cidade e Estado para buscar as coordenadas.");
       return;
     }
 
-    // Monta string de busca: "Rua X, 123, Bairro, Cidade, Estado, Brasil"
     const query = `${address.street}, ${address.number || ''}, ${address.neighborhood}, ${address.city}, ${address.state}, Brasil`;
 
     setLoadingCoords(true);
     try {
       const coords = await locationService.getCoordinates(query);
       
-      // Atualiza o formulário (O componente de Mapa vai reagir a isso automaticamente)
       setValue("address.latitude", coords.lat, { shouldDirty: true });
       setValue("address.longitude", coords.lng, { shouldDirty: true });
       
@@ -77,7 +73,7 @@ export function LocationStep() {
 
   return (
     <Card className={styles.sectionClass}>
-      <CardHeader className="border-b border-[#333] pb-3">
+      <CardHeader className="border-b border-border pb-3">
         <CardTitle className="text-primary flex items-center gap-2 text-base">
           <Home size={18} /> LOCALIZAÇÃO
         </CardTitle>
@@ -100,8 +96,8 @@ export function LocationStep() {
                     className={styles.inputClass} 
                     placeholder="00000-000"
                     onBlur={(e) => {
-                        field.onBlur(); // Mantém o onBlur original do React Hook Form
-                        handleCepBlur(e); // Nossa função
+                        field.onBlur(); 
+                        handleCepBlur(e); 
                     }}
                   />
                 </FormControl>
@@ -205,18 +201,19 @@ export function LocationStep() {
         </div>
 
         {/* Coordenadas e Mapa */}
-        <div className="border-t border-[#333] pt-4 mt-4">
+        <div className="border-t border-border pt-4 mt-4">
           <div className="flex justify-between items-center mb-4">
             <p className={styles.labelClass}>Coordenadas Geográficas</p>
             
-            {/* BOTÃO MÁGICO DE GERAR COORDENADAS */}
             <Button 
                 type="button" 
                 variant="outline" 
                 size="sm" 
                 onClick={handleAutoCoords}
                 disabled={loadingCoords}
-                className="text-xs border-[#d4af37] text-[#d4af37] hover:bg-[#d4af37] hover:text-black"
+                // ANTES: border-[#d4af37] text-[#d4af37] hover:bg-[#d4af37] hover:text-black
+                // DEPOIS: border-primary text-primary hover:bg-primary hover:text-primary-foreground
+                className="text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground"
             >
                 {loadingCoords ? <Loader2 className="animate-spin mr-2 h-3 w-3" /> : <MapPin className="mr-2 h-3 w-3" />}
                 Gerar pelo Endereço
@@ -229,7 +226,7 @@ export function LocationStep() {
               name="address.latitude"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs text-gray-500">Latitude</FormLabel>
+                  <FormLabel className="text-xs text-muted-foreground">Latitude</FormLabel>
                   <FormControl>
                     <Input {...field} className={styles.inputClass} placeholder="-26.99..." />
                   </FormControl>
@@ -241,7 +238,7 @@ export function LocationStep() {
               name="address.longitude"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs text-gray-500">Longitude</FormLabel>
+                  <FormLabel className="text-xs text-muted-foreground">Longitude</FormLabel>
                   <FormControl>
                     <Input {...field} className={styles.inputClass} placeholder="-48.63..." />
                   </FormControl>

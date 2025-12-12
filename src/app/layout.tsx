@@ -5,11 +5,10 @@ import { Navbar } from "@/components/Navbar";
 import { FloatingWhatsApp } from "@/components/ui/FloatingWhatsapp";
 import { Toaster } from "sonner";
 import Providers from "@/components/Providers";
+import { ThemeProvider } from "@/components/theme-provider"; // Ajuste o import se necessário
 
-// Fonte do Google otimizada pelo Next
 const inter = Inter({ subsets: ["latin"] });
 
-// SEO GLOBAL
 export const metadata: Metadata = {
   title: {
     template: '%s | DB Private',
@@ -24,21 +23,32 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="dark" suppressHydrationWarning>
+    // REMOVA o className="dark" daqui para o next-themes controlar
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
-        <Providers>
-          <div className="flex flex-col min-h-screen bg-background text-foreground">
-            <Navbar />
-            <main className="flex-1">
-              {children}
-            </main>
-            <FloatingWhatsApp />
-            <footer className="bg-[#0f0f0f] p-5 text-center text-[#555] text-xs border-t border-[#222]">
-               DB PRIVATE © 2025 - Todos os direitos reservados.
-            </footer>
-            <Toaster theme="dark" position="top-right" />
-          </div>
-        </Providers>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers>
+            {/* Use bg-background e text-foreground aqui */}
+            <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300">
+              <Navbar />
+              <main className="flex-1">
+                {children}
+              </main>
+              <FloatingWhatsApp />
+              
+              {/* Footer com cores semânticas */}
+              <footer className="bg-card p-5 text-center text-muted-foreground text-xs border-t border-border">
+                 DB PRIVATE © 2025 - Todos os direitos reservados.
+              </footer>
+              <Toaster />
+            </div>
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

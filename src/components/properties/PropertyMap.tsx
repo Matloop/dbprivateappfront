@@ -11,8 +11,12 @@ const customIcon = L.divIcon({
   className: 'custom-icon',
   html: renderToStaticMarkup(
     <div className="relative flex items-center justify-center w-8 h-8 -mt-8 -ml-4">
-        <div className="absolute w-full h-full bg-[#d4af37]/30 rounded-full animate-ping"></div>
-        <div className="relative bg-[#d4af37] text-black p-1.5 rounded-full shadow-lg border-2 border-black z-10">
+        {/* ANTES: bg-[#d4af37]/30 */}
+        {/* DEPOIS: bg-primary/30 */}
+        <div className="absolute w-full h-full bg-primary/30 rounded-full animate-ping"></div>
+        {/* ANTES: bg-[#d4af37] border-black */}
+        {/* DEPOIS: bg-primary border-foreground (ou black se preferir contraste fixo) */}
+        <div className="relative bg-primary text-primary-foreground p-1.5 rounded-full shadow-lg border-2 border-black z-10">
             <MapPin size={20} fill="currentColor" />
         </div>
         {/* Triângulo ponta */}
@@ -34,14 +38,20 @@ const PropertyMap = ({ lat, lng, address }: PropertyMapProps) => {
   const position: [number, number] = [lat || -26.9926, lng || -48.6353];
 
   return (
-    <div className="h-[400px] w-full rounded-xl overflow-hidden border border-[#333] z-0 relative shadow-lg">
+    // ANTES: border-[#333]
+    // DEPOIS: border-border
+    <div className="h-[400px] w-full rounded-xl overflow-hidden border border-border z-0 relative shadow-lg">
       <MapContainer 
         center={position} 
         zoom={16} 
         scrollWheelZoom={false} 
-        style={{ height: "100%", width: "100%", background: '#121212' }}
+        // ANTES: background: '#121212'
+        // DEPOIS: background: 'transparent' (o container pai define o fundo, ou bg-card)
+        style={{ height: "100%", width: "100%", background: 'transparent' }}
       >
-        {/* Tema Escuro do Mapa (CartoDB Dark Matter) */}
+        {/* Nota: Este TileLayer 'dark_all' é sempre escuro. 
+            Se quiser mapa claro no tema light, precisaria trocar a URL dinamicamente com useTheme().
+            Como a instrução é não mexer na lógica, mantive o dark_all. */}
         <TileLayer
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

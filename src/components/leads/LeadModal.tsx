@@ -20,7 +20,6 @@ interface LeadModalProps {
   leadToEdit?: Lead | null;
 }
 
-// Valores padrão seguros (Strings vazias, nunca null)
 const defaultValues = {
   name: '',
   email: '',
@@ -39,7 +38,6 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
     defaultValues
   });
 
-  // Reset do formulário ao abrir/fechar ou mudar o lead
   useEffect(() => {
     if (isOpen) {
         if (leadToEdit) {
@@ -81,10 +79,12 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#1a1a1a] border-[#333] text-white max-w-2xl">
+      {/* ANTES: bg-[#1a1a1a] border-[#333] text-white */}
+      {/* DEPOIS: bg-background border-border text-foreground */}
+      <DialogContent className="bg-background border-border text-foreground max-w-2xl">
         <DialogHeader>
           <DialogTitle>{leadToEdit ? 'Detalhes do Lead' : 'Novo Lead Manual'}</DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-muted-foreground">
              Preencha as informações do cliente abaixo.
           </DialogDescription>
         </DialogHeader>
@@ -102,7 +102,9 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
                         <FormItem>
                             <FormLabel>Nome *</FormLabel>
                             <FormControl>
-                                <Input {...field} className="bg-[#121212] border-[#333] text-white focus-visible:ring-primary" placeholder="Nome do cliente" />
+                                {/* ANTES: bg-[#121212] border-[#333] */}
+                                {/* DEPOIS: bg-background border-input */}
+                                <Input {...field} className="bg-background border-input text-foreground focus-visible:ring-primary" placeholder="Nome do cliente" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -118,7 +120,7 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
                         <FormItem>
                             <FormLabel>Celular *</FormLabel>
                             <FormControl>
-                                <Input {...field} className="bg-[#121212] border-[#333] text-white focus-visible:ring-primary" placeholder="(00) 00000-0000" />
+                                <Input {...field} className="bg-background border-input text-foreground focus-visible:ring-primary" placeholder="(00) 00000-0000" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -134,7 +136,7 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
                         <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                                <Input {...field} className="bg-[#121212] border-[#333] text-white" placeholder="email@cliente.com" />
+                                <Input {...field} className="bg-background border-input text-foreground" placeholder="email@cliente.com" />
                             </FormControl>
                         </FormItem>
                     )}
@@ -148,11 +150,11 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
                             <FormLabel>Status</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                                 <FormControl>
-                                    <SelectTrigger className="bg-[#121212] border-[#333] text-white">
+                                    <SelectTrigger className="bg-background border-input text-foreground">
                                         <SelectValue placeholder="Selecione..." />
                                     </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+                                <SelectContent className="bg-popover border-border text-popover-foreground">
                                     <SelectItem value="NOVO">Novo</SelectItem>
                                     <SelectItem value="EM_ATENDIMENTO">Em Atendimento</SelectItem>
                                     <SelectItem value="AGENDOU_VISITA">Agendou Visita</SelectItem>
@@ -173,7 +175,7 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
                         <FormItem>
                             <FormLabel>Assunto</FormLabel>
                             <FormControl>
-                                <Input {...field} className="bg-[#121212] border-[#333] text-white" placeholder="Ex: Interesse no Ed. X" />
+                                <Input {...field} className="bg-background border-input text-foreground" placeholder="Ex: Interesse no Ed. X" />
                             </FormControl>
                         </FormItem>
                     )}
@@ -185,7 +187,7 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
                         <FormItem>
                             <FormLabel>Contexto / Origem</FormLabel>
                             <FormControl>
-                                <Input {...field} className="bg-[#121212] border-[#333] text-white" placeholder="Ex: Instagram, Site..." />
+                                <Input {...field} className="bg-background border-input text-foreground" placeholder="Ex: Instagram, Site..." />
                             </FormControl>
                         </FormItem>
                     )}
@@ -199,7 +201,7 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
                     <FormItem>
                         <FormLabel>Mensagem do Cliente</FormLabel>
                         <FormControl>
-                            <Textarea {...field} className="bg-[#121212] border-[#333] text-white min-h-[80px]" placeholder="Mensagem original..." />
+                            <Textarea {...field} className="bg-background border-input text-foreground min-h-[80px]" placeholder="Mensagem original..." />
                         </FormControl>
                     </FormItem>
                 )}
@@ -210,17 +212,23 @@ export function LeadModal({ isOpen, onClose, onSuccess, leadToEdit }: LeadModalP
                 name="notes"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-yellow-500">Anotações Internas (Corretor)</FormLabel>
+                        {/* ANTES: text-yellow-500 bg-[#2a2a1a] */}
+                        {/* DEPOIS: text-yellow-600 dark:text-yellow-500 bg-yellow-500/10 */}
+                        <FormLabel className="text-yellow-600 dark:text-yellow-500">Anotações Internas (Corretor)</FormLabel>
                         <FormControl>
-                            <Textarea {...field} className="bg-[#2a2a1a] border-yellow-900/30 text-white min-h-[80px] focus:border-yellow-600" placeholder="Escreva observações aqui..." />
+                            <Textarea 
+                                {...field} 
+                                className="bg-yellow-500/5 border-yellow-500/30 text-foreground min-h-[80px] focus:border-yellow-500" 
+                                placeholder="Escreva observações aqui..." 
+                            />
                         </FormControl>
                     </FormItem>
                 )}
             />
 
             <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-[#333] hover:text-white">Cancelar</Button>
-                <Button type="submit" className="bg-primary text-black font-bold hover:bg-primary/90" disabled={saving}>
+                <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-muted hover:text-foreground">Cancelar</Button>
+                <Button type="submit" className="bg-primary text-primary-foreground font-bold hover:bg-primary/90" disabled={saving}>
                 <Save size={16} className="mr-2" /> Salvar
                 </Button>
             </div>

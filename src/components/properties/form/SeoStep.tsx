@@ -1,19 +1,18 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-import { Search, FileText, Eraser } from "lucide-react"; // Adicionei Eraser
+import { Search, FileText, Eraser } from "lucide-react"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { toast } from "sonner"; // Para feedback visual
+import { toast } from "sonner";
 import { styles } from "./constants";
 
 export function SeoStep() {
   const { control, getValues, setValue } = useFormContext();
 
-  // --- FUNÇÃO DE LIMPEZA DE HTML ---
   const handleCleanHtml = () => {
     const currentText = getValues("description");
     if (!currentText) return;
@@ -22,19 +21,14 @@ export function SeoStep() {
         return;
     }
 
-    // 1. Substitui tags de quebra de linha por quebra real
     let clean = currentText
-        .replace(/<br\s*\/?>/gi, '\n') // <br> vira Enter
-        .replace(/<\/p>/gi, '\n\n')    // </p> vira 2 Enters
-        .replace(/<li>/gi, '• ');      // <li> vira um bullet point
+        .replace(/<br\s*\/?>/gi, '\n') 
+        .replace(/<\/p>/gi, '\n\n')    
+        .replace(/<li>/gi, '• ');      
 
-    // 2. Remove todas as outras tags HTML (<div...>, <b>, <span>, etc)
     clean = clean.replace(/<[^>]+>/g, '');
-
-    // 3. Remove excesso de espaços em branco e linhas vazias repetidas
     clean = clean.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
 
-    // 4. Decodifica entidades HTML básicas (ex: &amp; -> &)
     const txt = document.createElement("textarea");
     txt.innerHTML = clean;
     clean = txt.value;
@@ -47,7 +41,7 @@ export function SeoStep() {
     <>
       {/* 9. SEO */}
       <Card className={styles.sectionClass}>
-        <CardHeader className="border-b border-[#333] pb-3">
+        <CardHeader className="border-b border-border pb-3">
           <CardTitle className="text-primary flex items-center gap-2 text-base">
             <Search size={18} /> SEO (Google)
           </CardTitle>
@@ -78,18 +72,19 @@ export function SeoStep() {
 
       {/* 10. DESCRIÇÃO PÚBLICA */}
       <Card className={styles.sectionClass}>
-        <CardHeader className="border-b border-[#333] pb-3 flex flex-row items-center justify-between">
+        <CardHeader className="border-b border-border pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-primary flex items-center gap-2 text-base">
             <FileText size={18} /> DESCRIÇÃO PÚBLICA
           </CardTitle>
           
-          {/* --- BOTÃO LIMPAR HTML --- */}
           <Button 
             type="button" 
             variant="outline" 
             size="sm" 
             onClick={handleCleanHtml}
-            className="h-8 border-[#444] text-xs text-gray-400 hover:text-white hover:border-red-500 hover:bg-red-500/10 transition-colors"
+            // ANTES: border-[#444] text-gray-400 hover:text-white
+            // DEPOIS: border-input text-muted-foreground hover:text-foreground
+            className="h-8 border-input text-xs text-muted-foreground hover:text-foreground hover:border-destructive hover:bg-destructive/10 transition-colors"
           >
             <Eraser size={14} className="mr-2" />
             Limpar HTML

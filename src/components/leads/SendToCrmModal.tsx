@@ -21,18 +21,15 @@ export function SendToCrmModal({ isOpen, onClose, lead }: SendToCrmModalProps) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
 
-  // Estados do formulário
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
   const [selectedStageId, setSelectedStageId] = useState<string>('');
 
-  // 1. Buscar Funis ao abrir
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
       api.get('/crm/pipelines')
         .then(res => {
           setPipelines(res.data);
-          // Seleciona o primeiro funil por padrão se houver
           if (res.data.length > 0) {
             setSelectedPipelineId(res.data[0].id);
           }
@@ -40,16 +37,13 @@ export function SendToCrmModal({ isOpen, onClose, lead }: SendToCrmModalProps) {
         .catch(() => toast.error("Erro ao carregar funis."))
         .finally(() => setLoading(false));
     } else {
-        // Resetar estados ao fechar
         setSelectedPipelineId('');
         setSelectedStageId('');
     }
   }, [isOpen]);
 
-  // Encontra o funil selecionado para listar as etapas
   const selectedPipeline = pipelines.find(p => p.id === selectedPipelineId);
 
-  // Seleciona a primeira etapa automaticamente quando muda o funil
   useEffect(() => {
     if (selectedPipeline && selectedPipeline.stages.length > 0) {
         setSelectedStageId(String(selectedPipeline.stages[0].id));
@@ -64,13 +58,12 @@ export function SendToCrmModal({ isOpen, onClose, lead }: SendToCrmModalProps) {
       await api.post('/crm/deals', {
         title: lead.subject || lead.name,
         value: 0,
-        contactName: lead.name, // Mantemos como backup visual
+        contactName: lead.name, 
         stageId: Number(selectedStageId),
-        leadId: lead.id, // <--- O PULO DO GATO: VINCULANDO O ID
+        leadId: lead.id, 
         priority: 'medium'
       });
 
-      // Atualiza status do Lead para CONVERTIDO
       await api.patch(`/leads/${lead.id}`, { status: 'CONVERTIDO' });
 
       toast.success("Negócio criado e vinculado ao Lead!");
@@ -85,13 +78,15 @@ export function SendToCrmModal({ isOpen, onClose, lead }: SendToCrmModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#1a1a1a] border-[#333] text-white max-w-md">
+      {/* ANTES: bg-[#1a1a1a] border-[#333] text-white */}
+      {/* DEPOIS: bg-background border-border text-foreground */}
+      <DialogContent className="bg-background border-border text-foreground max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KanbanIcon size={20} className="text-primary" /> 
             Enviar para o CRM
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-muted-foreground">
             Transforme o lead <strong>{lead?.name}</strong> em um negócio no seu funil de vendas.
           </DialogDescription>
         </DialogHeader>
@@ -105,10 +100,10 @@ export function SendToCrmModal({ isOpen, onClose, lead }: SendToCrmModalProps) {
                 <div className="space-y-2">
                     <Label>Selecione o Funil</Label>
                     <Select value={selectedPipelineId} onValueChange={setSelectedPipelineId}>
-                        <SelectTrigger className="bg-[#121212] border-[#333] text-white">
+                        <SelectTrigger className="bg-background border-input text-foreground">
                             <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+                        <SelectContent className="bg-popover border-border text-popover-foreground">
                             {pipelines.map(p => (
                                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                             ))}
@@ -120,10 +115,10 @@ export function SendToCrmModal({ isOpen, onClose, lead }: SendToCrmModalProps) {
                 <div className="space-y-2">
                     <Label>Selecione a Etapa de Entrada</Label>
                     <Select value={selectedStageId} onValueChange={setSelectedStageId} disabled={!selectedPipelineId}>
-                        <SelectTrigger className="bg-[#121212] border-[#333] text-white">
+                        <SelectTrigger className="bg-background border-input text-foreground">
                             <SelectValue placeholder="Selecione..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+                        <SelectContent className="bg-popover border-border text-popover-foreground">
                             {selectedPipeline?.stages?.map((s: any) => (
                                 <SelectItem key={s.id} value={String(s.id)}>
                                     {s.name}
@@ -137,10 +132,10 @@ export function SendToCrmModal({ isOpen, onClose, lead }: SendToCrmModalProps) {
         )}
 
         <DialogFooter>
-            <Button variant="ghost" onClick={onClose} className="hover:bg-[#333] hover:text-white">Cancelar</Button>
+            <Button variant="ghost" onClick={onClose} className="hover:bg-muted hover:text-foreground">Cancelar</Button>
             <Button 
                 onClick={handleSend} 
-                className="bg-primary text-black font-bold hover:bg-primary/90"
+                className="bg-primary text-primary-foreground font-bold hover:bg-primary/90"
                 disabled={sending || !selectedStageId}
             >
                 {sending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ArrowRight className="mr-2 h-4 w-4" />}

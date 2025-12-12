@@ -12,10 +12,7 @@ import { useProperties } from "@/hooks/useProperties"
 export function PropertiesList() {
   const router = useRouter()
   
-  // O hook agora retorna um objeto InfiniteData, não um array direto
   const { data: queryData, isLoading, isError, refetch } = useProperties()
-
-  // CORREÇÃO: Achatamos as páginas para criar um único array de imóveis para a Tabela
   const flattenedData = queryData?.pages.flatMap((page) => page.data) || []
 
   const handleImportDwv = async () => {
@@ -26,7 +23,7 @@ export function PropertiesList() {
     try {
       await api.post("/properties/import-dwv", { url })
       toast.success("Imóvel importado com sucesso!", { id: toastId })
-      refetch() // Atualiza a lista
+      refetch() 
     } catch (error) {
       console.error(error)
       toast.error("Erro na importação.", { id: toastId })
@@ -34,17 +31,18 @@ export function PropertiesList() {
   }
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-6">
+    <div className="w-full h-full flex flex-col">
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-primary">Gestão de Imóveis</h1>
           <p className="text-muted-foreground text-sm">Gerencie seu portfólio imobiliário</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleImportDwv} className="border-[#333] hover:bg-[#333] text-gray-300">
+          <Button variant="outline" onClick={handleImportDwv} className="border-border hover:bg-muted text-muted-foreground">
             <CloudDownload className="mr-2 h-4 w-4" /> Importar DWV
           </Button>
-          <Button onClick={() => router.push("/intranet/novo")} className="bg-primary text-black font-bold hover:bg-primary/90">
+          
+          <Button onClick={() => router.push("/intranet/novo")} className="bg-primary text-primary-foreground font-bold hover:bg-primary/90">
             <Plus className="mr-2 h-4 w-4" /> Novo Imóvel
           </Button>
         </div>
@@ -55,10 +53,11 @@ export function PropertiesList() {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : isError ? (
-        <div className="text-red-500 text-center">Erro ao carregar dados.</div>
+        <div className="text-destructive text-center py-10">Erro ao carregar dados.</div>
       ) : (
-        // Passamos o array tratado 'flattenedData' em vez de 'queryData'
-        <DataTable columns={columns} data={flattenedData} />
+        <div className="flex-1 overflow-hidden">
+          <DataTable columns={columns} data={flattenedData} />
+        </div>
       )}
     </div>
   )

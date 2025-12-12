@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { MoneyInput } from "@/components/ui/money-input"; // Importe aqui
+import { MoneyInput } from "@/components/ui/money-input";
 import { styles } from "./constants";
 
 export function PaymentConditionsStep() {
@@ -19,7 +19,7 @@ export function PaymentConditionsStep() {
 
   return (
     <Card className={styles.sectionClass}>
-      <CardHeader className="border-b border-[#333] pb-3">
+      <CardHeader className="border-b border-border pb-3">
         <CardTitle className="text-primary flex items-center gap-2 text-base">
           <Banknote size={18} /> CONDIÇÕES DE PAGAMENTO
         </CardTitle>
@@ -27,7 +27,9 @@ export function PaymentConditionsStep() {
       <CardContent className="pt-6 space-y-4">
         
         {fields.map((field, index) => (
-          <div key={field.id} className="flex gap-4 items-end bg-[#121212] p-3 rounded border border-[#333]">
+          // ANTES: bg-[#121212] border-[#333]
+          // DEPOIS: bg-background border-border
+          <div key={field.id} className="flex gap-4 items-end bg-background p-3 rounded border border-border">
             
             {/* DESCRIÇÃO (TEXTO) */}
             <FormField
@@ -35,15 +37,11 @@ export function PaymentConditionsStep() {
               name={`paymentConditions.${index}.description`}
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel className="text-xs text-gray-500">Descrição</FormLabel>
+                  <FormLabel className="text-xs text-muted-foreground">Descrição</FormLabel>
                   <FormControl>
                     <Input 
                         {...field} 
-                        // Remove o valor monetário do texto se ele for colado automaticamente, para limpar a visualização
-                        // Ex: "Entrada: R$ 500,00" vira "Entrada:"
                         onChange={(e) => {
-                            // Opcional: Se quiser limpar automagicamente o R$ do texto ao editar
-                            // field.onChange(e.target.value.replace(/R\$\s?[\d.,]+/, '').trim());
                             field.onChange(e.target.value);
                         }}
                         className={styles.inputClass} 
@@ -60,7 +58,7 @@ export function PaymentConditionsStep() {
               name={`paymentConditions.${index}.value`}
               render={({ field }) => (
                 <FormItem className="w-48">
-                  <FormLabel className="text-xs text-gray-500">Valor</FormLabel>
+                  <FormLabel className="text-xs text-muted-foreground">Valor</FormLabel>
                   <FormControl>
                     <MoneyInput 
                         value={field.value} 
@@ -77,7 +75,7 @@ export function PaymentConditionsStep() {
                 variant="ghost" 
                 size="icon" 
                 onClick={() => remove(index)}
-                className="hover:bg-red-900/20 hover:text-red-500 text-gray-500 mb-0.5"
+                className="hover:bg-destructive/10 hover:text-destructive text-muted-foreground mb-0.5"
             >
                 <Trash size={16} />
             </Button>
@@ -88,7 +86,9 @@ export function PaymentConditionsStep() {
           type="button"
           variant="outline"
           onClick={() => append({ description: "", value: 0 })}
-          className="w-full border-dashed border-[#444] text-gray-400 hover:text-primary hover:border-primary hover:bg-[#121212] h-10"
+          // ANTES: border-[#444] text-gray-400 hover:bg-[#121212]
+          // DEPOIS: border-input text-muted-foreground hover:bg-background
+          className="w-full border-dashed border-input text-muted-foreground hover:text-primary hover:border-primary hover:bg-background h-10"
         >
           <Plus size={16} className="mr-2" /> Adicionar Condição
         </Button>

@@ -22,7 +22,7 @@ export function GeneralInfoStep() {
 
   return (
     <Card className={styles.sectionClass}>
-      <CardHeader className="border-b border-[#333] pb-3">
+      <CardHeader className="border-b border-border pb-3">
         <CardTitle className="text-primary flex items-center gap-2 text-base">
           <FileText size={18} /> DADOS PRINCIPAIS
         </CardTitle>
@@ -55,7 +55,9 @@ export function GeneralInfoStep() {
           />
         </div>
 
-        <div className="bg-[#252525] p-4 rounded border border-[#333] flex flex-wrap gap-6">
+        {/* ANTES: bg-[#252525] border-[#333] */}
+        {/* DEPOIS: bg-muted/20 border-border */}
+        <div className="bg-muted/20 p-4 rounded border border-border flex flex-wrap gap-6">
           <FormField
             control={control}
             name="showOnSite"
@@ -92,13 +94,15 @@ export function GeneralInfoStep() {
             render={({ field }) => (
               <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                 <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormLabel className="font-normal cursor-pointer text-blue-400 font-bold">Aplicar Marca D'água</FormLabel>
+                {/* ANTES: text-blue-400 */}
+                {/* DEPOIS: text-blue-600 dark:text-blue-400 */}
+                <FormLabel className="font-normal cursor-pointer text-blue-600 dark:text-blue-400 font-bold">Aplicar Marca D'água</FormLabel>
               </FormItem>
             )}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-[#333]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-border">
           {/* CATEGORIA */}
           <FormField
             control={control}
@@ -116,7 +120,9 @@ export function GeneralInfoStep() {
                         <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-[#2b2b2b] border-[#444] text-white">
+                  {/* ANTES: bg-[#2b2b2b] border-[#444] text-white */}
+                  {/* DEPOIS: bg-popover border-border text-popover-foreground */}
+                  <SelectContent className="bg-popover border-border text-popover-foreground">
                     {CATEGORIES.map((o) => (
                       <SelectItem key={o} value={o}>{o}</SelectItem>
                     ))}
@@ -143,7 +149,7 @@ export function GeneralInfoStep() {
                         <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-[#2b2b2b] border-[#444] text-white">
+                  <SelectContent className="bg-popover border-border text-popover-foreground">
                     {STATUS_OPTS.map((o) => (
                       <SelectItem key={o} value={o}>{o}</SelectItem>
                     ))}
@@ -153,7 +159,7 @@ export function GeneralInfoStep() {
             )}
           />
 
-          {/* ESTÁGIO DA OBRA (Custom Radio Visual) */}
+          {/* ESTÁGIO DA OBRA */}
           <FormField
             control={control}
             name="constructionStage"
@@ -163,10 +169,14 @@ export function GeneralInfoStep() {
                 <div className="flex gap-4 items-center h-10">
                   {STAGES.map((opt) => (
                     <div key={opt.v} className="flex items-center space-x-2 cursor-pointer" onClick={() => field.onChange(opt.v)}>
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${field.value === opt.v ? "border-blue-500" : "border-gray-500"}`}>
-                        {field.value === opt.v && (<div className="w-2 h-2 rounded-full bg-blue-500" />)}
+                      {/* ANTES: border-blue-500 : border-gray-500 */}
+                      {/* DEPOIS: border-primary : border-muted-foreground */}
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${field.value === opt.v ? "border-primary" : "border-muted-foreground"}`}>
+                        {field.value === opt.v && (<div className="w-2 h-2 rounded-full bg-primary" />)}
                       </div>
-                      <span className={`text-sm ${field.value === opt.v ? "text-white" : "text-gray-400"}`}>{opt.l}</span>
+                      {/* ANTES: text-white : text-gray-400 */}
+                      {/* DEPOIS: text-foreground : text-muted-foreground */}
+                      <span className={`text-sm ${field.value === opt.v ? "text-foreground" : "text-muted-foreground"}`}>{opt.l}</span>
                     </div>
                   ))}
                 </div>
@@ -175,7 +185,7 @@ export function GeneralInfoStep() {
           />
         </div>
 
-        <div className="border-t border-[#333] pt-4 mt-4">
+        <div className="border-t border-border pt-4 mt-4">
           <p className={styles.labelClass}>Características Importantes</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -196,7 +206,9 @@ export function GeneralInfoStep() {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                       <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                      <FormLabel className="font-normal cursor-pointer text-sm text-gray-300 hover:text-white">{label}</FormLabel>
+                      {/* ANTES: text-gray-300 hover:text-white */}
+                      {/* DEPOIS: text-muted-foreground hover:text-foreground */}
+                      <FormLabel className="font-normal cursor-pointer text-sm text-muted-foreground hover:text-foreground">{label}</FormLabel>
                     </FormItem>
                   )}
                 />
@@ -205,7 +217,7 @@ export function GeneralInfoStep() {
           </div>
         </div>
 
-        <div className="flex gap-4 items-end border-t border-[#333] pt-4">
+        <div className="flex gap-4 items-end border-t border-border pt-4">
           <FormField
             control={control}
             name="badgeText"
@@ -228,7 +240,7 @@ export function GeneralInfoStep() {
                     defaultValue={field.value || ""}
                 >
                   <FormControl><SelectTrigger className={styles.inputClass}><SelectValue placeholder="Cor" /></SelectTrigger></FormControl>
-                  <SelectContent className="bg-[#2b2b2b] border-[#444] text-white">
+                  <SelectContent className="bg-popover border-border text-popover-foreground">
                     {BADGE_COLORS.map((c) => (
                       <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                     ))}

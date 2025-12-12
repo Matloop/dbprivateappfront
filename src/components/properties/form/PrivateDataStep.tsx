@@ -16,16 +16,27 @@ export function PrivateDataStep() {
   return (
     <>
       {/* 7. DADOS INTERNOS */}
+      {/* Mantive classes específicas se privateSectionClass for algo muito customizado, 
+          caso contrário poderia ser bg-card. Mas vou assumir que você quer manter o 'gold theme'
+          para esta seção usando as cores primárias do tema */}
       <Card className={styles.privateSectionClass}>
-        <CardHeader className="border-b border-[#5c4018] pb-3">
-          <CardTitle className="text-[#d4af37] flex items-center gap-2 text-base">
+        {/* ANTES: border-[#5c4018] */}
+        {/* DEPOIS: border-primary/50 */}
+        <CardHeader className="border-b border-primary/50 pb-3">
+          {/* ANTES: text-[#d4af37] */}
+          {/* DEPOIS: text-primary */}
+          <CardTitle className="text-primary flex items-center gap-2 text-base">
             <Lock size={18} /> DADOS PRIVADOS (INTERNO)
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 space-y-6">
           
-          <div className="p-4 border border-[#5c4018] rounded bg-[#25201b]/50 mb-4">
-            <h4 className="text-[#a89060] text-xs uppercase font-bold mb-3 border-b border-[#5c4018] pb-2">
+          {/* ANTES: border-[#5c4018] bg-[#25201b]/50 */}
+          {/* DEPOIS: border-primary/50 bg-primary/5 */}
+          <div className="p-4 border border-primary/50 rounded bg-primary/5 mb-4">
+            {/* ANTES: text-[#a89060] border-[#5c4018] */}
+            {/* DEPOIS: text-primary/80 border-primary/50 */}
+            <h4 className="text-primary/80 text-xs uppercase font-bold mb-3 border-b border-primary/50 pb-2">
               Pessoal Edifício
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -93,10 +104,12 @@ export function PrivateDataStep() {
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        className="border-[#d4af37] data-[state=checked]:bg-[#d4af37]"
+                        // ANTES: border-[#d4af37] data-[state=checked]:bg-[#d4af37]
+                        // DEPOIS: border-primary data-[state=checked]:bg-primary
+                        className="border-primary data-[state=checked]:bg-primary"
                       />
                     </FormControl>
-                    <FormLabel className="font-normal cursor-pointer text-[#d4af37]">
+                    <FormLabel className="font-normal cursor-pointer text-primary">
                       Autorização de venda assinada
                     </FormLabel>
                   </FormItem>
@@ -179,8 +192,8 @@ export function PrivateDataStep() {
 
       {/* 8. CAPTAÇÃO & CHAVES */}
       <Card className={styles.captureSectionClass}>
-        <CardHeader className="border-b border-[#5c4018] pb-3">
-          <CardTitle className="text-[#d4af37] flex items-center gap-2 text-base">
+        <CardHeader className="border-b border-primary/50 pb-3">
+          <CardTitle className="text-primary flex items-center gap-2 text-base">
             <Briefcase size={18} /> CAPTAÇÃO & CHAVES
           </CardTitle>
         </CardHeader>
@@ -206,7 +219,9 @@ export function PrivateDataStep() {
                     <FormControl>
                       <SelectTrigger className={styles.privateInputClass}><SelectValue /></SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-[#1e1a15] border-[#5c4018] text-[#d4af37]">
+                    {/* ANTES: bg-[#1e1a15] border-[#5c4018] text-[#d4af37] */}
+                    {/* DEPOIS: bg-popover border-primary/50 text-primary */}
+                    <SelectContent className="bg-popover border-primary/50 text-primary">
                       <SelectItem value="matriz">Matriz</SelectItem>
                       <SelectItem value="filial">Filial</SelectItem>
                     </SelectContent>
@@ -225,7 +240,7 @@ export function PrivateDataStep() {
               )}
             />
           </div>
-          <div className="pt-4 border-t border-[#5c4018] mt-4">
+          <div className="pt-4 border-t border-primary/50 mt-4">
             <FormField
               control={control}
               name="keysLocation"

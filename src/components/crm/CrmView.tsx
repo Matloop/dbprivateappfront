@@ -40,16 +40,16 @@ export function CrmView() {
     fetchPipelines();
   }, []);
 
-  if (loading) return <div className="h-full flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div>;
+  if (loading) return <div className="h-full flex items-center justify-center text-foreground"><Loader2 className="animate-spin text-primary" /></div>;
 
   // Encontra o funil selecionado para passar suas etapas pro Kanban
   const currentPipeline = pipelines.find(p => p.id === selectedPipelineId);
 
   return (
-    <div className="h-full flex flex-col bg-[#121212] text-white">
+    <div className="h-full flex flex-col bg-background text-foreground">
       
       {/* HEADER DO CRM */}
-      <header className="border-b border-[#333] h-16 flex items-center justify-between px-0 md:px-0 bg-[#121212] flex-shrink-0 mb-4">
+      <header className="border-b border-border h-16 flex items-center justify-between px-0 md:px-0 bg-background flex-shrink-0 mb-4">
         
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-primary">
@@ -57,14 +57,14 @@ export function CrmView() {
             <span className="font-bold text-lg hidden md:inline">CRM</span>
           </div>
 
-          <div className="h-6 w-px bg-[#333] hidden md:block"></div>
+          <div className="h-6 w-px bg-border hidden md:block"></div>
 
           {/* SELECTOR DE FUNIL REAL */}
           <Select value={selectedPipelineId} onValueChange={setSelectedPipelineId}>
-            <SelectTrigger className="w-[220px] h-9 bg-[#1a1a1a] border-[#333] text-white focus:ring-0 focus:border-primary">
+            <SelectTrigger className="w-[220px] h-9 bg-card border-border text-foreground focus:ring-0 focus:border-primary">
               <SelectValue placeholder="Selecione o Funil" />
             </SelectTrigger>
-            <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
+            <SelectContent className="bg-card border-border text-foreground">
               {pipelines.map(p => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
               ))}
@@ -74,12 +74,12 @@ export function CrmView() {
 
         <div className="flex items-center gap-3">
           <div className="relative hidden md:block">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <Input placeholder="Buscar..." className="pl-9 h-9 bg-[#1a1a1a] border-[#333] w-[150px] text-xs" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar..." className="pl-9 h-9 bg-card border-border w-[150px] text-xs" />
           </div>
 
           <Link href="/intranet/crm/config">
-            <Button variant="outline" size="icon" className="border-[#333] bg-transparent text-gray-400 hover:text-white h-9 w-9">
+            <Button variant="outline" size="icon" className="border-border bg-transparent text-muted-foreground hover:text-foreground h-9 w-9">
               <Settings size={18} />
             </Button>
           </Link>
@@ -87,7 +87,7 @@ export function CrmView() {
       </header>
 
       {/* KANBAN BOARD */}
-      <div className="flex-1 overflow-hidden relative bg-[#0f0f0f] rounded-lg border border-[#333]">
+      <div className="flex-1 overflow-hidden relative bg-background rounded-lg border border-border">
          {/* Passamos o OBJETO stages do funil atual para o Kanban */}
          {currentPipeline && <KanbanBoard stages={currentPipeline.stages} />}
       </div>

@@ -18,6 +18,7 @@ import { CrmView } from "@/components/crm/CrmView";
 import { LeadsView } from "@/components/leads/LeadsView"; 
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { ModeToggle } from "@/components/ui/mode-toggle"; // <--- IMPORT DO TOGGLE
 
 // --- COMPONENTE INTERNO (Lógica real) ---
 function IntranetContent() {
@@ -44,7 +45,7 @@ function IntranetContent() {
 
       setAuthLoading(false);
 
-      // 1. VERIFICA SE TEM ABA NA URL (Isso exige Suspense)
+      // 1. VERIFICA SE TEM ABA NA URL
       const tabParam = searchParams.get('tab');
       if (tabParam && ['imoveis', 'crm', 'leads', 'clientes', 'destaques'].includes(tabParam)) {
           setActiveTab(tabParam);
@@ -69,7 +70,7 @@ function IntranetContent() {
     router.replace("/login");
   };
 
-  // --- 2. FUNÇÃO DE TOGGLE ---
+  // --- 2. FUNÇÃO DE TOGGLE MARCA D'ÁGUA ---
   const toggleWatermark = async (newValue: boolean) => {
     const actionText = newValue ? "ATIVAR" : "REMOVER";
 
@@ -79,7 +80,6 @@ function IntranetContent() {
       )
     ) {
       setWatermarkEnabled((prev) => !prev);
-      // Hack para forçar re-render visual do checkbox se o usuário cancelar
       setTimeout(() => setWatermarkEnabled((prev) => !prev), 0);
       return;
     }
@@ -105,35 +105,40 @@ function IntranetContent() {
 
   if (authLoading) {
     return (
-      <div className="h-screen flex items-center justify-center text-primary gap-2 bg-[#121212]">
+      <div className="h-screen flex items-center justify-center text-primary gap-2 bg-background">
         <Loader2 className="animate-spin" /> Carregando sistema...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white flex flex-col font-sans">
+    // ANTES: bg-[#121212] text-white
+    // DEPOIS: bg-background text-foreground
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300">
       
       {/* HEADER */}
-      <header className="bg-[#121212] border-b border-[#222] h-16 flex items-center justify-between px-6 sticky top-0 z-50">
+      {/* ANTES: bg-[#121212] border-[#222] */}
+      {/* DEPOIS: bg-background border-border */}
+      <header className="bg-background border-b border-border h-16 flex items-center justify-between px-6 sticky top-0 z-50 transition-colors duration-300">
         <div className="flex items-center gap-2">
           {/* Logo */}
           <img 
             src="/logo2025.png" 
             alt="DB Private" 
+            // Adicionei invert na logo caso ela seja preta no light mode, ou remova se sua logo funcionar bem nos dois
             className="h-8 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" 
           />
         </div>
 
         <div className="flex items-center gap-4">
           
-          {/* --- SWITCH --- */}
+          {/* --- SWITCH MARCA D'ÁGUA --- */}
           <div 
             className={`
               flex items-center space-x-2 px-3 py-1 rounded border transition-all duration-300
               ${watermarkEnabled 
                 ? "border-primary/50 bg-primary/5" 
-                : "border-[#333] bg-transparent hover:border-[#444]"
+                : "border-border bg-transparent hover:bg-muted" // Cores adaptadas
               }
             `}
           >
@@ -145,7 +150,7 @@ function IntranetContent() {
                  checked={watermarkEnabled}
                  onCheckedChange={(val) => toggleWatermark(val === true)}
                  className={`
-                   data-[state=checked]:bg-primary data-[state=checked]:text-black border-[#555]
+                   data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-muted-foreground
                    w-3.5 h-3.5 rounded-sm
                  `}
                />
@@ -154,24 +159,31 @@ function IntranetContent() {
               htmlFor="bulk-watermark" 
               className={`
                 text-xs cursor-pointer font-medium select-none tracking-wide
-                ${watermarkEnabled ? "text-primary" : "text-gray-400 hover:text-white"}
+                ${watermarkEnabled ? "text-primary" : "text-muted-foreground hover:text-foreground"}
               `}
             >
               Marca D'água Global
             </Label>
           </div>
 
-          <div className="h-4 w-px bg-[#333]" />
+          <div className="h-4 w-px bg-border" />
 
+          {/* ÁREA DO USUÁRIO + TOGGLE DE TEMA */}
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500 hidden md:inline font-medium">
+            
+            {/* INSERÇÃO DO TOGGLE AQUI */}
+            <ModeToggle />
+
+            <div className="h-4 w-px bg-border hidden md:block" />
+
+            <span className="text-xs text-muted-foreground hidden md:inline font-medium">
               {userEmail}
             </span>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleLogout}
-              className="text-gray-400 hover:text-red-500 hover:bg-red-500/10 h-8 w-8"
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8"
               title="Sair"
             >
               <LogOut className="w-4 h-4" />
@@ -181,10 +193,12 @@ function IntranetContent() {
       </header>
 
       {/* TABS */}
-      <nav className="bg-[#121212] border-b border-[#222] px-6 pt-4 flex gap-2 overflow-x-auto">
+      {/* ANTES: bg-[#121212] border-[#222] */}
+      {/* DEPOIS: bg-background border-border */}
+      <nav className="bg-background border-b border-border px-6 pt-4 flex gap-2 overflow-x-auto transition-colors duration-300">
         {[
           { id: "imoveis", label: "Imóveis", icon: HomeIcon },
-          { id: "crm", label: "CRM / Funil", icon: LayoutDashboard }, // Ajuste o ícone se quiser
+          { id: "crm", label: "CRM / Funil", icon: LayoutDashboard },
           { id: "leads", label: "Leads", icon: Megaphone },
           { id: "clientes", label: "Clientes", icon: Users },
           { id: "destaques", label: "Destaques", icon: LayoutDashboard },
@@ -198,15 +212,19 @@ function IntranetContent() {
                 flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-t-lg transition-all border-b-0
                 ${
                   isActive
-                    ? "bg-[#1a1a1a] text-white border-x border-t border-[#333] relative top-[1px]"
-                    : "text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]"
+                    // ANTES: bg-[#1a1a1a] text-white border-[#333]
+                    // DEPOIS: bg-card text-foreground border-border border-x border-t
+                    ? "bg-muted text-foreground border-x border-t border-border relative top-[1px]"
+                    // ANTES: text-gray-500 hover:bg-[#1a1a1a]
+                    // DEPOIS: text-muted-foreground hover:bg-muted
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }
               `}
             >
               <tab.icon size={14} className={isActive ? "text-primary" : ""} />
               {tab.label}
               {tab.id === "leads" && (
-                <span className="bg-red-900/50 text-red-200 text-[9px] px-1.5 py-0.5 rounded-full ml-1">
+                <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full ml-1 font-bold">
                   99+
                 </span>
               )}
@@ -216,15 +234,17 @@ function IntranetContent() {
       </nav>
 
       {/* CONTEÚDO */}
-      <main className="flex-1 p-6 overflow-hidden relative bg-[#121212]">
+      {/* ANTES: bg-[#121212] */}
+      {/* DEPOIS: bg-background */}
+      <main className="flex-1 p-6 overflow-hidden relative bg-background transition-colors duration-300">
         
         {/* VIEW IMÓVEIS */}
         {activeTab === "imoveis" && (
           <div className="h-full w-full flex flex-col animate-in fade-in duration-500">
              <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h2 className="text-xl font-bold text-white">Catálogo</h2>
-                  <p className="text-xs text-gray-500">Gestão de portfólio</p>
+                  <h2 className="text-xl font-bold text-foreground">Catálogo</h2>
+                  <p className="text-xs text-muted-foreground">Gestão de portfólio</p>
                 </div>
              </div>
              
@@ -250,11 +270,11 @@ function IntranetContent() {
 
         {/* OUTROS (PLACEHOLDER) */}
         {(activeTab === "clientes" || activeTab === "destaques") && (
-          <div className="flex flex-col items-center justify-center h-full text-gray-600">
-            <div className="bg-[#1a1a1a] p-6 rounded-full mb-4 border border-[#222]">
-               <Users size={32} className="text-gray-700" />
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <div className="bg-muted p-6 rounded-full mb-4 border border-border">
+               <Users size={32} className="text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-medium mb-1">Em Desenvolvimento</h2>
+            <h2 className="text-lg font-medium mb-1 text-foreground">Em Desenvolvimento</h2>
             <p className="text-xs">Módulo será liberado em breve.</p>
           </div>
         )}
@@ -264,11 +284,10 @@ function IntranetContent() {
 }
 
 // --- COMPONENTE PÁGINA (WRAPPER) ---
-// Isso resolve o erro de build no Next.js
 export default function IntranetPage() {
   return (
     <Suspense fallback={
-      <div className="h-screen flex items-center justify-center bg-[#121212] text-primary">
+      <div className="h-screen flex items-center justify-center bg-background text-primary">
         <Loader2 className="animate-spin" />
       </div>
     }>
