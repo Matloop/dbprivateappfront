@@ -1980,19 +1980,19 @@ export default function EditPropertyPage({
                 variant="outline"
                 type="button"
                 onClick={() => router.push("/intranet")}
-                className="border-red-900/30 text-red-500"
+                className="border-red-900/30 text-red-500 hover:bg-red-900/20"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={form.handleSubmit(onSubmit)}
                 disabled={isSaving}
-                className="bg-primary text-black font-bold h-12 px-8 text-lg hover:bg-primary/90"
+                className="bg-primary text-black font-bold hover:bg-primary/90"
               >
                 {isSaving ? (
-                  <Loader2 className="animate-spin mr-2" />
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
                 ) : (
-                  <Save className="mr-2" />
+                  <Save className="mr-2 h-4 w-4" />
                 )}{" "}
                 Salvar Alterações
               </Button>
