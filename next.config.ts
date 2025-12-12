@@ -7,11 +7,19 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "localhost" },
       { protocol: "https", hostname: "98.93.10.61.nip.io" }, // Seu Backend Prod
       { protocol: "https", hostname: "dbprivate.com.br" },
-      { protocol: "https", hostname: "*.supabase.co" }, // Supabase Storage
+      { protocol: "https", hostname: "*.supabase.co" },
+      {
+        protocol: "https",
+        hostname: "**.amazonaws.com", // Permite S3 direto
+      },
+      {
+        protocol: "https",
+        hostname: "**.cloudfront.net", // Permite CloudFront (Seu CDN)
+      }, // Supabase Storage
     ],
   },
   // Isso ajuda a evitar erros de hidratação com algumas libs antigas
-  reactStrictMode: false, 
+  reactStrictMode: false,
 };
 
 export default nextConfig;

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image, { ImageLoaderProps } from 'next/image';
+import Image from 'next/image';
 import { Bed, Bath, Car, Ruler, MapPin, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -13,14 +13,12 @@ import { cn } from '@/lib/utils';
 const fixImageSource = (url: string | undefined | null) => {
   if (!url || url === '') return '/placeholder.jpg';
   if (url.startsWith('/')) return url;
+  // Se for produção, força HTTPS do CDN/Backend
   if (process.env.NODE_ENV === 'production' && (url.includes('localhost') || url.includes('127.0.0.1'))) {
       return url.replace(/http:\/\/(localhost|127\.0\.0\.1):\d+/g, 'https://98.93.10.61.nip.io');
   }
   return url;
 };
-
-// Loader para evitar otimização excessiva em localhost se necessário
-const customLoader = ({ src }: ImageLoaderProps) => src;
 
 export interface Property {
   id: number;
@@ -37,7 +35,8 @@ export interface Property {
   privateArea: number;
 }
 
-export const PropertyCard = ({ property }: { property: Property }) => {
+// Adicionei a prop 'index' para saber se é o primeiro card da lista
+export const PropertyCard = ({ property, index = 0 }: { property: Property, index?: number }) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
@@ -76,32 +75,27 @@ export const PropertyCard = ({ property }: { property: Property }) => {
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-black group/image">
           
           <Image
-            loader={customLoader}
+            // REMOVI O loader={customLoader} -> Agora o Next.js otimiza sozinho!
             src={currentImageUrl}
             alt={property.title}
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
+            // Tamanhos responsivos corretos para otimização
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            unoptimized={false}
-            // Prioridade apenas se for a primeira imagem da lista (opcional, ajuda performance)
-            priority={false} 
+            // Se for um dos 4 primeiros cards, carrega com prioridade máxima
+            priority={index < 4}
+            unoptimized={false} 
+            quality={40}
           />
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
 
-          {/* --- ALTERAÇÃO AQUI: Setas sempre visíveis --- */}
           {images.length > 1 && (
             <>
-              <button 
-                onClick={prevImage} 
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-primary hover:text-black z-20 transition-colors"
-              >
+              <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-primary hover:text-black z-20 transition-colors opacity-0 group-hover/image:opacity-100">
                 <ChevronLeft size={16} />
               </button>
-              <button 
-                onClick={nextImage} 
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-primary hover:text-black z-20 transition-colors"
-              >
+              <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-1.5 text-white hover:bg-primary hover:text-black z-20 transition-colors opacity-0 group-hover/image:opacity-100">
                 <ChevronRight size={16} />
               </button>
             </>
