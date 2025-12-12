@@ -3,9 +3,9 @@
 import { useFormContext, useWatch } from "react-hook-form";
 import { DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { MoneyInput } from "@/components/ui/money-input"; // <--- Importe aqui
 import { styles } from "./constants";
 
 export function FinancialStep() {
@@ -26,13 +26,12 @@ export function FinancialStep() {
             name="price"
             render={({ field }) => (
               <FormItem className="md:col-span-2">
-                <FormLabel className={styles.labelClass}>Valor de Venda (R$)</FormLabel>
+                <FormLabel className={styles.labelClass}>Valor de Venda</FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    <MoneyInput
+                      value={field.value}
+                      onChange={field.onChange}
                       className={`${styles.inputClass} text-lg font-bold text-green-400`}
                     />
                   </FormControl>
@@ -59,12 +58,11 @@ export function FinancialStep() {
               name="promotionalPrice"
               render={({ field }) => (
                 <FormItem className="md:col-span-2 animate-in fade-in">
-                  <FormLabel className={styles.labelClass}>Valor Promocional (R$)</FormLabel>
+                  <FormLabel className={styles.labelClass}>Valor Promocional</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    <MoneyInput
+                      value={field.value}
+                      onChange={field.onChange}
                       className={`${styles.inputClass} border-green-600`}
                     />
                   </FormControl>
@@ -82,7 +80,7 @@ export function FinancialStep() {
               <FormItem>
                 <FormLabel className={styles.labelClass}>Condomínio</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} className={styles.inputClass} />
+                   <MoneyInput value={field.value} onChange={field.onChange} className={styles.inputClass} />
                 </FormControl>
               </FormItem>
             )}
@@ -94,7 +92,7 @@ export function FinancialStep() {
               <FormItem>
                 <FormLabel className={styles.labelClass}>IPTU</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} className={styles.inputClass} />
+                   <MoneyInput value={field.value} onChange={field.onChange} className={styles.inputClass} />
                 </FormControl>
               </FormItem>
             )}

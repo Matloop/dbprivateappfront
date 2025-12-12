@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { MoneyInput } from "@/components/ui/money-input"; // Importe aqui
 import { styles } from "./constants";
 
 export function PaymentConditionsStep() {
   const { control } = useFormContext();
   
-  // Hook do React Hook Form para lidar com arrays dinâmicos
   const { fields, append, remove } = useFieldArray({
     control,
     name: "paymentConditions",
@@ -28,30 +28,43 @@ export function PaymentConditionsStep() {
         
         {fields.map((field, index) => (
           <div key={field.id} className="flex gap-4 items-end bg-[#121212] p-3 rounded border border-[#333]">
+            
+            {/* DESCRIÇÃO (TEXTO) */}
             <FormField
               control={control}
               name={`paymentConditions.${index}.description`}
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel className="text-xs text-gray-500">Descrição (Ex: Entrada)</FormLabel>
+                  <FormLabel className="text-xs text-gray-500">Descrição</FormLabel>
                   <FormControl>
-                    <Input {...field} className={styles.inputClass} placeholder="Ex: Entrada / Reforço Anual" />
+                    <Input 
+                        {...field} 
+                        // Remove o valor monetário do texto se ele for colado automaticamente, para limpar a visualização
+                        // Ex: "Entrada: R$ 500,00" vira "Entrada:"
+                        onChange={(e) => {
+                            // Opcional: Se quiser limpar automagicamente o R$ do texto ao editar
+                            // field.onChange(e.target.value.replace(/R\$\s?[\d.,]+/, '').trim());
+                            field.onChange(e.target.value);
+                        }}
+                        className={styles.inputClass} 
+                        placeholder="Ex: Entrada / Reforço Anual" 
+                    />
                   </FormControl>
                 </FormItem>
               )}
             />
             
+            {/* VALOR (DINHEIRO FORMATADO) */}
             <FormField
               control={control}
               name={`paymentConditions.${index}.value`}
               render={({ field }) => (
-                <FormItem className="w-40">
-                  <FormLabel className="text-xs text-gray-500">Valor (R$)</FormLabel>
+                <FormItem className="w-48">
+                  <FormLabel className="text-xs text-gray-500">Valor</FormLabel>
                   <FormControl>
-                    <Input 
-                        type="number" 
-                        {...field} 
-                        onChange={e => field.onChange(Number(e.target.value))}
+                    <MoneyInput 
+                        value={field.value} 
+                        onChange={field.onChange}
                         className={styles.inputClass} 
                     />
                   </FormControl>
