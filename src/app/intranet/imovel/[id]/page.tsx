@@ -18,6 +18,7 @@ import { LocationStep } from "@/components/properties/form/LocationStep";
 import { MediaStep } from "@/components/properties/form/MediaStep";
 import { PrivateDataStep } from "@/components/properties/form/PrivateDataStep";
 import { SeoStep } from "@/components/properties/form/SeoStep";
+import { PaymentConditionsStep } from "@/components/properties/form/PaymentConditions";
 
 export default function EditPropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -77,6 +78,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
             <GeneralInfoStep />
             
             <FinancialStep />
+
+            <PaymentConditionsStep />
             
             <DetailsStep />
             

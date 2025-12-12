@@ -100,6 +100,7 @@ export function usePropertyForm({ id }: UsePropertyFormProps) {
       roomFeatures: [] as string[],
       propertyFeatures: [] as string[],
       developmentFeatures: [] as string[],
+      paymentConditions: [] as { description: string; value: number }[],
     },
   });
 
@@ -166,6 +167,11 @@ export function usePropertyForm({ id }: UsePropertyFormProps) {
             description: data.description || "",
             solarPosition: data.solarPosition || "",
             relativePosition: data.relativePosition || "",
+
+            paymentConditions: data.paymentConditions ? data.paymentConditions.map((c: any) => ({
+                description: c.description,
+                value: Number(c.value) // Garante que venha como número
+            })) : [],
           });
         }
       } catch (err) {

@@ -194,9 +194,43 @@ export function PropertyDetailsClient({
 
           {/* DESCRIÇÃO */}
           <div className="mb-12">
-            <h3 className="text-xl font-medium text-white mb-4 border-l-4 border-primary pl-3">Sobre o Imóvel</h3>
-            <div className="text-[#ccc] leading-relaxed font-light text-justify space-y-4" dangerouslySetInnerHTML={{ __html: property.description || "" }} />
-          </div>
+                        <h3 className="text-xl font-medium text-white mb-6 border-l-4 border-primary pl-3">
+                            Sobre o Imóvel
+                        </h3>
+                        
+                        <div className="text-[#e0e0e0] font-light text-justify leading-relaxed text-base">
+                            {property.description ? (
+                                // A Lógica:
+                                // Se o texto contém tags HTML (<p>, <br>, <div>), usamos dangerouslySetInnerHTML.
+                                // As classes [&>p]:mb-4 forçam espaçamento entre parágrafos.
+                                property.description.match(/<[a-z][\s\S]*>/i) ? (
+                                    <div 
+                                        className="
+                                            space-y-4 
+                                            [&>p]:mb-4 [&>p]:block 
+                                            [&>br]:content-[''] [&>br]:block [&>br]:mb-4
+                                            [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4
+                                            [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-4
+                                            [&>li]:mb-1
+                                            [&>strong]:font-bold [&>strong]:text-white
+                                        "
+                                        dangerouslySetInnerHTML={{ __html: property.description }} 
+                                    />
+                                ) : (
+                                    // Se for Texto Puro (sem tags), quebramos nos "Enters" (\n)
+                                    property.description.split('\n').map((paragraph: string, index: number) => (
+                                        paragraph.trim() !== "" ? (
+                                            <p key={index} className="mb-4">
+                                                {paragraph}
+                                            </p>
+                                        ) : <br key={index} className="block mb-4" />
+                                    ))
+                                )
+                            ) : (
+                                <p className="italic text-gray-500">Sem descrição disponível.</p>
+                            )}
+                        </div>
+                    </div>
 
           {/* CARACTERÍSTICAS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-[#222] pt-8">
