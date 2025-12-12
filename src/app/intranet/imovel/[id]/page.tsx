@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import {
   UploadCloud,
   Trash,
   X,
+  GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -28,6 +29,25 @@ import {
   FormProvider,
 } from "react-hook-form";
 import { api } from "@/lib/api";
+
+// --- IMPORTS DND-KIT (A NOVA SOLUÇÃO ROBUSTA) ---
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +70,8 @@ import {
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import LocationPicker from "@/components/forms/LocationPicker";
+
+// --- HELPER URL ---
 const fixImageSource = (url: string | undefined | null) => {
   if (!url || url === "") return "/placeholder.jpg";
   if (url.startsWith("/")) return url;
@@ -64,7 +86,88 @@ const fixImageSource = (url: string | undefined | null) => {
   }
   return url;
 };
-// --- LISTAS DE OPÇÕES PADRÃO ---
+
+// --- COMPONENTE DE FOTO ORGANIZÁVEL (NOVO) ---
+function SortablePhoto({ url, id, index, onRemove, onSetCover, isCover }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: url });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 999 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative aspect-square w-[150px] group bg-black rounded-md overflow-hidden border border-[#333]"
+    >
+      {/* Imagem */}
+      <img
+        src={fixImageSource(url)}
+        alt={`Foto ${index}`}
+        className="w-full h-full object-cover pointer-events-none select-none"
+      />
+
+      {/* Camada de Ações (Hover) */}
+      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+        {/* Botão de Arrastar (Handle) */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute top-2 left-2 cursor-grab active:cursor-grabbing text-white p-1 hover:bg-white/20 rounded"
+        >
+          <GripVertical size={16} />
+        </div>
+
+        {/* Botão Remover */}
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full p-1.5 transition-colors"
+        >
+          <Trash size={12} />
+        </button>
+
+        {/* Botão Definir Capa */}
+        {!isCover && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-xs text-white hover:text-[#d4af37] mt-4"
+            onClick={() => onSetCover(index)}
+          >
+            Definir Capa
+          </Button>
+        )}
+      </div>
+
+      {/* Badge de Capa */}
+      {isCover && (
+        <Badge className="absolute bottom-2 right-2 text-[9px] px-2 bg-[#d4af37] text-black font-bold shadow-md z-10 pointer-events-none">
+          CAPA
+        </Badge>
+      )}
+
+      {/* Indicador de Ordem */}
+      <div className="absolute bottom-2 left-2 text-[10px] text-white/50 font-mono pointer-events-none">
+        #{index + 1}
+      </div>
+    </div>
+  );
+}
+
+// --- CONSTANTES DE OPÇÕES ---
 const ROOM_OPTS = [
   "Área de Serviço",
   "Banheiro de Serviço",
@@ -197,7 +300,6 @@ type FeatureCategory =
   | "propertyFeatures"
   | "developmentFeatures";
 
-// --- SUB-COMPONENTE PARA LISTAS (Isolado para evitar loop de renderização) ---
 const FeatureListGroup = ({
   title,
   name,
@@ -208,7 +310,6 @@ const FeatureListGroup = ({
   options: string[];
 }) => {
   const { control, setValue } = useFormContext();
-  // useWatch garante que só este componente renderize quando a lista mudar
   const currentValues: string[] = useWatch({ control, name }) || [];
   const [newItem, setNewItem] = useState("");
 
@@ -218,7 +319,6 @@ const FeatureListGroup = ({
       : [...currentValues, item];
     setValue(name, updated, { shouldDirty: true });
   };
-
   const removeCustom = (item: string) => {
     setValue(
       name,
@@ -227,7 +327,6 @@ const FeatureListGroup = ({
     );
     toast.success("Item removido!");
   };
-
   const addCustom = () => {
     if (!newItem || newItem.trim() === "") return;
     if (!currentValues.includes(newItem)) {
@@ -236,7 +335,6 @@ const FeatureListGroup = ({
       toast.success("Adicionado!");
     }
   };
-
   const customItems = currentValues.filter((item) => !options.includes(item));
 
   return (
@@ -244,8 +342,6 @@ const FeatureListGroup = ({
       <h4 className="text-gray-300 font-bold mb-3 uppercase text-xs border-b border-[#444] pb-2">
         {title}
       </h4>
-
-      {/* Lista Padrão */}
       <div className="h-60 overflow-y-auto space-y-1 pr-2 custom-scrollbar mb-4">
         {options.map((item) => (
           <div
@@ -258,13 +354,10 @@ const FeatureListGroup = ({
           </div>
         ))}
       </div>
-
-      {/* Área de Extras / Importados */}
       <div className="mt-auto pt-3 border-t border-[#444] bg-[#1a1a1a] -mx-3 -mb-3 p-3 rounded-b">
         <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">
           Importados / Extras
         </p>
-
         {customItems.length === 0 ? (
           <p className="text-xs text-gray-600 italic">Nenhum item extra.</p>
         ) : (
@@ -287,7 +380,6 @@ const FeatureListGroup = ({
             ))}
           </div>
         )}
-
         <div className="flex gap-2 mt-2">
           <Input
             placeholder="Add novo..."
@@ -313,11 +405,9 @@ const FeatureListGroup = ({
   );
 };
 
-// --- SUB-COMPONENTE PREÇO (Corrigido com FormField) ---
 const PriceSection = () => {
   const { control } = useFormContext();
   const hasDiscount = useWatch({ control, name: "hasDiscount" });
-
   return (
     <Card className="bg-[#1e1e1e] border-[#333] mb-6">
       <CardHeader className="border-b border-[#333] pb-3">
@@ -365,7 +455,6 @@ const PriceSection = () => {
               </FormItem>
             )}
           />
-
           {hasDiscount && (
             <FormField
               control={control}
@@ -388,7 +477,6 @@ const PriceSection = () => {
             />
           )}
         </div>
-
         <div className="grid grid-cols-2 gap-6">
           <FormField
             control={control}
@@ -429,7 +517,6 @@ const PriceSection = () => {
             )}
           />
         </div>
-
         <div className="bg-[#252525] p-4 rounded border border-[#333] flex flex-wrap gap-6">
           {[
             "acceptsFinancing:Aceita Financiamento",
@@ -474,14 +561,11 @@ export default function EditPropertyPage({
   const { id } = use(params);
   const router = useRouter();
 
-  // Estados Gerais
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Estados de Imagem
   const [tempImageUrl, setTempImageUrl] = useState("");
-  const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false); // Para o upload area
 
   const form = useForm({
     defaultValues: {
@@ -573,6 +657,12 @@ export default function EditPropertyPage({
 
   const images = useWatch({ control: form.control, name: "images" });
 
+  // Configuração dos Sensores do Dnd-Kit (Para evitar drag no click do botão)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   useEffect(() => {
     let mounted = true;
     async function loadData() {
@@ -661,7 +751,25 @@ export default function EditPropertyPage({
     }
   };
 
-  // --- UPLOAD ---
+  // --- REORDER IMAGES (DND-KIT) ---
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      const oldIndex = images.findIndex((img) => img.url === active.id);
+      const newIndex = images.findIndex((img) => img.url === over?.id);
+
+      const newImages = arrayMove(images, oldIndex, newIndex);
+
+      // Garante que o primeiro sempre é capa
+      const finalImages = newImages.map((img: any, idx: number) => ({
+        ...img,
+        isCover: idx === 0,
+      }));
+
+      form.setValue("images", finalImages, { shouldDirty: true });
+    }
+  };
+
   const addImage = () => {
     if (!tempImageUrl) return;
     form.setValue("images", [
@@ -670,32 +778,64 @@ export default function EditPropertyPage({
     ]);
     setTempImageUrl("");
   };
+
   const removeImage = (idx: number) => {
-    form.setValue(
-      "images",
-      images.filter((_, i) => i !== idx)
-    );
+    const filtered = images.filter((_, i) => i !== idx);
+    const updated = filtered.map((img, i) => ({ ...img, isCover: i === 0 }));
+    form.setValue("images", updated, { shouldDirty: true });
   };
-  const handleDragOver = (e: React.DragEvent) => {
+
+  const setCover = (idx: number) => {
+    const newImages = [...images];
+    const [selected] = newImages.splice(idx, 1);
+    newImages.unshift(selected);
+    const updated = newImages.map((img, i) => ({ ...img, isCover: i === 0 }));
+    form.setValue("images", updated, { shouldDirty: true });
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { 
+    e.preventDefault(); 
+    setIsDragging(true); 
+  };
+
+  // Quando sai de cima da área
+  const handleDragLeave = (e: React.DragEvent) => { 
+    e.preventDefault(); 
+    setIsDragging(false); 
+  };
+
+  // Quando solta o arquivo do computador
+  const handleDrop = async (e: React.DragEvent) => { 
+    e.preventDefault(); 
+    setIsDragging(false); 
+    const files = Array.from(e.dataTransfer.files); 
+    await uploadFiles(files); 
+  };
+
+  // Quando clica no botão "Selecionar Arquivos"
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => { 
+    if (e.target.files) { 
+        const files = Array.from(e.target.files); 
+        await uploadFiles(files); 
+    } 
+  };
+
+  const handleDragOverUpload = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeaveUpload = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   };
-  const handleDrop = async (e: React.DragEvent) => {
+  const handleDropUpload = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files);
     await uploadFiles(files);
   };
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      await uploadFiles(files);
-    }
-  };
+  
+
   const uploadFiles = async (files: File[]) => {
     if (files.length === 0) return;
     setIsUploading(true);
@@ -727,21 +867,14 @@ export default function EditPropertyPage({
       setIsUploading(false);
     }
   };
-
-  // Styles
   const sectionClass = "bg-[#1e1e1e] border-[#333] mb-6";
-  const labelClass =
-    "text-gray-400 text-xs uppercase tracking-wide font-bold mb-2 block";
-  const inputClass =
-    "bg-[#2b2b2b] border-[#444] text-white focus:border-primary h-10";
+  const labelClass = "text-gray-400 text-xs uppercase tracking-wide font-bold mb-2 block";
+  const inputClass = "bg-[#2b2b2b] border-[#444] text-white focus:border-primary h-10";
   const privateSectionClass = "bg-[#2b251e] border-[#5c4018] mb-6";
-  const privateLabelClass =
-    "text-[#a89060] text-xs uppercase mb-1 block font-bold";
-  const privateInputClass =
-    "bg-[#1e1a15] border-[#5c4018] text-[#d4af37] focus:border-[#d4af37]";
-  const captureSectionClass =
-    "bg-[#25201b] border-[#5c4018] mb-6 border-l-4 border-l-[#d4af37]";
-
+  const privateLabelClass = "text-[#a89060] text-xs uppercase mb-1 block font-bold";
+  const privateInputClass = "bg-[#1e1a15] border-[#5c4018] text-[#d4af37] focus:border-[#d4af37]";
+  const captureSectionClass = "bg-[#25201b] border-[#5c4018] mb-6 border-l-4 border-l-[#d4af37]";
+  
   if (isLoading)
     return (
       <div className="h-screen flex items-center justify-center text-primary">
@@ -785,7 +918,6 @@ export default function EditPropertyPage({
 
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* 1. DADOS PRINCIPAIS */}
             <Card className={sectionClass}>
               <CardHeader className="border-b border-[#333] pb-3">
                 <CardTitle className="text-primary flex items-center gap-2 text-base">
@@ -823,7 +955,6 @@ export default function EditPropertyPage({
                     )}
                   />
                 </div>
-
                 <div className="bg-[#252525] p-4 rounded border border-[#333] flex flex-wrap gap-6">
                   <FormField
                     control={form.control}
@@ -894,7 +1025,6 @@ export default function EditPropertyPage({
                     )}
                   />
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-[#333]">
                   <FormField
                     control={form.control}
@@ -1006,7 +1136,6 @@ export default function EditPropertyPage({
                     )}
                   />
                 </div>
-
                 <div className="border-t border-[#333] pt-4 mt-4">
                   <p className={labelClass}>Características Importantes</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1088,10 +1217,8 @@ export default function EditPropertyPage({
               </CardContent>
             </Card>
 
-            {/* 2. VALORES (USANDO COMPONENTE ISOLADO) */}
             <PriceSection />
 
-            {/* 3. DETALHAMENTO */}
             <Card className={sectionClass}>
               <CardHeader className="border-b border-[#333] pb-3">
                 <CardTitle className="text-primary flex items-center gap-2 text-base">
@@ -1173,7 +1300,6 @@ export default function EditPropertyPage({
               </CardContent>
             </Card>
 
-            {/* 4. CARACTERÍSTICAS (USANDO COMPONENTE ISOLADO) */}
             <Card className={sectionClass}>
               <CardHeader className="border-b border-[#333] pb-3">
                 <CardTitle className="text-primary flex items-center gap-2 text-base">
@@ -1199,7 +1325,6 @@ export default function EditPropertyPage({
               </CardContent>
             </Card>
 
-            {/* 5. LOCALIZAÇÃO */}
             <Card className={sectionClass}>
               <CardHeader className="border-b border-[#333] pb-3">
                 <CardTitle className="text-primary flex items-center gap-2 text-base">
@@ -1320,7 +1445,6 @@ export default function EditPropertyPage({
                   <p className={`${labelClass} mb-4`}>
                     Coordenadas Geográficas
                   </p>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <FormField
                       control={form.control}
@@ -1359,14 +1483,12 @@ export default function EditPropertyPage({
                       )}
                     />
                   </div>
-
-                  {/* Componente do Mapa */}
                   <LocationPicker />
                 </div>
               </CardContent>
             </Card>
 
-            {/* 6. MÍDIA */}
+            {/* 6. MÍDIA COM DRAG AND DROP CORRIGIDO E OTIMIZADO */}
             <Card className={sectionClass}>
               <CardHeader className="border-b border-[#333] pb-3">
                 <CardTitle className="text-primary flex items-center gap-2 text-base">
@@ -1403,11 +1525,15 @@ export default function EditPropertyPage({
                   />
                 </div>
                 <div className="space-y-4">
-                  <p className={labelClass}>Galeria de Fotos</p>
+                  <p className={labelClass}>
+                    Galeria de Fotos (Arraste para organizar)
+                  </p>
+
+                  {/* UPLOAD */}
                   <div
                     onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
+                    onDragLeave={handleDragLeaveUpload}
+                    onDrop={handleDropUpload}
                     className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
                       isDragging
                         ? "border-primary bg-primary/10"
@@ -1453,13 +1579,6 @@ export default function EditPropertyPage({
                       )}
                     </label>
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <div className="h-[1px] bg-[#333] flex-1"></div>
-                    <span className="text-xs text-gray-500 uppercase">
-                      Ou por Link
-                    </span>
-                    <div className="h-[1px] bg-[#333] flex-1"></div>
-                  </div>
                   <div className="flex gap-2">
                     <Input
                       placeholder="Cole o link da imagem..."
@@ -1475,58 +1594,32 @@ export default function EditPropertyPage({
                       <Plus size={16} />
                     </Button>
                   </div>
-                  {images && images.length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 mt-4 bg-[#151515] p-4 rounded border border-[#333]">
-                      {images.map((img: any, idx: number) => (
-                        <div key={idx} className="relative aspect-square group">
-                          <img
-                            src={fixImageSource(img.url)}
-                            alt={`Foto ${idx}`}
-                            className={`w-full h-full object-cover rounded border transition-all ${
-                              img.isCover
-                                ? "border-primary ring-2 ring-primary/30"
-                                : "border-[#444]"
-                            }`}
+
+                  {/* GALERIA SORTABLE */}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={images.map((i) => i.url)}
+                      strategy={rectSortingStrategy}
+                    >
+                      <div className="flex flex-wrap gap-4 mt-4 bg-[#151515] p-4 rounded border border-[#333]">
+                        {images.map((img: any, index: number) => (
+                          <SortablePhoto
+                            key={img.url}
+                            url={img.url}
+                            id={img.url}
+                            index={index}
+                            onRemove={removeImage}
+                            onSetCover={setCover}
+                            isCover={index === 0}
                           />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(idx)}
-                            className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 z-10"
-                          >
-                            <Trash size={12} />
-                          </button>
-                          {!img.isCover && (
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="text-white hover:text-primary hover:bg-transparent font-bold text-xs"
-                                onClick={() => {
-                                  const updated = images.map(
-                                    (pic: any, i: number) => ({
-                                      ...pic,
-                                      isCover: i === idx,
-                                    })
-                                  );
-                                  form.setValue("images", updated, {
-                                    shouldDirty: true,
-                                  });
-                                }}
-                              >
-                                Definir Capa
-                              </Button>
-                            </div>
-                          )}
-                          {img.isCover && (
-                            <Badge className="absolute bottom-1 right-1 text-[9px] px-1.5 py-0 bg-primary text-black font-bold shadow-sm">
-                              CAPA
-                            </Badge>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 </div>
               </CardContent>
             </Card>
@@ -1737,8 +1830,6 @@ export default function EditPropertyPage({
                 />
               </CardContent>
             </Card>
-
-            {/* 8. CAPTAÇÃO E SEO E DESCRIÇÃO (Mantidos padrão) */}
             <Card className={captureSectionClass}>
               <CardHeader className="border-b border-[#5c4018] pb-3">
                 <CardTitle className="text-[#d4af37] flex items-center gap-2 text-base">
@@ -1883,6 +1974,29 @@ export default function EditPropertyPage({
                 />
               </CardContent>
             </Card>
+
+            <div className="flex justify-end gap-4 pb-20 pt-10 border-t border-[#333]">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => router.push("/intranet")}
+                className="border-red-900/30 text-red-500"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={form.handleSubmit(onSubmit)}
+                disabled={isSaving}
+                className="bg-primary text-black font-bold h-12 px-8 text-lg hover:bg-primary/90"
+              >
+                {isSaving ? (
+                  <Loader2 className="animate-spin mr-2" />
+                ) : (
+                  <Save className="mr-2" />
+                )}{" "}
+                Salvar Alterações
+              </Button>
+            </div>
           </form>
         </FormProvider>
       </div>
