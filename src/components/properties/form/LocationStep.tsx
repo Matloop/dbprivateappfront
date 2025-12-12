@@ -2,19 +2,31 @@
 
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { Home, Search, MapPin, Loader2 } from "lucide-react";
+import { Home, MapPin, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import LocationPicker from "@/components/forms/LocationPicker";
 import { toast } from "sonner";
 import { locationService } from "@/services/location"; 
 import { styles } from "./constants";
 
+// --- CORREÇÃO AQUI: IMPORTAÇÃO DINÂMICA ---
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Importamos o LocationPicker dinamicamente e desligamos o SSR para ele
+const LocationPicker = dynamic(() => import("@/components/forms/LocationPicker"), {
+  ssr: false,
+  loading: () => (
+    // Um esqueleto de carregamento enquanto o mapa não carrega no cliente
+    <Skeleton className="h-[450px] w-full rounded-md bg-muted/20" />
+  ),
+});
+
 export function LocationStep() {
-  const { control, setValue, getValues, watch } = useFormContext();
+  const { control, setValue, getValues } = useFormContext();
   const [loadingCep, setLoadingCep] = useState(false);
   const [loadingCoords, setLoadingCoords] = useState(false);
 
@@ -211,8 +223,6 @@ export function LocationStep() {
                 size="sm" 
                 onClick={handleAutoCoords}
                 disabled={loadingCoords}
-                // ANTES: border-[#d4af37] text-[#d4af37] hover:bg-[#d4af37] hover:text-black
-                // DEPOIS: border-primary text-primary hover:bg-primary hover:text-primary-foreground
                 className="text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground"
             >
                 {loadingCoords ? <Loader2 className="animate-spin mr-2 h-3 w-3" /> : <MapPin className="mr-2 h-3 w-3" />}
@@ -247,6 +257,7 @@ export function LocationStep() {
             />
           </div>
 
+          {/* O componente dinâmico que não quebra o build */}
           <LocationPicker />
         </div>
       </CardContent>
