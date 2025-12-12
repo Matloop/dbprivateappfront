@@ -9,6 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { styles, BADGE_COLORS } from "./constants";
 
+const CATEGORIES = ["APARTAMENTO", "CASA", "COBERTURA", "TERRENO", "SALA_COMERCIAL", "SITIO", "GALPAO"];
+const STATUS_OPTS = ["DISPONIVEL", "VENDIDO", "RESERVADO", "ALUGADO", "NAO_DISPONIVEL"];
+const STAGES = [
+  { v: "LANCAMENTO", l: "Lançamento" },
+  { v: "EM_OBRA", l: "Em Obras" },
+  { v: "PRONTO", l: "Pronto" },
+];
+
 export function GeneralInfoStep() {
   const { control } = useFormContext();
 
@@ -91,18 +99,25 @@ export function GeneralInfoStep() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-[#333]">
+          {/* CATEGORIA */}
           <FormField
             control={control}
             name="category"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className={styles.labelClass}>Categoria</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || "APARTAMENTO"}>
+                <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value} 
+                    value={field.value}
+                >
                   <FormControl>
-                    <SelectTrigger className={styles.inputClass}><SelectValue /></SelectTrigger>
+                    <SelectTrigger className={styles.inputClass}>
+                        <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-[#2b2b2b] border-[#444] text-white">
-                    {["APARTAMENTO", "CASA", "COBERTURA", "TERRENO", "SALA_COMERCIAL", "SITIO", "GALPAO"].map((o) => (
+                    {CATEGORIES.map((o) => (
                       <SelectItem key={o} value={o}>{o}</SelectItem>
                     ))}
                   </SelectContent>
@@ -110,18 +125,26 @@ export function GeneralInfoStep() {
               </FormItem>
             )}
           />
+
+          {/* SITUAÇÃO */}
           <FormField
             control={control}
             name="status"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className={styles.labelClass}>Situação</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || "DISPONIVEL"}>
+                <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                    value={field.value}
+                >
                   <FormControl>
-                    <SelectTrigger className={styles.inputClass}><SelectValue /></SelectTrigger>
+                    <SelectTrigger className={styles.inputClass}>
+                        <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-[#2b2b2b] border-[#444] text-white">
-                    {["DISPONIVEL", "VENDIDO", "RESERVADO", "ALUGADO", "NAO_DISPONIVEL"].map((o) => (
+                    {STATUS_OPTS.map((o) => (
                       <SelectItem key={o} value={o}>{o}</SelectItem>
                     ))}
                   </SelectContent>
@@ -129,6 +152,8 @@ export function GeneralInfoStep() {
               </FormItem>
             )}
           />
+
+          {/* ESTÁGIO DA OBRA (Custom Radio Visual) */}
           <FormField
             control={control}
             name="constructionStage"
@@ -136,11 +161,7 @@ export function GeneralInfoStep() {
               <FormItem>
                 <FormLabel className={styles.labelClass}>Estágio</FormLabel>
                 <div className="flex gap-4 items-center h-10">
-                  {[
-                    { v: "LANCAMENTO", l: "Lançamento" },
-                    { v: "EM_OBRA", l: "Em Obras" },
-                    { v: "PRONTO", l: "Pronto" },
-                  ].map((opt) => (
+                  {STAGES.map((opt) => (
                     <div key={opt.v} className="flex items-center space-x-2 cursor-pointer" onClick={() => field.onChange(opt.v)}>
                       <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${field.value === opt.v ? "border-blue-500" : "border-gray-500"}`}>
                         {field.value === opt.v && (<div className="w-2 h-2 rounded-full bg-blue-500" />)}
@@ -201,7 +222,11 @@ export function GeneralInfoStep() {
             render={({ field }) => (
               <FormItem className="w-40">
                 <FormLabel className={styles.labelClass}>Cor</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""}>
+                <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value || ""}
+                    defaultValue={field.value || ""}
+                >
                   <FormControl><SelectTrigger className={styles.inputClass}><SelectValue placeholder="Cor" /></SelectTrigger></FormControl>
                   <SelectContent className="bg-[#2b2b2b] border-[#444] text-white">
                     {BADGE_COLORS.map((c) => (
