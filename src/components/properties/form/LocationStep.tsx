@@ -1,16 +1,79 @@
 "use client";
 
+import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { Home } from "lucide-react";
+import { Home, Search, MapPin, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import LocationPicker from "@/components/forms/LocationPicker";
+import { toast } from "sonner";
+import { locationService } from "@/services/location"; // Importe o serviço criado
 import { styles } from "./constants";
 
 export function LocationStep() {
-  const { control } = useFormContext();
+  const { control, setValue, getValues, watch } = useFormContext();
+  const [loadingCep, setLoadingCep] = useState(false);
+  const [loadingCoords, setLoadingCoords] = useState(false);
+
+  // --- BUSCA CEP ---
+  const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const cep = e.target.value;
+    if (!cep || cep.length < 8) return;
+
+    setLoadingCep(true);
+    try {
+      const data = await locationService.getAddressByCep(cep);
+      
+      setValue("address.street", data.street);
+      setValue("address.neighborhood", data.neighborhood);
+      setValue("address.city", data.city);
+      setValue("address.state", data.state);
+      
+      toast.success("Endereço encontrado!");
+      
+      // Tenta focar no número após preencher
+      const numberInput = document.querySelector('input[name="address.number"]') as HTMLInputElement;
+      if (numberInput) numberInput.focus();
+
+    } catch (error) {
+      toast.error("CEP não encontrado.");
+    } finally {
+      setLoadingCep(false);
+    }
+  };
+
+  // --- BUSCA COORDENADAS AUTOMÁTICAS ---
+  const handleAutoCoords = async () => {
+    const address = getValues("address");
+    
+    // Validação básica
+    if (!address.street || !address.city || !address.state) {
+      toast.warning("Preencha Rua, Cidade e Estado para buscar as coordenadas.");
+      return;
+    }
+
+    // Monta string de busca: "Rua X, 123, Bairro, Cidade, Estado, Brasil"
+    const query = `${address.street}, ${address.number || ''}, ${address.neighborhood}, ${address.city}, ${address.state}, Brasil`;
+
+    setLoadingCoords(true);
+    try {
+      const coords = await locationService.getCoordinates(query);
+      
+      // Atualiza o formulário (O componente de Mapa vai reagir a isso automaticamente)
+      setValue("address.latitude", coords.lat, { shouldDirty: true });
+      setValue("address.longitude", coords.lng, { shouldDirty: true });
+      
+      toast.success("Coordenadas atualizadas com sucesso!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Não foi possível achar a localização exata. Tente ajustar o endereço ou mova o pino manualmente.");
+    } finally {
+      setLoadingCoords(false);
+    }
+  };
 
   return (
     <Card className={styles.sectionClass}>
@@ -20,6 +83,7 @@ export function LocationStep() {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6 space-y-4">
+        
         {/* CEP, Cidade, Estado */}
         <div className="grid grid-cols-12 gap-4">
           <FormField
@@ -27,9 +91,19 @@ export function LocationStep() {
             name="address.zipCode"
             render={({ field }) => (
               <FormItem className="col-span-3">
-                <FormLabel className={styles.labelClass}>CEP</FormLabel>
+                <FormLabel className={styles.labelClass}>
+                    CEP {loadingCep && <Loader2 className="inline h-3 w-3 animate-spin ml-1"/>}
+                </FormLabel>
                 <FormControl>
-                  <Input {...field} className={styles.inputClass} />
+                  <Input 
+                    {...field} 
+                    className={styles.inputClass} 
+                    placeholder="00000-000"
+                    onBlur={(e) => {
+                        field.onBlur(); // Mantém o onBlur original do React Hook Form
+                        handleCepBlur(e); // Nossa função
+                    }}
+                  />
                 </FormControl>
               </FormItem>
             )}
@@ -132,7 +206,23 @@ export function LocationStep() {
 
         {/* Coordenadas e Mapa */}
         <div className="border-t border-[#333] pt-4 mt-4">
-          <p className={`${styles.labelClass} mb-4`}>Coordenadas Geográficas</p>
+          <div className="flex justify-between items-center mb-4">
+            <p className={styles.labelClass}>Coordenadas Geográficas</p>
+            
+            {/* BOTÃO MÁGICO DE GERAR COORDENADAS */}
+            <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={handleAutoCoords}
+                disabled={loadingCoords}
+                className="text-xs border-[#d4af37] text-[#d4af37] hover:bg-[#d4af37] hover:text-black"
+            >
+                {loadingCoords ? <Loader2 className="animate-spin mr-2 h-3 w-3" /> : <MapPin className="mr-2 h-3 w-3" />}
+                Gerar pelo Endereço
+            </Button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <FormField
               control={control}
