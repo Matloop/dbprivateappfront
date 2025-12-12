@@ -57,7 +57,7 @@ export function PropertyDetailsClient({
 }: PropertyDetailsClientProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
   
-  // --- CONFIGURAÇÃO DO CARROSSEL EMBLA ---
+  // --- CONFIGURAÇÃO DO CARROSSEL ---
   const OPTIONS: EmblaOptionsType = { loop: true, align: "center", containScroll: false };
   const [emblaRef, emblaApi] = useEmblaCarousel(OPTIONS);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -136,7 +136,7 @@ export function PropertyDetailsClient({
       <div className="relative w-full">
         
         {/* 1. CARROSSEL */}
-        <div className="w-full bg-[#050505] relative overflow-hidden py-6"> 
+        <div className="w-full bg-[#050505] relative overflow-hidden py-0"> 
             <div className="w-full mx-auto relative group">
                 
                 {/* Viewport do Embla */}
@@ -147,33 +147,48 @@ export function PropertyDetailsClient({
                             return (
                                 <div 
                                     key={idx} 
-                                    // Largura: Central ocupa 50-60%, laterais aparecem parcialmente
-                                    className="flex-[0_0_85%] md:flex-[0_0_60%] lg:flex-[0_0_55%] min-w-0 relative px-2 transition-all duration-700 ease-out"
+                                    // SEM PADDING e com largura calibrada para tocar as bordas
+                                    className="flex-[0_0_100%] md:flex-[0_0_65%] lg:flex-[0_0_65%] min-w-0 relative transition-all duration-700 ease-out"
                                 >
-                                    {/* Container da Imagem Individual */}
-                                    <div className={`relative h-[300px] md:h-[500px] lg:h-[600px] w-full overflow-hidden bg-black rounded-sm transition-all duration-700 ${isActive ? 'scale-100 opacity-100 z-10 shadow-2xl shadow-black/80 ring-1 ring-white/10' : 'scale-90 opacity-40 grayscale-[80%] z-0'}`}>
+                                    <div className="relative h-[400px] md:h-[600px] lg:h-[700px] w-full overflow-hidden bg-black">
                                         
-                                        {/* IMAGEM PRINCIPAL */}
-                                        <Image
-                                            loader={customLoader}
-                                            src={fixImageSource(img.url)}
-                                            alt={`Foto ${idx}`}
-                                            fill
-                                            // IMPORTANTE: object-contain mostra a foto inteira sem cortar
-                                            className="object-contain"
-                                            quality={100}
-                                            priority={idx === 0}
-                                            unoptimized={true}
-                                        />
+                                        {/* --- CAMADA 1: FUNDO BORRADO (Preenche o espaço preto) --- */}
+                                        <div className="absolute inset-0 z-0">
+                                            <Image
+                                                loader={customLoader}
+                                                src={fixImageSource(img.url)}
+                                                alt="Blur Background"
+                                                fill
+                                                className="object-cover opacity-50 blur-xl scale-110" // scale-110 remove bordas brancas do blur
+                                                quality={10} // Baixa qualidade pro blur carregar rápido
+                                                unoptimized={true}
+                                            />
+                                            {/* Camada escura por cima do blur para não brigar com a foto principal */}
+                                            <div className="absolute inset-0 bg-black/40" />
+                                        </div>
 
-                                        {/* GRADIENTE (Vignette) para suavizar o fundo preto */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40 pointer-events-none opacity-60" />
+                                        {/* --- CAMADA 2: IMAGEM PRINCIPAL (Dimensão Original) --- */}
+                                        <div className={`relative w-full h-full transition-all duration-700 z-10 ${isActive ? 'scale-100 opacity-100' : 'scale-95 opacity-50'}`}>
+                                            <Image
+                                                loader={customLoader}
+                                                src={fixImageSource(img.url)}
+                                                alt={`Foto ${idx}`}
+                                                fill
+                                                // OBJECT-CONTAIN: Garante a foto inteira (original)
+                                                className="object-contain"
+                                                quality={100}
+                                                priority={idx === 0}
+                                                unoptimized={true}
+                                            />
+                                        </div>
+
+                                        {/* MÁSCARA ESCURA NAS LATERAIS (Imagens inativas) */}
+                                        <div className={`absolute inset-0 bg-black/60 transition-opacity duration-500 pointer-events-none z-20 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
 
                                         {/* LOGO WATERMARK (Centralizada EM BAIXO) */}
                                         {isActive && property.watermarkEnabled && (
-                                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none z-30 w-full flex justify-center">
-                                                {/* Logo branca e transparente */}
-                                                <div className="relative w-28 h-16 md:w-40 md:h-20 opacity-50 drop-shadow-lg filter brightness-0 invert"> 
+                                            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 pointer-events-none z-30 flex justify-center w-full">
+                                                <div className="relative w-32 h-20 md:w-48 md:h-28 opacity-70 invert brightness-0 filter drop-shadow-lg"> 
                                                     <Image 
                                                         src="/logo2025.png" 
                                                         alt="Watermark"
@@ -187,8 +202,8 @@ export function PropertyDetailsClient({
                                         
                                         {/* Badge na Foto */}
                                         {isActive && property.badgeText && (
-                                            <div className="absolute top-4 left-4 z-20">
-                                                <Badge className="bg-primary text-primary-foreground font-bold uppercase text-xs px-3 py-1 shadow-lg border-none">
+                                            <div className="absolute top-6 left-6 z-20">
+                                                <Badge className="bg-primary text-primary-foreground font-bold uppercase text-xs px-3 py-1 shadow-lg border-none rounded-sm">
                                                     {property.badgeText}
                                                 </Badge>
                                             </div>
@@ -203,20 +218,20 @@ export function PropertyDetailsClient({
                 {/* BOTÕES DE NAVEGAÇÃO */}
                 <button 
                     onClick={scrollPrev} 
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-black/20 hover:bg-black/80 text-white p-3 transition-all opacity-0 group-hover:opacity-100 border border-white/10 backdrop-blur-md rounded-full"
+                    className="absolute left-0 h-full w-24 top-0 z-30 bg-gradient-to-r from-black/60 to-transparent hover:from-black/80 text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
                 >
-                    <ChevronLeft size={32} strokeWidth={1.5} />
+                    <ChevronLeft size={48} strokeWidth={1} />
                 </button>
                 <button 
                     onClick={scrollNext} 
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-black/20 hover:bg-black/80 text-white p-3 transition-all opacity-0 group-hover:opacity-100 border border-white/10 backdrop-blur-md rounded-full"
+                    className="absolute right-0 h-full w-24 top-0 z-30 bg-gradient-to-l from-black/60 to-transparent hover:from-black/80 text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
                 >
-                    <ChevronRight size={32} strokeWidth={1.5} />
+                    <ChevronRight size={48} strokeWidth={1} />
                 </button>
                 
                 {/* Contador */}
-                <div className="absolute bottom-6 right-1/2 translate-x-[150px] md:translate-x-[250px] lg:translate-x-[350px] text-white/40 text-[10px] tracking-widest font-mono pointer-events-none z-40">
-                    {String(selectedIndex + 1).padStart(2, '0')} / {String(images.length).padStart(2, '0')}
+                <div className="absolute bottom-6 right-6 md:right-1/2 md:translate-x-[350px] text-white/80 text-xs tracking-widest font-mono pointer-events-none z-40 bg-black/50 px-3 py-1 rounded backdrop-blur-sm">
+                    {String(selectedIndex + 1).padStart(2, '0')} <span className="mx-1 text-white/40">|</span> {String(images.length).padStart(2, '0')}
                 </div>
             </div>
         </div>
