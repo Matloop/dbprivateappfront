@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useProperties } from '@/hooks/useProperties';
-import { PropertyCard } from '@/components/property/PropertyCard';
+import { PropertyCard } from '@/components/properties/PropertyCard';
 import { SidebarFilter } from '@/components/sales/SidebarFilter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Breadcrumb } from '@/components/sales/Breadcrumb';

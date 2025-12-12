@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { PropertyDetailsClient } from '@/components/property/PropertyDetailsClient';
+import { PropertyDetailsClient } from '@/components/properties/PropertyDetailsClient';
 import { api } from '@/lib/api';
 
 // Força a página a ser dinâmica

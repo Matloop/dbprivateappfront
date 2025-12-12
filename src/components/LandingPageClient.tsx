@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Search, MapPin, Building2, DollarSign } from 'lucide-react';
-import { PropertyCard } from '@/components/property/PropertyCard';
+import { PropertyCard } from '@/components/properties/PropertyCard';
 import { useProperties } from '@/hooks/useProperties';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
