@@ -106,9 +106,18 @@ export const columns: ColumnDef<Property>[] = [
   // --- DATA DE EDIÇÃO (NOVO) ---
   {
     accessorKey: "updatedAt",
-    header: "Editado em", // Geralmente não precisa ordenar por edição na visualização padrão
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        // Esta linha faz a mágica de ordenar ao clicar
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="hover:text-white text-xs px-0"
+      >
+        Editado em <ArrowUpDown className="ml-2 h-3 w-3" />
+      </Button>
+    ),
     cell: ({ row }) => (
-      <div className="text-xs text-gray-500 whitespace-nowrap">
+      <div className="text-xs text-[#d4af37] whitespace-nowrap font-medium">
         {formatDate(row.getValue("updatedAt"))}
       </div>
     ),
