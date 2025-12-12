@@ -14,10 +14,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 export function LandingPageClient() {
   const router = useRouter();
   
+  // Estados da Busca
   const [searchCity, setSearchCity] = useState('');
   const [searchType, setSearchType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Hook de dados
   const { data: queryData, isLoading, isError } = useProperties();
   const featuredProperties = queryData?.pages.flatMap((page) => page.data) || [];
 
@@ -34,7 +36,7 @@ export function LandingPageClient() {
     <div className="min-h-screen bg-[#121212] text-foreground flex flex-col overflow-x-hidden">
       
       {/* ===================================================================================== */}
-      {/* HERO BANNER */}
+      {/* HERO BANNER (CORRIGIDO E OTIMIZADO) */}
       {/* ===================================================================================== */}
       <div className="relative w-full h-[650px] md:h-[750px] bg-[#0a0a0a] flex flex-col justify-end items-center">
       
@@ -46,11 +48,13 @@ export function LandingPageClient() {
                 fill
                 className="object-cover opacity-40 grayscale-[30%]"
                 priority
+                quality={80}
             />
+            {/* Gradiente para suavizar o rodapé */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/40 to-transparent" />
         </div>
 
-        {/* 2. TEXTO GIGANTE DE FUNDO */}
+        {/* 2. TEXTO GIGANTE DE FUNDO (EFEITO OUTLINE) */}
         <div className="absolute inset-0 z-0 flex flex-col items-center justify-center opacity-10 select-none pointer-events-none overflow-hidden leading-none">
             <span 
                 className="text-[18vw] font-black text-transparent uppercase whitespace-nowrap"
@@ -66,7 +70,7 @@ export function LandingPageClient() {
             </span>
         </div>
 
-        {/* 3. FOTO DO CORRETOR */}
+        {/* 3. FOTO DO CORRETOR (ANIMAÇÃO SLIDE-UP) */}
         <div className="absolute bottom-0 z-10 w-full flex justify-center items-end pointer-events-none">
             <div className="relative h-[400px] md:h-[600px] w-auto aspect-[3/4] animate-in slide-in-from-bottom duration-1000 fade-in-0">
                 <Image 
@@ -75,11 +79,12 @@ export function LandingPageClient() {
                     fill
                     className="object-contain object-bottom"
                     priority
+                    quality={90}
                 />
             </div>
         </div>
 
-        {/* 4. TEXTO DE DESTAQUE */}
+        {/* 4. TEXTO DE DESTAQUE (FRENTE) */}
         <div className="absolute top-[20%] md:top-[25%] left-0 w-full z-20 text-center px-4">
             <p className="text-white/80 uppercase tracking-[0.2em] text-[10px] md:text-sm font-light mb-2 animate-in fade-in zoom-in duration-1000 delay-300 fill-mode-forwards">
                 Bem-vindo à Imobiliária em Balneário Camboriú
@@ -87,6 +92,7 @@ export function LandingPageClient() {
             <h2 className="text-white text-base md:text-xl font-light mb-2 animate-in fade-in zoom-in duration-1000 delay-500 fill-mode-forwards">
                 Danillo Bezerra <span className="font-bold text-[#d4af37]">Corretor de Imóveis</span>
             </h2>
+            
             <h1 className="text-4xl md:text-7xl text-white font-serif italic animate-in slide-in-from-bottom-10 fade-in duration-1000 delay-700 fill-mode-forwards drop-shadow-lg">
                 Experiência <span className="text-[#d4af37]">Única!</span>
             </h1>
@@ -98,7 +104,7 @@ export function LandingPageClient() {
       </div>
 
       {/* ===================================================================================== */}
-      {/* BARRA DE BUSCA (FLUTUANTE ENTRE AS SEÇÕES) */}
+      {/* BARRA DE BUSCA (FLUTUANTE) */}
       {/* ===================================================================================== */}
       <div className="relative z-40 w-full px-4 -mt-20 md:-mt-24 pointer-events-none">
          <div className="max-w-6xl mx-auto pointer-events-auto">
@@ -107,7 +113,7 @@ export function LandingPageClient() {
                     <h3 className="text-[#d4af37] text-sm uppercase tracking-widest font-bold flex items-center gap-2">
                         <Search size={16} /> Encontre seu Imóvel
                     </h3>
-                    <p className="text-gray-500 text-xs hidden md:block">Busque por cidade, tipo ou código.</p>
+                    <p className="text-gray-500 text-xs hidden md:block">Busque por cidade, tipo ou código de referência.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
@@ -214,7 +220,30 @@ export function LandingPageClient() {
         </div>
       </section>
 
-      {/* SEÇÃO EXTRA */}
+      {/* SEÇÃO EXTRA (Restaurada) */}
+      <section className="bg-[#0f0f0f] py-16 px-[5%] border-t border-white/5">
+        <div className="max-w-[1600px] mx-auto w-full">
+          <div className="flex items-center gap-4 mb-8">
+             <div className="h-8 w-1 bg-[#d4af37]"></div>
+             <h2 className="text-2xl md:text-3xl font-light text-foreground">
+               Lançamentos & <span className="font-bold text-white">Na Planta</span>
+             </h2>
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 bg-[#1a1a1a] border border-white/10 p-8 rounded-lg">
+             <div className="space-y-4 max-w-2xl">
+                <h3 className="text-xl text-[#d4af37] font-bold">Invista com Alta Rentabilidade</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Temos acesso exclusivo aos pré-lançamentos das maiores construtoras de Balneário Camboriú e Praia Brava. 
+                </p>
+             </div>
+             <Button className="bg-green-600 hover:bg-green-700 text-white font-bold h-12 px-8 flex items-center gap-2">
+                <DollarSign size={18} />
+                Falar com Especialista
+             </Button>
+          </div>
+        </div>
+      </section>
       
     </div>
   );
