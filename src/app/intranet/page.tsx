@@ -3,22 +3,33 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  LogOut,
   LayoutDashboard,
   Users,
   Megaphone,
   Home as HomeIcon,
   Loader2,
+  MoreVertical, // <--- NOVO ÍCONE
+  History,      // <--- NOVO ÍCONE
+  LogOut        // MANTIDO
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // <--- NOVO IMPORT
 import { PropertiesList } from "@/components/admin/PropertiesList";
 import { CrmView } from "@/components/crm/CrmView"; 
 import { LeadsView } from "@/components/leads/LeadsView"; 
+import { AuditHistoryModal } from "@/components/admin/AuditHistoryModal"; // <--- IMPORT DO MODAL
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { ModeToggle } from "@/components/ui/mode-toggle"; // <--- IMPORT DO TOGGLE
+import { ModeToggle } from "@/components/ui/mode-toggle";
 
 // --- COMPONENTE INTERNO (Lógica real) ---
 function IntranetContent() {
@@ -32,6 +43,9 @@ function IntranetContent() {
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [watermarkEnabled, setWatermarkEnabled] = useState(false);
   const [userEmail, setUserEmail] = useState("Administrador");
+  
+  // ESTADO DO MODAL DE HISTÓRICO
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // --- 1. VERIFICAÇÃO DE AUTH E STATUS INICIAL ---
   useEffect(() => {
@@ -45,13 +59,11 @@ function IntranetContent() {
 
       setAuthLoading(false);
 
-      // 1. VERIFICA SE TEM ABA NA URL
       const tabParam = searchParams.get('tab');
       if (tabParam && ['imoveis', 'crm', 'leads', 'clientes', 'destaques'].includes(tabParam)) {
           setActiveTab(tabParam);
       }
 
-      // 2. Busca status da marca d'água
       try {
         const { data } = await api.get("/properties/bulk/watermark-status");
         setWatermarkEnabled(!!data.isEnabled);
@@ -70,7 +82,6 @@ function IntranetContent() {
     router.replace("/login");
   };
 
-  // --- 2. FUNÇÃO DE TOGGLE MARCA D'ÁGUA ---
   const toggleWatermark = async (newValue: boolean) => {
     const actionText = newValue ? "ATIVAR" : "REMOVER";
 
@@ -112,20 +123,14 @@ function IntranetContent() {
   }
 
   return (
-    // ANTES: bg-[#121212] text-white
-    // DEPOIS: bg-background text-foreground
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300">
       
       {/* HEADER */}
-      {/* ANTES: bg-[#121212] border-[#222] */}
-      {/* DEPOIS: bg-background border-border */}
       <header className="bg-background border-b border-border h-16 flex items-center justify-between px-6 sticky top-0 z-50 transition-colors duration-300">
         <div className="flex items-center gap-2">
-          {/* Logo */}
           <img 
             src="/logo2025.png" 
             alt="DB Private" 
-            // Adicionei invert na logo caso ela seja preta no light mode, ou remova se sua logo funcionar bem nos dois
             className="h-8 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" 
           />
         </div>
@@ -135,10 +140,10 @@ function IntranetContent() {
           {/* --- SWITCH MARCA D'ÁGUA --- */}
           <div 
             className={`
-              flex items-center space-x-2 px-3 py-1 rounded border transition-all duration-300
+              flex items-center space-x-2 px-3 py-1 rounded border transition-all duration-300 hidden md:flex
               ${watermarkEnabled 
                 ? "border-primary/50 bg-primary/5" 
-                : "border-border bg-transparent hover:bg-muted" // Cores adaptadas
+                : "border-border bg-transparent hover:bg-muted"
               }
             `}
           >
@@ -166,12 +171,11 @@ function IntranetContent() {
             </Label>
           </div>
 
-          <div className="h-4 w-px bg-border" />
+          <div className="h-4 w-px bg-border hidden md:block" />
 
-          {/* ÁREA DO USUÁRIO + TOGGLE DE TEMA */}
+          {/* ÁREA DO USUÁRIO + TOGGLE + MENU */}
           <div className="flex items-center gap-3">
             
-            {/* INSERÇÃO DO TOGGLE AQUI */}
             <ModeToggle />
 
             <div className="h-4 w-px bg-border hidden md:block" />
@@ -179,22 +183,43 @@ function IntranetContent() {
             <span className="text-xs text-muted-foreground hidden md:inline font-medium">
               {userEmail}
             </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8"
-              title="Sair"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
+
+            {/* --- MENU DROPDOWN DE AÇÕES (SUBSTITUI O LOGOUT DIRETO) --- */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground focus:ring-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-popover border-border text-popover-foreground">
+                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-border" />
+                
+                <DropdownMenuItem 
+                  onClick={() => setHistoryOpen(true)} 
+                  className="cursor-pointer hover:bg-muted focus:bg-muted"
+                >
+                  <History className="mr-2 h-4 w-4 text-primary" />
+                  <span>Histórico de Alterações</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator className="bg-border" />
+                
+                <DropdownMenuItem 
+                  onClick={handleLogout} 
+                  className="cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair do Sistema</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
           </div>
         </div>
       </header>
 
       {/* TABS */}
-      {/* ANTES: bg-[#121212] border-[#222] */}
-      {/* DEPOIS: bg-background border-border */}
       <nav className="bg-background border-b border-border px-6 pt-4 flex gap-2 overflow-x-auto transition-colors duration-300">
         {[
           { id: "imoveis", label: "Imóveis", icon: HomeIcon },
@@ -212,11 +237,7 @@ function IntranetContent() {
                 flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-t-lg transition-all border-b-0
                 ${
                   isActive
-                    // ANTES: bg-[#1a1a1a] text-white border-[#333]
-                    // DEPOIS: bg-card text-foreground border-border border-x border-t
                     ? "bg-muted text-foreground border-x border-t border-border relative top-[1px]"
-                    // ANTES: text-gray-500 hover:bg-[#1a1a1a]
-                    // DEPOIS: text-muted-foreground hover:bg-muted
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }
               `}
@@ -234,8 +255,6 @@ function IntranetContent() {
       </nav>
 
       {/* CONTEÚDO */}
-      {/* ANTES: bg-[#121212] */}
-      {/* DEPOIS: bg-background */}
       <main className="flex-1 p-6 overflow-hidden relative bg-background transition-colors duration-300">
         
         {/* VIEW IMÓVEIS */}
@@ -254,7 +273,7 @@ function IntranetContent() {
           </div>
         )}
 
-        {/* VIEW CRM (KANBAN) */}
+        {/* VIEW CRM */}
         {activeTab === "crm" && (
            <div className="h-full w-full animate-in fade-in duration-300">
               <CrmView />
@@ -279,6 +298,13 @@ function IntranetContent() {
           </div>
         )}
       </main>
+
+      {/* MODAL DE HISTÓRICO */}
+      <AuditHistoryModal 
+        isOpen={historyOpen} 
+        onClose={() => setHistoryOpen(false)} 
+      />
+
     </div>
   );
 }
