@@ -7,8 +7,8 @@ export interface PropertyFilters {
   types?: string[];
   minPrice?: string;
   maxPrice?: string;
-  minArea?: string;
-  maxArea?: string;
+  minPrivateArea?: string;
+  maxPrivateArea?: string;
   bedrooms?: number;
   suites?: number;
   garageSpots?: number;

@@ -18,6 +18,8 @@ export function SalesPageClient() {
     search: searchParams.get("search") || undefined,
     minPrice: searchParams.get("minPrice") || undefined,
     maxPrice: searchParams.get("maxPrice") || undefined,
+    minArea: searchParams.get("minArea") || undefined,
+    maxArea: searchParams.get("maxArea") || undefined,
     garageSpots: searchParams.get("garageSpots")
       ? Number(searchParams.get("garageSpots"))
       : undefined,

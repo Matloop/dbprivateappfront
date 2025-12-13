@@ -18,8 +18,8 @@ export const SidebarFilter = () => {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
-  const [minArea, setMinArea] = useState(searchParams.get('minArea') || '');
-  const [maxArea, setMaxArea] = useState(searchParams.get('maxArea') || '');
+  const [minPrivateArea, setMinArea] = useState(searchParams.get('minPrivateArea') || '');
+  const [maxPrivateArea, setMaxArea] = useState(searchParams.get('maxPrivateArea') || '');
 
   // Ref para evitar loop infinito ou disparo inicial desnecessário
   const isFirstRender = useRef(true);
@@ -73,15 +73,15 @@ export const SidebarFilter = () => {
         updateParam('search', search);
         updateParam('minPrice', minPrice);
         updateParam('maxPrice', maxPrice);
-        updateParam('minArea', minArea);
-        updateParam('maxArea', maxArea);
+        updateParam('minArea', minPrivateArea);
+        updateParam('maxArea', maxPrivateArea);
         
         params.delete('page');
         router.push(`/vendas?${params.toString()}`, { scroll: false });
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [search, minPrice, maxPrice, minArea, maxArea]); // Removemos searchParams da dependência para evitar loop
+  }, [search, minPrice, maxPrice, minPrivateArea, maxPrivateArea]); // Removemos searchParams da dependência para evitar loop
 
   return (
     <aside className="w-full lg:w-[300px] shrink-0 space-y-4 bg-card border border-border rounded-lg p-5 h-fit lg:sticky lg:top-4 shadow-xl">
@@ -291,9 +291,9 @@ export const SidebarFilter = () => {
           </AccordionContent>
         </AccordionItem>
 
-        {/* 7. ÁREA TOTAL */}
+        {/* 7. ÁREA Privativa */}
         <AccordionItem value="area" className="border-b-0">
-          <AccordionTrigger className="text-xs uppercase font-bold text-foreground hover:text-primary py-3">Área Total</AccordionTrigger>
+          <AccordionTrigger className="text-xs uppercase font-bold text-foreground hover:text-primary py-3">Área Privativa</AccordionTrigger>
           <AccordionContent className="pt-1 pb-2">
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -302,7 +302,7 @@ export const SidebarFilter = () => {
                       <Input 
                         type="number" 
                         className="pr-6 bg-background border-input text-foreground text-xs h-8 focus-visible:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                        value={minArea} 
+                        value={minPrivateArea} 
                         onChange={(e) => setMinArea(e.target.value)} 
                       />
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px]">m²</span>
@@ -314,7 +314,7 @@ export const SidebarFilter = () => {
                       <Input 
                         type="number" 
                         className="pr-6 bg-background border-input text-foreground text-xs h-8 focus-visible:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                        value={maxArea} 
+                        value={maxPrivateArea} 
                         onChange={(e) => setMaxArea(e.target.value)} 
                       />
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px]">m²</span>
