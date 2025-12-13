@@ -10,6 +10,7 @@ export interface PropertyFilters {
   minArea?: string;
   maxArea?: string;
   bedrooms?: number;
+  suites?: number;
   garageSpots?: number;
   search?: string;
   ids?: string;
@@ -75,7 +76,7 @@ api.interceptors.response.use(
 // Funções de busca
 export const getProperties = async (filters?: PropertyFilters): Promise<PaginatedResponse<any>> => {
   const params = new URLSearchParams();
-  
+  console.log("🔍 FILTROS RECEBIDOS NO API.TS:", filters);
   if (filters) {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== '' && value !== 0 && value !== '0') {
